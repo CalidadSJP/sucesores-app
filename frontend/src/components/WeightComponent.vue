@@ -1,49 +1,62 @@
 <template>
-    <div class="weight-component">
-      <b-card title="Registrar Peso">
-        <!-- Campo para la fecha actual -->
-        <b-form-group label="Fecha Actual">
-          <b-form-input :value="currentDate" readonly></b-form-input>
-        </b-form-group>
+    <div class="container mt-5">
+      <div class="card">
+        <div class="card-header">
+          <h4>Registrar Peso</h4>
+        </div>
+        <div class="card-body">
+          <!-- Fecha Actual -->
+          <div class="mb-3">
+            <label for="fecha" class="form-label">Fecha Actual</label>
+            <input type="text" id="fecha" class="form-control" :value="currentDate" readonly>
+          </div>
   
-        <!-- Campo para ingresar la empacadora -->
-        <b-form-group label="Empacadora">
-          <b-form-input v-model="form.empacadora" placeholder="Ingresa la empacadora"></b-form-input>
-        </b-form-group>
+          <!-- Empacadora -->
+          <div class="mb-3">
+            <label for="empacadora" class="form-label">Empacadora</label>
+            <input type="text" id="empacadora" class="form-control" v-model="form.empacadora">
+          </div>
   
-        <!-- Campo para ingresar el peso neto -->
-        <b-form-group label="Peso Neto">
-          <b-form-input v-model="form.pesoNeto" type="number" placeholder="Ingresa el peso neto"></b-form-input>
-        </b-form-group>
+          <!-- Peso Neto -->
+          <div class="mb-3">
+            <label for="pesoNeto" class="form-label">Peso Neto</label>
+            <input type="text" id="pesoNeto" class="form-control" v-model="form.pesoNeto">
+          </div>
   
-        <!-- Campo para ingresar el formato -->
-        <b-form-group label="Formato">
-          <b-form-input v-model="form.formato" placeholder="Ingresa el formato"></b-form-input>
-        </b-form-group>
+          <!-- Formato -->
+          <div class="mb-3">
+            <label for="formato" class="form-label">Formato</label>
+            <input type="text" id="formato" class="form-control" v-model="form.formato">
+          </div>
   
-        <!-- Campo para ingresar la marca -->
-        <b-form-group label="Marca">
-          <b-form-input v-model="form.marca" placeholder="Ingresa la marca"></b-form-input>
-        </b-form-group>
+          <!-- Marca -->
+          <div class="mb-3">
+            <label for="marca" class="form-label">Marca</label>
+            <input type="text" id="marca" class="form-control" v-model="form.marca">
+          </div>
   
-        <!-- Campo para ingresar el lote -->
-        <b-form-group label="Lote">
-          <b-form-input v-model="form.lote" placeholder="Ingresa el lote"></b-form-input>
-        </b-form-group>
+          <!-- Lote -->
+          <div class="mb-3">
+            <label for="lote" class="form-label">Lote</label>
+            <input type="text" id="lote" class="form-control" v-model="form.lote">
+          </div>
   
-        <!-- Campo para ingresar la fecha de fabricación -->
-        <b-form-group label="Fecha de Fabricación">
-          <b-form-input v-model="form.fechaFabricacion" type="date"></b-form-input>
-        </b-form-group>
+          <!-- Fecha de Fabricación -->
+          <div class="mb-3">
+            <label for="fechaFabricacion" class="form-label">Fecha de Fabricación</label>
+            <input type="date" id="fechaFabricacion" class="form-control" v-model="form.fechaFabricacion">
+          </div>
   
-        <!-- Campo para ingresar la fecha de vencimiento -->
-        <b-form-group label="Fecha de Vencimiento">
-          <b-form-input v-model="form.fechaVencimiento" type="date"></b-form-input>
-        </b-form-group>
+          <!-- Fecha de Vencimiento -->
+          <div class="mb-3">
+            <label for="fechaVencimiento" class="form-label">Fecha de Vencimiento</label>
+            <input type="date" id="fechaVencimiento" class="form-control" v-model="form.fechaVencimiento">
+          </div>
   
-        <!-- Botón de enviar -->
-        <b-button variant="primary" @click="submitForm">Enviar</b-button>
-      </b-card>
+          <!-- Botón de enviar -->
+          <button class="btn btn-primary" @click="submitForm">Enviar</button>
+        </div>
+      </div>
     </div>
   </template>
   
@@ -51,7 +64,6 @@
   export default {
     data() {
       return {
-        // Almacenar los datos del formulario
         form: {
           empacadora: '',
           pesoNeto: '',
@@ -61,31 +73,26 @@
           fechaFabricacion: '',
           fechaVencimiento: ''
         },
-        currentDate: this.getCurrentDate() // Para mostrar la fecha actual
+        currentDate: this.getCurrentDate()
       };
     },
     methods: {
-      // Obtener la fecha actual en formato DD/MM/YYYY
       getCurrentDate() {
         const today = new Date();
-        const dd = String(today.getDate()).padStart(2, '0');
-        const mm = String(today.getMonth() + 1).padStart(2, '0'); // Enero es 0
-        const yyyy = today.getFullYear();
-        return `${dd}/${mm}/${yyyy}`;
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0'); // Meses empiezan desde 0
+        const year = today.getFullYear();
+        return `${day}/${month}/${year}`;
       },
       submitForm() {
-        // Acción al enviar el formulario
-        console.log("Formulario enviado:", this.form);
+        // Aquí puedes agregar la lógica para enviar el formulario
+        console.log(this.form);
       }
     }
   };
   </script>
   
   <style scoped>
-  .weight-component {
-    max-width: 600px;
-    margin: auto;
-    padding: 20px;
-  }
+  /* Puedes agregar estilos adicionales si lo necesitas */
   </style>
   
