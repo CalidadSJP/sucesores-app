@@ -26,6 +26,11 @@ const routes = [
     name: 'Frecuency',
     component: FrecuecyComponent
   },
+  {
+    path: '/weight',
+    name: 'WeightComponent',
+    component: WeightComponent
+  },
 ];
 
 const router = createRouter({
