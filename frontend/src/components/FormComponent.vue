@@ -241,25 +241,20 @@ export default {
     await this.loadAreas();
   },
   methods: {
-    async loadPersonnel() {
-      this.isLoading = true;
-      try {
-        const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-personnel`);
-        const personnelData = response.data.personnel;
-
-        // Guardamos todos los datos de personnel para poder acceder a id_area
-        this.personnel = personnelData;
-
-        // Extraemos los nombres para los selects
-        this.operarioNames = personnelData.map(person => ({ name: person.name, id_area: person.id_area }));
-        this.supervisorNames = personnelData
-          .filter(person => person.role.startsWith('SUPERVISOR'))
-          .map(person => person.name);
-      } catch (error) {
-        console.error("Error al cargar el personal:", error);
-      } finally {
-        this.isLoading = false;
-      }
+    loadPersonnel() {
+      axios.get(`${process.env.VUE_APP_API_URL}/get-personnel`)
+        .then(response => {
+          if (response.data && response.data.personnel) {
+            this.personnelList = response.data.personnel;
+          } else {
+            console.error("La respuesta no contiene 'personnel'");
+            this.personnelList = [];
+          }
+        })
+        .catch(error => {
+          console.error("Error al cargar el personal:", error);
+          this.personnelList = [];
+        });
     },
     async loadAreas() {
       this.isLoading = true;

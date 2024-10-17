@@ -122,11 +122,11 @@ def download_inspection():
 @app.route('/get-personnel', methods=['GET'])
 def get_personnel():
     try:
-        # Consultar la base de datos el personal
         response = supabase.table('personnel').select('*').execute()
         data = response.data
 
-        return jsonify({"personnel": data}), 200
+        # Asegurarse de retornar un objeto con la estructura correcta
+        return jsonify({"personnel": data if data else []}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
