@@ -2,10 +2,11 @@ from dotenv import load_dotenv
 import os
 from flask import Flask, request, jsonify, render_template, send_file
 from flask_cors import CORS
+import pandas as pd
 from supabase import create_client, Client
 from io import BytesIO
 from openpyxl import Workbook
-from waitress import serve  # Importa el servidor Waitress
+import requests
 
 # Cargar las variables de entorno
 load_dotenv()
@@ -15,6 +16,7 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:8080')
 
 CORS(app, resources={r"/*": {"origins": ["https://sucesores-app.vercel.app", frontend_url]}})
+
 
 # Configuración de Supabase
 SUPABASE_URL = os.getenv('SUPABASE_URL')
@@ -225,5 +227,4 @@ def get_inspection_frequency():
         return jsonify({'error': f"Error interno del servidor: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    # En lugar de app.run(), usaremos Waitress para servir la aplicación en producción.
-    serve(app, host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=os.getenv('DEBUG', 'False') == 'True')
