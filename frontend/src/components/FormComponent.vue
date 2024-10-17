@@ -242,33 +242,26 @@ export default {
   },
   methods: {
     async loadPersonnel() {
-  this.isLoading = true;
-  try {
-    const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-personnel`);
-    console.log("Respuesta completa del servidor:", response);  // <-- Verificar la respuesta completa
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-personnel`);
+        const personnelData = response.data.personnel;
 
-    // Verificar si el campo 'personnel' está presente en la respuesta
-    if (response.data && response.data.personnel) {
-      const personnelData = response.data.personnel;
+        // Guardamos todos los datos de personnel para poder acceder a id_area
+        this.personnel = personnelData;
 
-      // Guardamos todos los datos de personnel para poder acceder a id_area
-      this.personnel = personnelData;
-
-      // Extraemos los nombres para los selects
-      this.operarioNames = personnelData.map(person => ({ name: person.name, id_area: person.id_area }));
-      this.supervisorNames = personnelData
-        .filter(person => person.role.startsWith('SUPERVISOR'))
-        .map(person => person.name);
-    } else {
-      console.error("La respuesta no contiene el campo 'personnel'");
-    }
-  } catch (error) {
-    console.error("Error al cargar el personal:", error);
-  } finally {
-    this.isLoading = false;
-  }
-}
-,
+        // Extraemos los nombres para los selects
+        this.operarioNames = personnelData.map(person => ({ name: person.name, id_area: person.id_area }));
+        this.supervisorNames = personnelData
+          .filter(person => person.role.startsWith('SUPERVISOR'))
+          .map(person => person.name);
+      } catch (error) {
+        console.error("Error al cargar el personal:", error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    
     async loadAreas() {
       this.isLoading = true;
       try {
