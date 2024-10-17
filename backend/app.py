@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 import os
-from flask import Flask, request, jsonify, render_template, send_file
+from flask import Flask, request, jsonify, render_template, send_file, send_from_directory
 from flask_cors import CORS
 from supabase import create_client, Client
 from io import BytesIO
@@ -118,6 +118,11 @@ def download_inspection():
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
 
 
 @app.route('/get-personnel', methods=['GET'])
