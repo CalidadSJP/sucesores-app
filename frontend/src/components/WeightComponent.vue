@@ -13,7 +13,7 @@
               style="width: 20px; height: 20px; margin-right: 5px;"
             />
             <span class="card-text">Inicio</span>
-          </router-link>
+          </router-link> 
         </div>
         <div class="card-body">
           <!-- Fecha Actual -->
@@ -25,43 +25,43 @@
           <!-- EAN 13 -->
           <div class="mb-3">
             <label for="ean13" class="form-label">EAN 13</label>
-            <input type="text" id="ean13" class="form-control" v-model="form.ean13">
+            <input type="text" id="ean13" class="form-control uppercase-input" v-model="form.ean13">
           </div> 
   
           <!-- EAN 14 -->
           <div class="mb-3">
             <label for="ean14" class="form-label">EAN 14</label>
-            <input type="text" id="ean14" class="form-control" v-model="form.ean14">
+            <input type="text" id="ean14" class="form-control uppercase-input" v-model="form.ean14">
           </div>
   
           <!-- Empacadora -->
           <div class="mb-3">
             <label for="empacadora" class="form-label">Empacadora</label>
-            <input type="text" id="empacadora" class="form-control" v-model="form.empacadora">
+            <input type="text" id="empacadora" class="form-control uppercase-input" v-model="form.empacadora">
           </div>
   
           <!-- Peso Neto -->
           <div class="mb-3">
             <label for="pesoNeto" class="form-label">Peso Neto</label>
-            <input type="text" id="pesoNeto" class="form-control" v-model="form.pesoNeto">
+            <input type="text" id="pesoNeto" class="form-control uppercase-input" v-model="form.pesoNeto">
           </div>
   
           <!-- Formato -->
           <div class="mb-3">
             <label for="formato" class="form-label">Formato</label>
-            <input type="text" id="formato" class="form-control" v-model="form.formato">
+            <input type="text" id="formato" class="form-control uppercase-input" v-model="form.formato">
           </div>
   
           <!-- Marca -->
           <div class="mb-3">
             <label for="marca" class="form-label">Marca</label>
-            <input type="text" id="marca" class="form-control" v-model="form.marca">
+            <input type="text" id="marca" class="form-control uppercase-input" v-model="form.marca">
           </div>
   
           <!-- Lote -->
           <div class="mb-3">
             <label for="lote" class="form-label">Lote</label>
-            <input type="text" id="lote" class="form-control" v-model="form.lote">
+            <input type="text" id="lote" class="form-control uppercase-input" v-model="form.lote">
           </div>
   
           <!-- Fecha de Fabricación -->
@@ -148,6 +148,10 @@
   </script>
   
   <style scoped>
+
+  .uppercase-input {
+  text-transform: uppercase;
+  }
   /* Estilo adicional si es necesario */
   .back-link {
     text-decoration: none;
