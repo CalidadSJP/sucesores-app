@@ -242,26 +242,40 @@ export default {
   },
   methods: {
     async loadPersonnel() {
-      this.isLoading = true;
-      try {
-        const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-personnel`);
-        const personnelData = response.data.personnel;
-
-        // Guardamos todos los datos de personnel para poder acceder a id_area
-        this.personnel = personnelData;
-
-        // Extraemos los nombres para los selects
-        this.operarioNames = personnelData.map(person => ({ name: person.name, id_area: person.id_area }));
-        this.supervisorNames = personnelData
-          .filter(person => person.role.startsWith('SUPERVISOR'))
-          .map(person => person.name);
-      } catch (error) {
-        console.error("Error al cargar el personal:", error);
-      } finally {
-        this.isLoading = false;
-      }
-    },
+  this.isLoading = true;
+  try {
+    const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-personnel`);
     
+    // Muestra la respuesta completa para depurar
+    console.log("Respuesta del servidor:", response.data);
+
+    const personnelData = response.data.personnel;
+
+    // Verifica si personnelData está definido antes de intentar mapearlo
+    if (personnelData && Array.isArray(personnelData)) {
+      // Guardamos todos los datos de personnel para poder acceder a id_area
+      this.personnel = personnelData;
+
+      // Extraemos los nombres para los selects
+      this.operarioNames = personnelData.map(person => ({ name: person.name, id_area: person.id_area }));
+      this.supervisorNames = personnelData
+        .filter(person => person.role && person.role.startsWith('SUPERVISOR')) // Asegura que role esté definido
+        .map(person => person.name);
+    } else {
+      console.error("No se encontró 'personnel' en la respuesta o no es un array.");
+      this.personnel = []; // Establece personnel a un array vacío para evitar errores en el frontend
+      this.operarioNames = [];
+      this.supervisorNames = [];
+    }
+  } catch (error) {
+    console.error("Error al cargar el personal:", error);
+    this.personnel = []; // Establece personnel a un array vacío en caso de error
+    this.operarioNames = [];
+    this.supervisorNames = [];
+  } finally {
+    this.isLoading = false;
+  }
+},
     async loadAreas() {
       this.isLoading = true;
       try {

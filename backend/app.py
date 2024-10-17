@@ -127,10 +127,15 @@ def get_personnel():
         response = supabase.table('personnel').select('*').execute()
         data = response.data
 
+        # Asegurarse de que data es una lista
+        if data is None:
+            data = []
+
         return jsonify({"personnel": data}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
 @app.route('/get-areas', methods=['GET'])
