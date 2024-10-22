@@ -1,340 +1,434 @@
 <template>
-  <div class="container mt-4">
-    <h1 class="mb-4">Gestión de Personal</h1>
-
-    <!-- Formulario para Agregar o Editar Personal -->
-    <div class="card mb-4">
-      <div class="card-header d-flex justify-content-between align-items-center">
-      <!-- Título de la tarjeta a la izquierda -->
-      <span>
-        {{ isEditing ? 'Editar Personal' : 'Agregar Nuevo Personal' }}
-      </span>
-
-      <!-- Botón de regresar a la derecha -->
-      <router-link to="/" class="back-link d-flex align-items-center">
-        <img
-          src="@/assets/home.png"
-          alt="Regresar"
-          class="back-icon"
-          style="width: 20px; height: 20px; margin-right: 5px;"
-        />
-        <span class="card-text">Inicio</span>
-      </router-link>
-    </div>
-      <div class="card-body">
-          <form @submit.prevent="isEditing ? updatePersonnel() : addPersonnel()">
-      <div class="mb-3">
-          <label for="name" class="form-label">Nombre</label>
-          <input type="text" id="name" v-model="person.name" @input="toUpperCase($event)" class="form-control" placeholder="Nombre" required />
-      </div>
-      <div class="mb-3">
-          <label for="role" class="form-label">Cargo</label>
-          <input type="text" id="role" v-model="person.role" @input="toUpperCase($event)" class="form-control"  placeholder="Cargo" required />
-      </div>
-
-    <div class="mb-3">
-      <label for="area" class="form-label">Área</label>
-      <select id="area" v-model="person.id_area" class="form-select" required>
-        <option v-for="area in areas" :key="area.id_area" :value="area.id_area">{{ area.name_area }}</option>
-      </select>
-    </div><br>
-    <div>
-      <button type="submit" class="btn btn-success">{{ isEditing ? 'Actualizar' : 'Agregar' }}</button>
-      <button v-if="isEditing" @click="cancelEdit" class="btn btn-secondary ms-2">Cancelar</button>
-    </div>
-  </form>
-</div>
-</div>
-
-
-    <!-- Listado de Personal -->
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-          <span>Lista de Personal</span>
-          <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
-              Filtros
-          </button>
-      </div>
-      <div class="collapse" id="filterCollapse">
-          <div class="card-body p-4">
-              <input v-model="search.name" @input="toUpperCase($event)" class="form-control mb-3" placeholder="Buscar por nombre" />
-              <input v-model="search.role" @input="toUpperCase($event)" class="form-control mb-3" placeholder="Buscar por cargo" />
-              <input v-model="search.area" @input="toUpperCase($event)" class="form-control mb-3" placeholder="Buscar por área" />
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header d-flex align-items-center">
+            <!-- Logo al lado del título -->
+            <img
+              src="@/assets/sucesores-logo-1.png"
+              alt="Logo"
+              class="logo"
+              style="width: 135px; height: 90px; margin-right: 0px;"
+            />
+            <h1 class="mb-0">Comportamiento del Personal</h1>
           </div>
+          <div class="card-body">
+            <form @submit.prevent="submitForm">
+              <!-- Encabezado -->
+              <router-link to="/" class="back-link">
+                <img
+                  src="@/assets/home.png"
+                  alt="Regresar"
+                  class="back-icon"
+                />
+                <span class="card-text">Inicio</span>
+              </router-link><br><br>
+              <router-link to="/frecuency" class="frequency-link">
+                <img
+                  src="@/assets/frecuencia.png"
+                  alt="Regresar"
+                  class="back-icon"
+                />
+                <span class="card-text">Frecuencia de inspección</span>
+              </router-link>
+              <br>
+              <div class="form-group">
+                <label for="fecha">Fecha:</label>
+                <input
+                  type="date"
+                  id="fecha"
+                  class="form-control"
+                  v-model="form.fecha"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="turno">Turno:</label>
+                <select
+                  id="turno"
+                  class="form-control"
+                  v-model="form.turno"
+                  required
+                >
+                  <option value="I">I</option>
+                  <option value="II">II</option>
+                  <option value="III">III</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="area">Área:</label>
+                <select
+                  id="area"
+                  class="form-control"
+                  v-model="form.area"
+                  @change="filterOperarios"
+                  required
+                >
+                  <option disabled value=""></option>
+                  <option
+                    v-for="area in areaNames"
+                    :key="area.id_area"
+                    :value="area.id_area">
+                    {{ area.name_area }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="nombre_operario">Operario:</label>
+                <select
+                  id="nombre_operario"
+                  class="form-control"
+                  v-model="form.nombre_operario"
+                  required
+                >
+                  <option disabled value=""></option>
+                  <option
+                    v-for="name in filteredOperarios"
+                    :key="name"
+                    :value="name"
+                  >
+                    {{ name }}
+                  </option>
+                </select>
+              </div>
+              <br /><br />
+
+              <!-- Cuerpo del formulario -->
+              <fieldset class="form-group">
+                <div class="d-flex align-items-center">
+                  <img
+                    src="@/assets/check.png"
+                    alt="Logo"
+                    class="logo"
+                    style="width: 65px; height: 65px; margin-right: 10px; padding: 15px; vertical-align: middle;"
+                  />
+                  <h2 class="mb-0">Inspección</h2>
+                </div>
+                <br /><br />
+
+                <div
+                  v-for="item in items"
+                  :key="item.name"
+                  class="form-group"
+                >
+                  <label :for="item.name">{{ item.label }}</label>
+                  <select
+                    class="form-control"
+                    :id="item.name"
+                    v-model="form[item.name]"
+                  >
+                    <option
+                      v-for="option in item.options"
+                      :key="option"
+                      :value="option"
+                    >
+                      {{ option }}
+                    </option>
+                  </select>
+                </div>
+              </fieldset>
+
+              <!-- Pie de página -->
+              <div class="form-group">
+                <label for="supervisor">Supervisor:</label>
+                <select
+                  id="supervisor"
+                  class="form-control"
+                  v-model="form.supervisor"
+                  required
+                >
+                  <option
+                    v-for="name in supervisorNames"
+                    :key="name"
+                    :value="name"
+                  >
+                    {{ name }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="observaciones">Observaciones:</label>
+                <textarea
+                  id="observaciones"
+                  class="form-control"
+                  v-model="form.observaciones"
+                  rows="3"
+                ></textarea>
+              </div>
+              <br />
+              <div class="form-buttons">
+                <button type="submit" class="btn btn-success w-50" :disabled="isLoading">
+                  <!-- Mostrar spinner dentro del botón -->
+                  <span v-if="isLoading" class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                  {{ isLoading ? 'Guardando...' : 'Enviar' }}
+                </button>
+                <button
+                  @click="scrollToTop"
+                  class="btn btn-secondary scroll-to-top w-50"
+                >
+                  Regresar
+                </button>
+              </div>
+              <br>
+              <button class="btn btn-primary w-100" @click="downloadExcel" :disabled="isLoading">
+                <span v-if="isLoading" class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                <span v-else>Descargar registro</span>
+              </button>
+              <br><br><br>
+            </form>
+          </div>
+        </div>
       </div>
-      <div class="card-body p-4">
-      <div class="table-responsive">
-          <table class="table table-striped table-hover mb-3">
-              <thead class="table-light">
-                  <tr>
-                      <th>Nombre</th>
-                      <th>Cargo</th>
-                      <th>Área</th>
-                      <th>Acciones</th>
-                  </tr>
-              </thead>
-      <tbody>
-        <tr v-for="item in paginatedPersonnelList" :key="item.id">
-          <td>{{ item.name }}</td>
-          <td>{{ item.role }}</td>
-          <td>{{ areaName(item.id_area) }}</td>
-          <td>
-            <button @click="editPersonnel(item)" class="btn btn-secondary btn-sm me-2">Editar</button>
-            <button @click="deletePersonnel(item.id)" class="btn btn-danger btn-sm">Eliminar</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    </div>
   </div>
-  <!-- Paginación -->
-  <nav aria-label="Page navigation">
-      <ul class="pagination justify-content-center mb-0">
-        <li class="page-item" :class="{ disabled: currentPage === 1 }">
-          <a class="page-link btn-success text-white" @click="prevPage">Anterior</a>
-        </li>
-        <li
-          class="page-item"
-          :class="{ active: page === currentPage }"
-          v-for="page in visiblePages"
-          :key="page"
-        >
-          <a class="page-link btn-success text-white" @click="setPage(page)">{{ page }}</a>
-        </li>
-        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-          <a class="page-link btn-success text-white" @click="nextPage">Siguiente</a>
-        </li>
-      </ul>
-    </nav>
-</div>
-</div>
-</div>
 </template>
 
 <script>
-import axios from 'axios';
+import axios from "axios";
 
 export default {
-data() {
-  return {
-    personnelList: [],
-    person: { id: '', name: '', role: '', id_area: '' },
-    roles: [],
-    areas: [],
-    isEditing: false,
-    search: {
-      name: '',
-      role: '',
-      area: ''
+  name: "FormComponent",
+  data() {
+    return {
+      isLoading: false,
+      form: {
+        fecha: "",
+        turno: "",
+        area: "",
+        nombre_operario: "",
+        manos_limpias: "",
+        uniforme_limpio: "",
+        no_objetos_personales: "",
+        heridas_protegidas: "",
+        cofia_bien_puesta: "",
+        mascarilla_bien_colocada: "",
+        protector_auditivo: "",
+        unas_cortas: "",
+        guantes_limpios: "",
+        pestanas: "",
+        barba_bigote: "",
+        medicamento_autorizado: "",
+        supervisor: "",
+        observaciones: "",
+      },
+      items: [
+        { name: "manos_limpias", label: "Manos limpias", options: ["Cumple", "No cumple"] },
+        { name: "uniforme_limpio", label: "Uniforme limpio", options: ["Cumple", "No cumple"] },
+        { name: "no_objetos_personales", label: "No objetos personales en el área", options: ["Cumple", "No cumple", "No aplica"] },
+        { name: "heridas_protegidas", label: "Presenta heridas protegidas", options: ["Cumple", "No cumple", "No aplica"] },
+        { name: "cofia_bien_puesta", label: "Cofia bien puesta", options: ["Cumple", "No cumple"] },
+        { name: "mascarilla_bien_colocada", label: "Mascarilla bien colocada", options: ["Cumple", "No cumple"] },
+        { name: "protector_auditivo", label: "Uso de protector auditivo", options: ["Cumple", "No cumple", "No aplica"] },
+        { name: "unas_cortas", label: "Uñas Cortas, limpias y sin esmalte", options: ["Cumple", "No cumple"] },
+        { name: "guantes_limpios", label: "Guantes limpios y en buen estado", options: ["Cumple", "No cumple", "No aplica"] },
+        { name: "pestanas", label: "Pestañas sin rímel o extensiones", options: ["Cumple", "No cumple", "No aplica"] },
+        { name: "barba_bigote", label: "Barba/Bigote", options: ["Cumple", "No cumple", "No aplica"] },
+        { name: "medicamento_autorizado", label: "Uso de medicamento con autorización del supervisor", options: ["Cumple", "No cumple", "No aplica"] },
+      ],
+      operarioNames: [],
+      supervisorNames: [],
+      areaNames: [],
+      personnel: [], // Guarda los datos del personal completo, incluyendo el id_area
+    };
+  },
+  async created() {
+    await this.loadPersonnel();
+    await this.loadAreas();
+  },
+  methods: {
+    async loadPersonnel() {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-personnel`);
+        const personnelData = response.data.personnel;
+
+        // Guardamos todos los datos de personnel para poder acceder a id_area
+        this.personnel = personnelData;
+
+        // Extraemos los nombres para los selects
+        this.operarioNames = personnelData.map(person => ({ name: person.nombre, id_area: person.id_area }));
+        this.supervisorNames = personnelData
+          .filter(person => person.rol.includes('SUPERVISOR')) // Cambiado a includes para que reconozca 'SUPERVISOR'
+          .map(person => person.nombre);
+      } catch (error) {
+        console.error("Error al cargar el personal:", error);
+      } finally {
+        this.isLoading = false;
+      }
     },
-    currentPage: 1,
-    perPage: 10,
-  };
-},
-computed: {
-  visiblePages() {
-    const pages = [];
-    const startPage = Math.max(1, this.currentPage - 2);
-    const endPage = Math.min(this.totalPages, startPage + 4);
+    async loadAreas() {
+      this.isLoading = true;
+      try {
+        const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-areas`);
+        this.areaNames = response.data.areas;
+      } catch (error) {
+        console.error("Error al cargar áreas:", error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    filterOperarios() {
+      const selectedArea = this.form.area;
+      if (selectedArea) {
+        this.filteredOperarios = this.operarioNames
+          .filter(person => person.id_area === selectedArea)
+          .map(person => person.name);
+      } else {
+        this.filteredOperarios = this.operarioNames.map(person => person.name);
+      }
+    },
+    async submitForm() {
+      this.isLoading = true;
+      try {
+        // Asegúrate de que se envíe el nombre del área en el formulario
+        const formToSubmit = { ...this.form };
+        const selectedArea = this.areaNames.find(a => a.id_area === formToSubmit.area);
+        formToSubmit.area = selectedArea ? selectedArea.nombre_area : "";
 
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
+        const response = await axios.post(
+          `${process.env.VUE_APP_API_URL}/submit-form`,
+          formToSubmit
+        );
 
-    return pages;
-  },
-  filteredPersonnelList() {
-    return this.personnelList.filter(item => {
-      return (
-        (!this.search.name || item.name.toLowerCase().includes(this.search.name.toLowerCase())) &&
-        (!this.search.role || item.role.toLowerCase().includes(this.search.role.toLowerCase())) &&
-        (!this.search.area || this.areaName(item.id_area).toLowerCase().includes(this.search.area.toLowerCase()))
-      );
-    });
-  },
-  sortedFilteredPersonnelList() {
-    return this.filteredPersonnelList
-      .slice()  // Create a copy of the filtered list
-      .sort((a, b) => a.name.localeCompare(b.name));  // Sort alphabetically by name
-  },
-  paginatedPersonnelList() {
-    const start = (this.currentPage - 1) * this.perPage;
-    const end = start + this.perPage;
-    return this.sortedFilteredPersonnelList.slice(start, end);
-  },
-  totalPages() {
-    return Math.ceil(this.sortedFilteredPersonnelList.length / this.perPage);
-  }
-},
-methods: {
-  async fetchPersonnel() {
-    try {
-      const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-personnel`);
-      this.personnelList = response.data.personnel;
-    } catch (error) {
-      console.error('Error al obtener el personal:', error);
-    }
-  },
-  async fetchRoles() {
-    try {
-      const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-roles`);
-      this.roles = response.data.roles;
-    } catch (error) {
-      console.error('Error al obtener los roles:', error);
-    }
-  },
-  async fetchAreas() {
-    try {
-      const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-areas`);
-      this.areas = response.data.areas;
-    } catch (error) {
-      console.error('Error al obtener las áreas:', error);
-    }
-  },
-  async addPersonnel() {
-    if (confirm('¿Estás seguro de que deseas agregar este usuario?')) {
-      try {
-        await axios.post(`${process.env.VUE_APP_API_URL}/add-personnel`, this.person);
-        alert('Usuario agregado exitosamente.');
-        this.fetchPersonnel();
-        this.person = { id: '', name: '', role: '', id_area: '' };
-        this.isEditing = false;
+        if (response.data && response.data.message) {
+          alert(response.data.message); // Muestra el mensaje de éxito
+        } else {
+          alert("Formulario guardado exitosamente"); // Mensaje predeterminado si no hay un mensaje específico
+        }
+
+        this.resetForm(); // Resetea el formulario después de guardar
+
       } catch (error) {
-        console.error('Error al agregar personal:', error);
+        console.error("Error al guardar el formulario:", error);
+        const errorMessage = error.response?.data?.error || "Hubo un error al guardar el formulario. Por favor, inténtelo de nuevo.";
+        alert(errorMessage);
+      } finally {
+        this.isLoading = false;
       }
-    }
-  },
-  editPersonnel(person) {
-    this.person = { ...person };
-    this.isEditing = true;
-    this.scrollToTop();
-  },
-  async updatePersonnel() {
-    if (confirm('¿Estás seguro de que deseas editar este usuario?')) {
+    },
+    async downloadExcel() {
+      this.isLoading = true;
       try {
-        await axios.put(`${process.env.VUE_APP_API_URL}/update-personnel`, this.person);
-        alert('Usuario actualizado exitosamente.');
-        this.fetchPersonnel();
-        this.cancelEdit();
+        const response = await axios.get(`${process.env.VUE_APP_API_URL}/download-inspection`, {
+          responseType: 'blob'
+        });
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'data.xlsx');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       } catch (error) {
-        console.error('Error al actualizar personal:', error);
+        console.error("Error al descargar el archivo Excel:", error);
+        alert("Error al descargar el archivo Excel.");
+      } finally {
+        this.isLoading = false;
       }
-    }
+    },
+    resetForm() {
+      this.form = {
+        fecha: "",
+        turno: "",
+        area: "",
+        nombre_operario: "",
+        manos_limpias: "",
+        uniforme_limpio: "",
+        no_objetos_personales: "",
+        heridas_protegidas: "",
+        cofia_bien_puesta: "",
+        mascarilla_bien_colocada: "",
+        protector_auditivo: "",
+        unas_cortas: "",
+        guantes_limpios: "",
+        pestanas: "",
+        barba_bigote: "",
+        medicamento_autorizado: "",
+        supervisor: "",
+        observaciones: "",
+      };
+    },
+    scrollToTop() {
+      window.scrollTo(0, 0);
+    },
   },
-  cancelEdit() {
-    this.person = { id: '', name: '', role: '', id_area: '' };
-    this.isEditing = false;
-  },
-  async deletePersonnel(id) {
-    if (confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
-      try {
-        await axios.delete(`${process.env.VUE_APP_API_URL}/delete-personnel/${id}`);
-        alert('Usuario eliminado exitosamente.');
-        this.fetchPersonnel();
-      } catch (error) {
-        console.error('Error al eliminar personal:', error);
-      }
-    }
-  },
-  areaName(id) {
-    const area = this.areas.find(area => area.id_area === id);
-    return area ? area.name_area : 'Desconocida';
-  },
-  setPage(page) {
-    this.currentPage = page;
-  },
-  nextPage() {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-    }
-  },
-  prevPage() {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-    }
-  },
-  scrollToTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  },
-  toUpperCase(event) {
-    event.target.value = event.target.value.toUpperCase();
-  }
-},
-mounted() {
-  this.fetchPersonnel();
-  this.fetchRoles();
-  this.fetchAreas();
-}
 };
 </script>
 
+
+
 <style scoped>
 
-.card-body {
-  padding: 1.5rem; /* Mayor espacio en el contenedor */
+.page-container {
+  background-color: #007940;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 }
 
-.table td, .table th {
-  padding: 1rem; /* Mayor espacio en las celdas de la tabla */
+.card {
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.table {
-  margin-bottom: 1rem; /* Espacio inferior para la tabla */
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  text-align: center;
 }
 
-.input, .form-control {
-  margin-bottom: 1rem; /* Espacio entre los campos de entrada */
+.form-group {
+  margin-bottom: 1rem;
 }
 
-.pagination {
-  margin-top: 2rem; /* Espacio superior para la paginación */
+textarea {
+  resize: vertical;
 }
 
-.page-link {
-  cursor: pointer;
+.card-body{
+  position: relative;
+  padding: 20px;
 }
 
-.page-link-animation {
-  transition: background-color 0.3s, transform 0.3s;
-}
-
-.page-link:hover {
-  background-color: #e9ecef; /* Color de fondo al pasar el mouse */
-}
-
-.pagination .page-link {
-background-color: #28a745; /* Color verde de btn-success */
-color: white;
-border: 1px solid #28a745;
-padding: 0.5rem 0.75rem;
-font-size: 0.875rem;
-
-}
-
-.pagination .page-link:hover {
-background-color: #218838; /* Color verde oscuro al pasar el mouse */
-color: white;
-}
-
-.pagination .page-item.active .page-link {
-background-color: #218838; /* Color verde oscuro para la página activa */
-border-color: #218838;
-}
-
-h1{
-font-weight: bold;
-}
-
-span{
-font-weight: bold;
-}
-
-.card-text {
-font-size: 23px; /* Ajusta el tamaño de la palabra según sea necesario */
-color: #000; /* Ajusta el color de la palabra según sea necesario */
-
+.back-icon {
+  width: 25px;  /* Ajusta el ancho del ícono */
+  height: 25px; /* Ajusta la altura del ícono */
+  margin-right: 8px;
 }
 
 .back-link {
-text-decoration: none; /* Elimina el subrayado del enlace */
+  position: absolute;
+  top: 20px; /* Ajusta según sea necesario */
+  left: 20px; /* Ajusta según sea necesario */
+  display: flex;
+  align-items: center;
+  /* Otros estilos para el enlace, como padding o margin */
+  text-decoration: none; /* Elimina el subrayado del enlace */
+}
+
+.frequency-link {
+  display: flex;
+  align-items: center;
+  /* Otros estilos para el enlace, como padding o margin */
+  text-decoration: none; /* Elimina el subrayado del enlace */
+}
+
+.card-text {
+  font-size: 23px; /* Ajusta el tamaño de la palabra según sea necesario */
+  color: #000; /* Ajusta el color de la palabra según sea necesario */
+
+}
+.form-buttons {
+  margin-top: 20px; /* Espacio superior entre el formulario y los botones */
+  display: flex; /* Muestra los botones en una fila */
+  gap: 10px; /* Espacio entre los botones */
+  justify-content: flex-start; /* Alinea los botones a la izquierda */
 }
 </style>
