@@ -251,10 +251,10 @@ export default {
         this.personnel = personnelData;
 
         // Extraemos los nombres para los selects
-        this.operarioNames = personnelData.map(person => ({ name: person.nombre, id_area: person.id_area }));
+        this.operarioNames = personnelData.map(person => ({ name: person.name, id_area: person.id_area }));
         this.supervisorNames = personnelData
-          .filter(person => person.rol.includes('SUPERVISOR')) // Cambiado a includes para que reconozca 'SUPERVISOR'
-          .map(person => person.nombre);
+          .filter(person => person.role.startsWith('SUPERVISOR'))
+          .map(person => person.name);
       } catch (error) {
         console.error("Error al cargar el personal:", error);
       } finally {
@@ -283,34 +283,34 @@ export default {
       }
     },
     async submitForm() {
-      this.isLoading = true;
-      try {
-        // Asegúrate de que se envíe el nombre del área en el formulario
-        const formToSubmit = { ...this.form };
-        const selectedArea = this.areaNames.find(a => a.id_area === formToSubmit.area);
-        formToSubmit.area = selectedArea ? selectedArea.nombre_area : "";
+  this.isLoading = true;
+  try {
+    // Asegúrate de que se envíe el nombre del área en el formulario
+    const formToSubmit = { ...this.form };
+    formToSubmit.area = this.areaNames.find(a => a.id_area === formToSubmit.area).name_area;
 
-        const response = await axios.post(
-          `${process.env.VUE_APP_API_URL}/submit-form`,
-          formToSubmit
-        );
+    const response = await axios.post(
+      `${process.env.VUE_APP_API_URL}/submit-form`,
+      formToSubmit
+    );
+    
+    if (response.data && response.data.message) {
+      alert(response.data.message); // Muestra el mensaje de éxito
+    } else {
+      alert("Formulario guardado exitosamente"); // Mensaje predeterminado si no hay un mensaje específico
+    }
 
-        if (response.data && response.data.message) {
-          alert(response.data.message); // Muestra el mensaje de éxito
-        } else {
-          alert("Formulario guardado exitosamente"); // Mensaje predeterminado si no hay un mensaje específico
-        }
+    this.resetForm(); // Resetea el formulario después de guardar
 
-        this.resetForm(); // Resetea el formulario después de guardar
+  } catch (error) {
+    console.error("Error al guardar el formulario:", error);
+    const errorMessage = error.response?.data?.error || "Hubo un error al guardar el formulario. Por favor, inténtelo de nuevo.";
+    alert(errorMessage);
+  } finally {
+    this.isLoading = false;
+  }
+},
 
-      } catch (error) {
-        console.error("Error al guardar el formulario:", error);
-        const errorMessage = error.response?.data?.error || "Hubo un error al guardar el formulario. Por favor, inténtelo de nuevo.";
-        alert(errorMessage);
-      } finally {
-        this.isLoading = false;
-      }
-    },
     async downloadExcel() {
       this.isLoading = true;
       try {
