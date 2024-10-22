@@ -1,11 +1,10 @@
 from dotenv import load_dotenv
 import os
+import psycopg2
 from flask import Flask, request, jsonify, render_template, send_file, send_from_directory
 from flask_cors import CORS
-from supabase import create_client, Client
 from io import BytesIO
 from openpyxl import Workbook
-from waitress import serve  # Importa el servidor Waitress
 
 # Cargar las variables de entorno
 load_dotenv()
@@ -16,10 +15,15 @@ frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:8080')
 
 CORS(app, resources={r"/*": {"origins": ["https://sucesores-app.vercel.app", frontend_url]}})
 
-# Configuración de Supabase
-SUPABASE_URL = os.getenv('SUPABASE_URL')
-SUPABASE_KEY = os.getenv('SUPABASE_KEY')
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Conexión a PostgreSQL
+def get_db_connection():
+    conn = psycopg2.connect(
+        host=os.getenv('DB_HOST', 'localhost'),
+        database=os.getenv('DB_NAME'),
+        user=os.getenv('DB_USER'),
+        password=os.getenv('DB_PASSWORD'),
+    )
+    return conn
 
 @app.route('/')
 def index():
@@ -29,34 +33,29 @@ def index():
 def submit_form():
     try:
         data = request.json
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-        # Insertar los datos en la tabla "inspection" de Supabase
-        response = supabase.table('inspection').insert({
-            'fecha': data['fecha'],
-            'turno': data['turno'],
-            'area': data['area'],
-            'nombre_operario': data['nombre_operario'],
-            'manos_limpias': data['manos_limpias'],
-            'uniforme_limpio': data['uniforme_limpio'],
-            'no_objetos_personales': data['no_objetos_personales'],
-            'heridas_protegidas': data['heridas_protegidas'],
-            'cofia_bien_puesta': data['cofia_bien_puesta'],
-            'mascarilla_bien_colocada': data['mascarilla_bien_colocada'],
-            'protector_auditivo': data['protector_auditivo'],
-            'unas_cortas': data['unas_cortas'],
-            'guantes_limpios': data['guantes_limpios'],
-            'pestanas': data['pestanas'],
-            'barba_bigote': data['barba_bigote'],
-            'medicamento_autorizado': data['medicamento_autorizado'],
-            'supervisor': data['supervisor'],
-            'observaciones': data['observaciones']
-        }).execute()
+        # Insertar los datos en la tabla "inspection" de PostgreSQL
+        cur.execute(''' 
+            INSERT INTO inspection 
+            (fecha, turno, area, nombre_operario, manos_limpias, uniforme_limpio, no_objetos_personales, 
+             heridas_protegidas, cofia_bien_puesta, mascarilla_bien_colocada, protector_auditivo, 
+             unas_cortas, guantes_limpios, pestanas, barba_bigote, medicamento_autorizado, supervisor, observaciones)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (
+            data['fecha'], data['turno'], data['area'], data['nombre_operario'], data['manos_limpias'], 
+            data['uniforme_limpio'], data['no_objetos_personales'], data['heridas_protegidas'], 
+            data['cofia_bien_puesta'], data['mascarilla_bien_colocada'], data['protector_auditivo'], 
+            data['unas_cortas'], data['guantes_limpios'], data['pestanas'], data['barba_bigote'], 
+            data['medicamento_autorizado'], data['supervisor'], data['observaciones']
+        ))
 
-        # Verificar si hubo algún error en la respuesta
-        if response.data:
-            return jsonify({"message": "Formulario guardado en la base de datos."}), 200
-        else:
-            return jsonify({"error": "Error al guardar en la base de datos"}), 500
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"message": "Formulario guardado en la base de datos."}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -64,9 +63,10 @@ def submit_form():
 @app.route('/download-inspection', methods=['GET'])
 def download_inspection():
     try:
-        # Obtener datos de la base de datos
-        response = supabase.table('inspection').select("*").execute()
-        data = response.data
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM inspection')
+        data = cur.fetchall()
 
         # Crear un libro de trabajo de Excel
         wb = Workbook()
@@ -82,27 +82,10 @@ def download_inspection():
 
         # Agregar datos
         for record in data:
-            row = [
-                record.get("fecha"),
-                record.get("turno"),
-                record.get("area"),
-                record.get("nombre_operario"),
-                record.get("manos_limpias"),
-                record.get("uniforme_limpio"),
-                record.get("no_objetos_personales"),
-                record.get("heridas_protegidas"),
-                record.get("cofia_bien_puesta"),
-                record.get("mascarilla_bien_colocada"),
-                record.get("protector_auditivo"),
-                record.get("unas_cortas"),
-                record.get("guantes_limpios"),
-                record.get("pestanas"),
-                record.get("barba_bigote"),
-                record.get("medicamento_autorizado"),
-                record.get("supervisor"),
-                record.get("observaciones")
-            ]
-            ws.append(row)
+            ws.append(list(record))
+
+        cur.close()
+        conn.close()
 
         # Guardar el archivo en un objeto BytesIO y enviarlo
         output = BytesIO()
@@ -119,51 +102,54 @@ def download_inspection():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
 
-
 @app.route('/get-personnel', methods=['GET'])
 def get_personnel():
     try:
-        # Consultar la base de datos el personal
-        response = supabase.table('personnel').select('*').execute()
-        data = response.data
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM personnel')
+        data = cur.fetchall()
 
-        # Asegurarse de que data es una lista
-        if data is None:
-            data = []
+        cur.close()
+        conn.close()
 
         return jsonify({"personnel": data}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-
 @app.route('/get-areas', methods=['GET'])
 def get_areas():
     try:
-        # Consultar la base de datos las areas
-        response = supabase.table('area').select('*').execute()
-        data = response.data
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM area')
+        data = cur.fetchall()
+
+        cur.close()
+        conn.close()
 
         return jsonify({"areas": data}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
 @app.route('/get-roles', methods=['GET'])
 def get_roles():
     try:
-        # Consultar la base de datos y obtener cargos
-        response = supabase.table('personnel').select('role').execute()
-        data = response.data
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT DISTINCT role FROM personnel')
+        data = cur.fetchall()
 
-        # Obtener los cargos
-        roles = list(set(person['role'] for person in data if person['role']))
+        cur.close()
+        conn.close()
+
+        roles = [role[0] for role in data]
 
         return jsonify({"roles": roles}), 200
 
@@ -174,16 +160,19 @@ def get_roles():
 def add_personnel():
     try:
         data = request.json
-        response = supabase.table('personnel').insert({
-            'name': data['name'],
-            'role': data['role'],
-            'id_area': data['id_area']
-        }).execute()
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-        if response.data:
-            return jsonify({"message": "Personal agregado con éxito."}), 200
-        else:
-            return jsonify({"error": "Error al agregar personal"}), 500
+        cur.execute(''' 
+            INSERT INTO personnel (name, role, id_area)
+            VALUES (%s, %s, %s)
+        ''', (data['name'], data['role'], data['id_area']))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"message": "Personal agregado con éxito."}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -192,16 +181,20 @@ def add_personnel():
 def update_personnel():
     try:
         data = request.json
-        response = supabase.table('personnel').update({
-            'name': data['name'],
-            'role': data['role'],
-            'id_area': data['id_area']
-        }).eq('id', data['id']).execute()
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-        if response.data:
-            return jsonify({"message": "Personal actualizado con éxito."}), 200
-        else:
-            return jsonify({"error": "Error al actualizar personal"}), 500
+        cur.execute(''' 
+            UPDATE personnel
+            SET name = %s, role = %s, id_area = %s
+            WHERE id = %s
+        ''', (data['name'], data['role'], data['id_area'], data['id']))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"message": "Personal actualizado con éxito."}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -209,12 +202,16 @@ def update_personnel():
 @app.route('/delete-personnel/<id>', methods=['DELETE'])
 def delete_personnel(id):
     try:
-        response = supabase.table('personnel').delete().eq('id', id).execute()
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-        if response.data:
-            return jsonify({"message": "Personal eliminado con éxito."}), 200
-        else:
-            return jsonify({"error": "Error al eliminar personal"}), 500
+        cur.execute('DELETE FROM personnel WHERE id = %s', (id,))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"message": "Personal eliminado con éxito."}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -222,20 +219,20 @@ def delete_personnel(id):
 @app.route('/api/inspection-frequency', methods=['GET'])
 def get_inspection_frequency():
     try:
-        # Llamada a la función almacenada de Supabase
-        response = supabase.rpc('get_inspection_frequency').execute()
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-        # Verifica si la solicitud fue exitosa
-        if not response.data:
-            return jsonify({'error': f"Error en la consulta: {response}"}), 500
-        
-        # Devuelve los datos si no hay errores
-        return jsonify(response.data), 200
+        # Llamada a la función almacenada en PostgreSQL
+        cur.execute('SELECT * FROM get_inspection_frequency()')
+        data = cur.fetchall()
+
+        cur.close()
+        conn.close()
+
+        return jsonify(data), 200
 
     except Exception as e:
-        # Maneja otros errores
         return jsonify({'error': f"Error interno del servidor: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    # En lugar de app.run(), usaremos Waitress para servir la aplicación en producción.
-    serve(app, host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
