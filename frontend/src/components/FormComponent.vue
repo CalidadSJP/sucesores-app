@@ -253,7 +253,7 @@ export default {
         // Extraemos los nombres para los selects
         this.operarioNames = personnelData.map(person => ({ name: person.name, id_area: person.id_area }));
         this.supervisorNames = personnelData
-          .filter(person => person.role.startsWith('SUPERVISOR'))
+          .filter(person => person.role && person.role.startsWith('SUPERVISOR'))
           .map(person => person.name);
       } catch (error) {
         console.error("Error al cargar el personal:", error);
