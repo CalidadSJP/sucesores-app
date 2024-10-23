@@ -13,7 +13,16 @@ load_dotenv()
 app = Flask(__name__, static_folder='static', template_folder='templates')
 frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:8080')
 
-CORS(app, resources={r"/*": {"origins": ["https://sucesores-app.vercel.app", frontend_url]}})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Private-Network"] = "true"
+    response.headers["Content-Type"] = "application/json"
+    return response
 
 # Conexión a PostgreSQL
 def get_db_connection():
@@ -108,6 +117,9 @@ def favicon():
 
 @app.route('/get-personnel', methods=['GET'])
 def get_personnel():
+    if request.method == 'OPTIONS':
+        # Responder con los encabezados CORS adecuados para solicitudes preflight
+        return jsonify({'status': 'OK'}), 200
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -124,6 +136,9 @@ def get_personnel():
 
 @app.route('/get-areas', methods=['GET'])
 def get_areas():
+    if request.method == 'OPTIONS':
+        # Responder con los encabezados CORS adecuados para solicitudes preflight
+        return jsonify({'status': 'OK'}), 200
     try:
         conn = get_db_connection()
         cur = conn.cursor()

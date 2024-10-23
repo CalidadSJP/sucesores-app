@@ -242,46 +242,56 @@ export default {
   },
   methods: {
     async loadPersonnel() {
-      this.isLoading = true;
-      try {
-        const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-personnel`);
-        const personnelData = response.data.personnel;
+  this.isLoading = true;
+  try {
+    const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-personnel`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const personnelData = response.data.personnel;
 
-        // Guardamos todos los datos de personnel para poder acceder a id_area
-        this.personnel = personnelData;
+    // Guardamos todos los datos de personnel para poder acceder a id_area
+    this.personnel = personnelData;
 
-        // Extraemos los nombres para los selects
-        this.operarioNames = personnelData.map(person => ({ name: person.name, id_area: person.id_area }));
-        this.supervisorNames = personnelData
-          .filter(person => person.role && person.role.startsWith('SUPERVISOR'))
-          .map(person => person.name);
-      } catch (error) {
-        console.error("Error al cargar el personal:", error);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    async loadAreas() {
-      this.isLoading = true;
-      try {
-        const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-areas`);
-        this.areaNames = response.data.areas;
-      } catch (error) {
-        console.error("Error al cargar áreas:", error);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    filterOperarios() {
-      const selectedArea = this.form.area;
-      if (selectedArea) {
-        this.filteredOperarios = this.operarioNames
-          .filter(person => person.id_area === selectedArea)
-          .map(person => person.name);
-      } else {
-        this.filteredOperarios = this.operarioNames.map(person => person.name);
-      }
-    },
+    // Extraemos los nombres para los selects
+    this.operarioNames = personnelData.map(person => ({ name: person.name, id_area: person.id_area }));
+    this.supervisorNames = personnelData
+      .filter(person => person.role && person.role.startsWith('SUPERVISOR'))
+      .map(person => person.name);
+  } catch (error) {
+    console.error("Error al cargar el personal:", error);
+  } finally {
+    this.isLoading = false;
+  }
+},
+
+async loadAreas() {
+  this.isLoading = true;
+  try {
+    const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-areas`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    this.areaNames = response.data.areas;
+  } catch (error) {
+    console.error("Error al cargar áreas:", error);
+  } finally {
+    this.isLoading = false;
+  }
+},
+
+filterOperarios() {
+  const selectedArea = this.form.area;
+  if (selectedArea) {
+    this.filteredOperarios = this.operarioNames
+      .filter(person => person.id_area === selectedArea)
+      .map(person => person.name);
+  } else {
+    this.filteredOperarios = this.operarioNames.map(person => person.name);
+  }
+},
     async submitForm() {
   this.isLoading = true;
   try {
