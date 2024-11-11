@@ -39,15 +39,21 @@ export default {
   },
   methods: {
     async loadFrequencies() {
-      try {
-        const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/inspection-frequency`);
-        // Ordenar por frecuencia ascendente
-        this.frequencies = response.data.sort((a, b) => a.frecuencia - b.frecuencia);
-      } catch (error) {
-        console.error('Error loading frequencies:', error.message);
-        alert('Hubo un error al cargar los datos. Por favor, inténtalo de nuevo más tarde.');
-      }
+  try {
+    const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/inspection-frequency`);
+    
+    if (response.data && Array.isArray(response.data)) {
+      // Ordenar por frecuencia ascendente
+      this.frequencies = response.data.sort((a, b) => a.frecuencia - b.frecuencia);
+    } else {
+      console.error('Formato inesperado de datos:', response.data);
     }
+  } catch (error) {
+    console.error('Error loading frequencies:', error.message);
+    alert('Hubo un error al cargar los datos. Por favor, inténtalo de nuevo más tarde.');
+  }
+}
+
   }
 };
 </script>

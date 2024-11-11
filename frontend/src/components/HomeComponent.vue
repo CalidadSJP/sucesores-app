@@ -9,8 +9,8 @@
         <p class="card-text">Seleccione una de las opciones:</p>
         <div class="d-grid gap-2 col-6 mx-auto">
           <router-link to="/form" class="btn btn-outline-success">Formulario Control Personal</router-link>
-          <router-link to="/weight" class="btn btn-outline-success">Control Pesos</router-link>
-          <router-link to="/personnel" class="btn btn-outline-primary">Gestionar Personal</router-link>
+          <!--<router-link to="/weight" class="btn btn-outline-success">Control Pesos</router-link>-->
+          <!--<router-link to="/personnel" class="btn btn-outline-primary">Gestionar Personal</router-link>-->
           <!-- Se puede añadir más opciones aquí para futuras funcionalidades -->
           <!--<router-link to="/otra-opcion" class="btn btn-secondary">Otra Opción</router-link>-->
         </div>

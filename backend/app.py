@@ -11,18 +11,9 @@ load_dotenv()
 
 # Crear la instancia de Flask
 app = Flask(__name__, static_folder='static', template_folder='templates')
-frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:8080')
 
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": ["http://192.168.0.251:8080"]}})
 
-@app.after_request
-def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    response.headers["Access-Control-Allow-Private-Network"] = "true"
-    response.headers["Content-Type"] = "application/json"
-    return response
 
 # Conexión a PostgreSQL
 def get_db_connection():
@@ -42,39 +33,59 @@ def index():
 def submit_form():
     try:
         data = request.json
+        print(f"Datos recibidos: {data}")  # Log para ver los datos recibidos
+
+        # Establecer conexión con la base de datos
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # Insertar los datos en la tabla "inspection" de PostgreSQL
+        # Reemplazar valores nulos en los datos si es necesario (por ejemplo, si 'observaciones' puede ser nulo)
+        observaciones = data.get('observaciones', None)
+
+        # Ejecutar consulta SQL para insertar datos
         cur.execute(''' 
             INSERT INTO inspection 
             (fecha, turno, area, nombre_operario, manos_limpias, uniforme_limpio, no_objetos_personales, 
              heridas_protegidas, cofia_bien_puesta, mascarilla_bien_colocada, protector_auditivo, 
              unas_cortas, guantes_limpios, pestanas, barba_bigote, medicamento_autorizado, supervisor, observaciones)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             data['fecha'], data['turno'], data['area'], data['nombre_operario'], data['manos_limpias'], 
             data['uniforme_limpio'], data['no_objetos_personales'], data['heridas_protegidas'], 
             data['cofia_bien_puesta'], data['mascarilla_bien_colocada'], data['protector_auditivo'], 
             data['unas_cortas'], data['guantes_limpios'], data['pestanas'], data['barba_bigote'], 
-            data['medicamento_autorizado'], data['supervisor'], data['observaciones']
+            data['medicamento_autorizado'], data['supervisor'], observaciones  # Observaciones se maneja para ser None si está vacío
         ))
 
+        # Confirmar los cambios en la base de datos
         conn.commit()
+
+        # Cerrar cursor y conexión
         cur.close()
         conn.close()
 
         return jsonify({"message": "Formulario guardado en la base de datos."}), 200
 
     except Exception as e:
+        print(f"Error general: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/download-inspection', methods=['GET'])
 def download_inspection():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute('SELECT * FROM inspection')
+
+        # Seleccionar solo las columnas que deseas incluir en el Excel
+        cur.execute('''
+            SELECT fecha, turno, area, nombre_operario, manos_limpias, uniforme_limpio, 
+                   no_objetos_personales, heridas_protegidas, cofia_bien_puesta, 
+                   mascarilla_bien_colocada, protector_auditivo, unas_cortas, 
+                   guantes_limpios, pestanas, barba_bigote, medicamento_autorizado, 
+                   supervisor, observaciones
+            FROM inspection
+        ''')
         data = cur.fetchall()
 
         # Crear un libro de trabajo de Excel
@@ -111,15 +122,13 @@ def download_inspection():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
 
 @app.route('/get-personnel', methods=['GET'])
 def get_personnel():
-    if request.method == 'OPTIONS':
-        # Responder con los encabezados CORS adecuados para solicitudes preflight
-        return jsonify({'status': 'OK'}), 200
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -136,9 +145,6 @@ def get_personnel():
 
 @app.route('/get-areas', methods=['GET'])
 def get_areas():
-    if request.method == 'OPTIONS':
-        # Responder con los encabezados CORS adecuados para solicitudes preflight
-        return jsonify({'status': 'OK'}), 200
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -231,7 +237,7 @@ def delete_personnel(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/inspection-frequency', methods=['GET'])
+@app.route('/inspection-frequency', methods=['GET'])
 def get_inspection_frequency():
     try:
         conn = get_db_connection()
@@ -241,13 +247,17 @@ def get_inspection_frequency():
         cur.execute('SELECT * FROM get_inspection_frequency()')
         data = cur.fetchall()
 
+        # Mapea los resultados a un diccionario con claves nombre_operario y frecuencia
+        results = [{'nombre_operario': row[0], 'frecuencia': row[1]} for row in data]
+
         cur.close()
         conn.close()
 
-        return jsonify(data), 200
+        return jsonify(results), 200
 
     except Exception as e:
         return jsonify({'error': f"Error interno del servidor: {str(e)}"}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))

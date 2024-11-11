@@ -153,8 +153,13 @@ export default {
     },
     sortedFilteredPersonnelList() {
       return this.filteredPersonnelList
-        .slice()  // Create a copy of the filtered list
-        .sort((a, b) => a.name.localeCompare(b.name));  // Sort alphabetically by name
+        .slice()  // Crear una copia de la lista filtrada
+        .sort((a, b) => {
+          const nameA = a.name || '';  // Si 'name' es undefined o null, usa una cadena vacía
+          const nameB = b.name || '';  // Lo mismo para 'name' en el segundo objeto
+
+          return nameA.localeCompare(nameB);  // Comparar las cadenas
+        });
     },
     paginatedPersonnelList() {
       const start = (this.currentPage - 1) * this.perPage;
@@ -168,24 +173,34 @@ export default {
   methods: {
     async fetchPersonnel() {
       try {
-        const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-personnel`);
-        this.personnelList = response.data.personnel;
+        const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-personnel`);
+        // Transformar los datos de arrays a objetos
+        this.personnelList = response.data.personnel.map(item => ({
+          id: item[0],
+          name: item[1],
+          role: item[2],
+          id_area: item[3]
+        }));
       } catch (error) {
         console.error('Error al obtener el personal:', error);
       }
     },
     async fetchRoles() {
       try {
-        const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-roles`);
-        this.roles = response.data.roles;
+        const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-roles`);
+        this.roles = response.data.roles;  // Asegúrate de que los roles lleguen en el formato adecuado
       } catch (error) {
         console.error('Error al obtener los roles:', error);
       }
     },
     async fetchAreas() {
       try {
-        const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-areas`);
-        this.areas = response.data.areas;
+        const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-areas`);
+        // Transformar la respuesta para que sea más accesible
+        this.areas = response.data.areas.map(area => ({
+          id_area: area[0],  // El primer valor es el id_area
+          name_area: area[1] // El segundo valor es el name_area
+        }));
       } catch (error) {
         console.error('Error al obtener las áreas:', error);
       }
@@ -193,7 +208,7 @@ export default {
     async addPersonnel() {
       if (confirm('¿Estás seguro de que deseas agregar este usuario?')) {
         try {
-          await axios.post(`${process.env.VUE_APP_API_URL}/add-personnel`, this.person);
+          await axios.post(`${process.env.VUE_APP_API_URL}/api/add-personnel`, this.person);
           alert('Usuario agregado exitosamente.');
           this.fetchPersonnel();
           this.person = { id: '', name: '', role: '', id_area: '' };
@@ -211,7 +226,7 @@ export default {
     async updatePersonnel() {
       if (confirm('¿Estás seguro de que deseas editar este usuario?')) {
         try {
-          await axios.put(`${process.env.VUE_APP_API_URL}/update-personnel`, this.person);
+          await axios.put(`${process.env.VUE_APP_API_URL}/api/update-personnel`, this.person);
           alert('Usuario actualizado exitosamente.');
           this.fetchPersonnel();
           this.cancelEdit();
@@ -227,7 +242,7 @@ export default {
     async deletePersonnel(id) {
       if (confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
         try {
-          await axios.delete(`${process.env.VUE_APP_API_URL}/delete-personnel/${id}`);
+          await axios.delete(`${process.env.VUE_APP_API_URL}/api/delete-personnel/${id}`);
           alert('Usuario eliminado exitosamente.');
           this.fetchPersonnel();
         } catch (error) {
@@ -266,6 +281,8 @@ export default {
   }
 };
 </script>
+
+
   
 <style scoped>
 

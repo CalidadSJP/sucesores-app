@@ -167,10 +167,7 @@
                   <span v-if="isLoading" class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
                   {{ isLoading ? 'Guardando...' : 'Enviar' }}
                 </button>
-                <button
-                  @click="scrollToTop"
-                  class="btn btn-secondary scroll-to-top w-50"
-                >
+                <button @click.prevent="scrollToTop" class="btn btn-secondary scroll-to-top w-50">
                   Regresar
                 </button>
               </div>
@@ -234,6 +231,7 @@ export default {
       supervisorNames: [],
       areaNames: [],
       personnel: [], // Guarda los datos del personal completo, incluyendo el id_area
+      filteredOperarios: [], // Variable para filtrar operarios según el área seleccionada
     };
   },
   async created() {
@@ -244,87 +242,103 @@ export default {
     async loadPersonnel() {
   this.isLoading = true;
   try {
-    const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-personnel`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    const personnelData = response.data.personnel;
+    const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-personnel`);
+    const personnelData = response.data.personnel || []; // Accede al arreglo dentro de 'personnel'
 
-    // Guardamos todos los datos de personnel para poder acceder a id_area
-    this.personnel = personnelData;
+    // Verificamos si personnelData es un arreglo
+    if (!Array.isArray(personnelData)) {
+      throw new Error("La respuesta no es un arreglo");
+    }
+
+    // Convertimos el arreglo de arreglos a un arreglo de objetos
+    this.personnel = personnelData.map(item => ({
+      id: item[0],
+      nombre: item[1],
+      role: item[2],
+      id_area: item[3]
+    }));
 
     // Extraemos los nombres para los selects
-    this.operarioNames = personnelData.map(person => ({ name: person.name, id_area: person.id_area }));
-    this.supervisorNames = personnelData
-      .filter(person => person.role && person.role.startsWith('SUPERVISOR'))
-      .map(person => person.name);
+    this.operarioNames = this.personnel.map(person => ({ name: person.nombre, id_area: person.id_area }));
+    this.supervisorNames = this.personnel
+      .filter(person => person.role.startsWith('SUPERVISOR'))
+      .map(person => person.nombre);
   } catch (error) {
     console.error("Error al cargar el personal:", error);
+    alert("Hubo un error al cargar el personal. Por favor, inténtelo de nuevo.");
   } finally {
     this.isLoading = false;
   }
 },
-
 async loadAreas() {
   this.isLoading = true;
   try {
-    const response = await axios.get(`${process.env.VUE_APP_API_URL}/get-areas`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    this.areaNames = response.data.areas;
+    const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-areas`);
+    // Acceder correctamente al arreglo de áreas
+    this.areaNames = response.data.areas.map(area => ({ id_area: area[0], name_area: area[1] })) || [];
   } catch (error) {
     console.error("Error al cargar áreas:", error);
   } finally {
     this.isLoading = false;
   }
 },
-
-filterOperarios() {
-  const selectedArea = this.form.area;
-  if (selectedArea) {
-    this.filteredOperarios = this.operarioNames
-      .filter(person => person.id_area === selectedArea)
-      .map(person => person.name);
-  } else {
-    this.filteredOperarios = this.operarioNames.map(person => person.name);
-  }
-},
+    filterOperarios() {
+      const selectedArea = this.form.area;
+      if (selectedArea) {
+        this.filteredOperarios = this.operarioNames
+          .filter(person => person.id_area === selectedArea)
+          .map(person => person.name);
+      } else {
+        this.filteredOperarios = this.operarioNames.map(person => person.name);
+      }
+    },
     async submitForm() {
   this.isLoading = true;
   try {
-    // Asegúrate de que se envíe el nombre del área en el formulario
+    // Copia el formulario actual
     const formToSubmit = { ...this.form };
-    formToSubmit.area = this.areaNames.find(a => a.id_area === formToSubmit.area).name_area;
 
-    const response = await axios.post(
-      `${process.env.VUE_APP_API_URL}/submit-form`,
-      formToSubmit
-    );
-    
-    if (response.data && response.data.message) {
-      alert(response.data.message); // Muestra el mensaje de éxito
-    } else {
-      alert("Formulario guardado exitosamente"); // Mensaje predeterminado si no hay un mensaje específico
+    // Validar que areaNames contenga el área seleccionada
+    const selectedArea = this.areaNames.find(a => a.id_area === formToSubmit.area);
+    if (!selectedArea) {
+      throw new Error("Área seleccionada no válida.");
     }
 
-    this.resetForm(); // Resetea el formulario después de guardar
+    // Asignar el nombre del área al formulario
+    formToSubmit.area = selectedArea.name_area;
+
+    // Hacer la solicitud POST al backend (ajustado para que coincida con la ruta del backend)
+    const response = await axios.post(
+      `${process.env.VUE_APP_API_URL}/api/submit-form`, // Ajustado si no usas "/api" en tu ruta
+      formToSubmit
+    );
+
+    // Verificar si la respuesta es exitosa
+    if (response.data && response.data.message) {
+      alert(response.data.message);
+    } else {
+      alert("Formulario guardado exitosamente");
+    }
+
+    // Reiniciar el formulario después de guardar
+    this.resetForm();
 
   } catch (error) {
     console.error("Error al guardar el formulario:", error);
+
+    // Manejar el mensaje de error
     const errorMessage = error.response?.data?.error || "Hubo un error al guardar el formulario. Por favor, inténtelo de nuevo.";
     alert(errorMessage);
+
   } finally {
-    this.isLoading = false;
+    this.isLoading = false; // Detener la animación de carga
   }
 },
 
     async downloadExcel() {
       this.isLoading = true;
       try {
-        const response = await axios.get(`${process.env.VUE_APP_API_URL}/download-inspection`, {
+        const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/download-inspection`, {
           responseType: 'blob'
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -364,7 +378,7 @@ filterOperarios() {
       };
     },
     scrollToTop() {
-      window.scrollTo(0, 0);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     },
   },
 };
