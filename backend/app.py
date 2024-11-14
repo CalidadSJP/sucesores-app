@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import os
 import psycopg2
+from psycopg2.extras import RealDictCursor
 from flask import Flask, request, jsonify, render_template, send_file, send_from_directory
 from flask_cors import CORS
 from io import BytesIO
@@ -181,10 +182,17 @@ def get_roles():
 def add_personnel():
     try:
         data = request.json
+        print(f"Datos recibidos para añadir personal: {data}")  # Ver los datos recibidos
+
+        # Verifica que los datos que recibes son correctos
+        if not all(key in data for key in ('name', 'role', 'id_area')):
+            return jsonify({"error": "Faltan campos obligatorios."}), 400
+
         conn = get_db_connection()
         cur = conn.cursor()
 
-        cur.execute(''' 
+        # Añadir los datos a la base de datos
+        cur.execute('''
             INSERT INTO personnel (name, role, id_area)
             VALUES (%s, %s, %s)
         ''', (data['name'], data['role'], data['id_area']))
@@ -196,10 +204,14 @@ def add_personnel():
         return jsonify({"message": "Personal agregado con éxito."}), 200
 
     except Exception as e:
+        print(f"Error al añadir personal: {str(e)}")  # Mostrar el error
         return jsonify({"error": str(e)}), 500
 
-@app.route('/update-personnel', methods=['PUT'])
-def update_personnel():
+
+
+
+@app.route('/update-personnel/<int:id>', methods=['PUT'])
+def update_personnel(id):
     try:
         data = request.json
         conn = get_db_connection()
@@ -209,7 +221,7 @@ def update_personnel():
             UPDATE personnel
             SET name = %s, role = %s, id_area = %s
             WHERE id = %s
-        ''', (data['name'], data['role'], data['id_area'], data['id']))
+        ''', (data['name'], data['role'], data['id_area'], id))
 
         conn.commit()
         cur.close()
@@ -257,6 +269,32 @@ def get_inspection_frequency():
 
     except Exception as e:
         return jsonify({'error': f"Error interno del servidor: {str(e)}"}), 500
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()  # Recibe los datos del formulario (username, password)
+    username = data.get('username')
+    password = data.get('password')
+
+    # Conectar a la base de datos y verificar el usuario y contraseña
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("SELECT * FROM users WHERE username = %s", (username,))
+    user = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if user and user['password'] == password:  # Verificación simple de la contraseña
+        return jsonify({
+            'success': True,
+            'user_id': user['id']  # Suponiendo que cada usuario tiene un ID único
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'message': 'Usuario o contraseña incorrectos'
+        }), 401
 
 
 if __name__ == '__main__':
