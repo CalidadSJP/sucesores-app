@@ -216,14 +216,22 @@ export default {
       }
     },
     async deletePersonnel(id) {
-      try {
-        await axios.delete(`${process.env.VUE_APP_API_URL}/api/delete-personnel/${id}`);
-        alert('Usuario eliminado exitosamente.');
-        this.fetchPersonnel();
-      } catch (error) {
-        console.error('Error al eliminar personal:', error);
-      }
-    },
+  // Solicitar confirmación antes de eliminar
+  const confirmation = window.confirm('¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.');
+
+  // Proceder solo si el usuario confirma
+  if (confirmation) {
+    try {
+      await axios.delete(`${process.env.VUE_APP_API_URL}/api/delete-personnel/${id}`);
+      alert('Usuario eliminado exitosamente.');
+      this.fetchPersonnel(); // Refrescar la lista de personal después de eliminar
+    } catch (error) {
+      console.error('Error al eliminar personal:', error);
+    }
+  } else {
+    alert('Eliminación cancelada.');
+  }
+},
     cancelEdit() {
       this.resetForm();
     },

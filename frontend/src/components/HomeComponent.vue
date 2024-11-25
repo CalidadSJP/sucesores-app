@@ -3,14 +3,14 @@
   <div class="container mt-5">
     <div class="card text-center shadow">
       <div class="card-header">
-        <h2>Control de Calidad</h2>
+        <h2>Sucesores-App</h2>
       </div>
       <div class="card-body">
         <p class="card-text">Seleccione una de las opciones:</p>
         <div class="d-grid gap-2 col-6 mx-auto">
           <router-link to="/personnel" class="btn btn-outline-primary">Gestionar Personal</router-link>
-          <router-link to="/form" class="btn btn-outline-success">Formulario Control Personal</router-link>
-          <!--<router-link to="/weight" class="btn btn-outline-success">Control Pesos</router-link>-->
+          <router-link to="/control-home" class="btn btn-outline-success">Control Personal</router-link>
+          <!--<router-link to="/additive-storage-form" class="btn btn-outline-success">Control Pesos</router-link>-->
           <!-- Se puede añadir más opciones aquí para futuras funcionalidades -->
           <!--<router-link to="/otra-opcion" class="btn btn-secondary">Otra Opción</router-link>-->
         </div>
@@ -34,7 +34,7 @@ export default {
 }
 
 .card-header {
-  background-color: #007940;
+  background-color: #019c54;
   color: white;
 }
 

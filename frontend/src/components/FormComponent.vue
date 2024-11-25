@@ -16,7 +16,7 @@
           <div class="card-body">
             <form @submit.prevent="submitForm">
               <!-- Encabezado -->
-              <router-link to="/" class="back-link">
+              <router-link to="/control-home" class="back-link">
                 <img
                   src="@/assets/home.png"
                   alt="Regresar"
@@ -172,11 +172,6 @@
                 </button>
               </div>
               <br>
-              <button class="btn btn-primary w-100" @click="downloadExcel" :disabled="isLoading">
-                <span v-if="isLoading" class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
-                <span v-else>Descargar registro</span>
-              </button>
-              <br><br><br>
             </form>
           </div>
         </div>
@@ -335,26 +330,6 @@ async loadAreas() {
   }
 },
 
-    async downloadExcel() {
-      this.isLoading = true;
-      try {
-        const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/download-inspection`, {
-          responseType: 'blob'
-        });
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', 'data.xlsx');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (error) {
-        console.error("Error al descargar el archivo Excel:", error);
-        alert("Error al descargar el archivo Excel.");
-      } finally {
-        this.isLoading = false;
-      }
-    },
     resetForm() {
       this.form = {
         fecha: "",

@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify, render_template, send_file, send_from
 from flask_cors import CORS
 from io import BytesIO
 from openpyxl import Workbook
+from werkzeug.utils import secure_filename
 
 # Cargar las variables de entorno
 load_dotenv()
@@ -25,6 +26,11 @@ def get_db_connection():
         password=os.getenv('DB_PASSWORD'),
     )
     return conn
+
+# Configurar la carpeta de carga
+UPLOAD_FOLDER = 'D:/Projects/control_personal/backend/uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limitar el tamaño máximo del archivo a 16 MB
 
 @app.route('/')
 def index():
@@ -123,7 +129,6 @@ def download_inspection():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
@@ -207,9 +212,6 @@ def add_personnel():
         print(f"Error al añadir personal: {str(e)}")  # Mostrar el error
         return jsonify({"error": str(e)}), 500
 
-
-
-
 @app.route('/update-personnel/<int:id>', methods=['PUT'])
 def update_personnel(id):
     try:
@@ -270,7 +272,6 @@ def get_inspection_frequency():
     except Exception as e:
         return jsonify({'error': f"Error interno del servidor: {str(e)}"}), 500
 
-
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()  # Recibe los datos del formulario (username, password)
@@ -295,6 +296,109 @@ def login():
             'success': False,
             'message': 'Usuario o contraseña incorrectos'
         }), 401
+
+@app.route('/login-supervisor', methods=['POST'])
+def login_Supervisor():
+    data = request.get_json()  # Recibe los datos del formulario (username, password)
+    username = data.get('username')
+    password = data.get('password')
+
+    # Conectar a la base de datos y verificar el usuario y contraseña
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("SELECT * FROM supervisors WHERE username = %s", (username,))
+    user = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if user and user['password'] == password:  # Verificación simple de la contraseña
+        return jsonify({
+            'success': True,
+            'user_id': user['id']  # Suponiendo que cada usuario tiene un ID único
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'message': 'Usuario o contraseña incorrectos'
+        }), 401
+
+@app.route('/submit-additive-form', methods=['POST'])
+def submit_additive_form():
+    try:
+        # Obtiene los datos JSON
+        data = request.json
+        # Establecer conexión con la base de datos
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        last_fumigation_date = data.get('last_fumigation_date') or None
+
+        # Insertar los datos en la tabla correspondiente
+        cur.execute('''
+            INSERT INTO product_entry
+            (entry_date, supplier, driver_name, driver_id, food_transport_permission,
+             food_transport_validity, fumigation_record, last_fumigation_date, invoice_number,
+             strange_smells, pests_evidence, clean_truck, uniformed_personnel, 
+             floor_walls_roof_condition, truck_box_holes, disinfection_sticker,
+             foreign_bodies, observations, product, lot_number, shelf_life_check, 
+             allergen_statement, graphic_system, product_accepted, rejection_reasons, 
+             received_by, manufacture_date, expiry_date, package_quantity, total_weight)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (
+            data['entry_date'], data['supplier'], data['driver_name'], data['driver_id'],
+            data['food_transport_permission'], data['food_transport_validity'],
+            data['fumigation_record'], last_fumigation_date, data['invoice_number'],
+            data['strange_smells'], data['pests_evidence'], data['clean_truck'],
+            data['uniformed_personnel'], data['floor_walls_roof_condition'], 
+            data['truck_box_holes'], data['disinfection_sticker'], data['foreign_bodies'], 
+            data.get('observations', None), data['product'], data['lot_number'], data['shelf_life_check'], 
+            data['allergen_statement'], data['graphic_system'], data['product_accepted'], 
+            data['rejection_reasons'], data['received_by'], data['manufacture_date'], 
+            data['expiry_date'], data['package_quantity'], data['total_weight']
+        ))
+
+        # Confirmar los cambios
+        conn.commit()
+
+        # Cerrar la conexión
+        cur.close()
+        conn.close()
+
+        return jsonify({"message": "Formulario guardado correctamente"}), 200
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/submit-files', methods=['POST'])
+def submit_files():
+    # Verificar si los archivos fueron recibidos y guardarlos
+    if 'invoice_file' in request.files:
+        invoice_file = request.files['invoice_file']
+        if invoice_file:
+            invoice_filename = os.path.join(app.config['UPLOAD_FOLDER'], invoice_file.filename)
+            invoice_file.save(invoice_filename)
+    
+    if 'truck_condition_image' in request.files:
+        truck_condition_image = request.files['truck_condition_image']
+        if truck_condition_image:
+            truck_condition_filename = os.path.join(app.config['UPLOAD_FOLDER'], truck_condition_image.filename)
+            truck_condition_image.save(truck_condition_filename)
+    
+    if 'truck_plate_image' in request.files:
+        truck_plate_image = request.files['truck_plate_image']
+        if truck_plate_image:
+            truck_plate_filename = os.path.join(app.config['UPLOAD_FOLDER'], truck_plate_image.filename)
+            truck_plate_image.save(truck_plate_filename)
+    
+    if 'technical_file' in request.files:
+        technical_file = request.files['technical_file']
+        if technical_file:
+            technical_filename = os.path.join(app.config['UPLOAD_FOLDER'], technical_file.filename)
+            technical_file.save(technical_filename)
+
+    return jsonify({"message": "Archivos subidos exitosamente"}), 200
 
 
 if __name__ == '__main__':
