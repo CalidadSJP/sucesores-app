@@ -2,11 +2,14 @@ from dotenv import load_dotenv
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from flask import Flask, request, jsonify, render_template, send_file, send_from_directory
+from flask import Flask, request, jsonify, render_template, send_file, send_from_directory, abort
 from flask_cors import CORS
 from io import BytesIO
 from openpyxl import Workbook
 from werkzeug.utils import secure_filename
+from datetime import datetime
+from flask import send_from_directory
+
 
 # Cargar las variables de entorno
 load_dotenv()
@@ -15,7 +18,6 @@ load_dotenv()
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
 CORS(app, resources={r"/*": {"origins": ["http://192.168.0.251:8080"]}})
-
 
 # Conexión a PostgreSQL
 def get_db_connection():
@@ -28,7 +30,7 @@ def get_db_connection():
     return conn
 
 # Configurar la carpeta de carga
-UPLOAD_FOLDER = 'D:/Projects/control_personal/backend/uploads'
+UPLOAD_FOLDER = 'D:/Projects/sucesores-app-data/Ingreso a Bodega de Aditivos'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limitar el tamaño máximo del archivo a 16 MB
 
@@ -77,7 +79,6 @@ def submit_form():
         print(f"Error general: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-
 @app.route('/download-inspection', methods=['GET'])
 def download_inspection():
     try:
@@ -92,6 +93,7 @@ def download_inspection():
                    guantes_limpios, pestanas, barba_bigote, medicamento_autorizado, 
                    supervisor, observaciones
             FROM inspection
+            ORDER BY fecha DESC
         ''')
         data = cur.fetchall()
 
@@ -298,30 +300,40 @@ def login():
         }), 401
 
 @app.route('/login-supervisor', methods=['POST'])
-def login_Supervisor():
-    data = request.get_json()  # Recibe los datos del formulario (username, password)
+def login_supervisor():
+    data = request.get_json()  # Recibe los datos del formulario (username, password, area)
     username = data.get('username')
     password = data.get('password')
+    user_area = data.get('area')  # El área fija de la página, enviada automáticamente desde el frontend
 
-    # Conectar a la base de datos y verificar el usuario y contraseña
+    # Conectar a la base de datos y verificar el usuario
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("SELECT * FROM supervisors WHERE username = %s", (username,))
+    cur.execute("SELECT * FROM users WHERE username = %s", (username,))
     user = cur.fetchone()
     cur.close()
     conn.close()
 
-    if user and user['password'] == password:  # Verificación simple de la contraseña
+    if not user:
+        return jsonify({
+            'success': False,
+            'message': 'Usuario no encontrado'
+        }), 401
+
+    # Verificar contraseña y área
+    if user['password'] == password and user['area'] == user_area:
         return jsonify({
             'success': True,
-            'user_id': user['id']  # Suponiendo que cada usuario tiene un ID único
+            'user_id': user['id'],  # Suponiendo que cada usuario tiene un ID único
+            'message': f"Bienvenido, {username}",  # Genera el token para la sesión
+            'area': user['area']
         })
     else:
         return jsonify({
             'success': False,
-            'message': 'Usuario o contraseña incorrectos'
+            'message': 'Usuario, contraseña o área incorrectos'
         }), 401
-
+    
 @app.route('/submit-additive-form', methods=['POST'])
 def submit_additive_form():
     try:
@@ -342,9 +354,11 @@ def submit_additive_form():
              floor_walls_roof_condition, truck_box_holes, disinfection_sticker,
              foreign_bodies, observations, product, lot_number, shelf_life_check, 
              allergen_statement, graphic_system, product_accepted, rejection_reasons, 
-             received_by, manufacture_date, expiry_date, package_quantity, total_weight)
+             received_by, manufacture_date, expiry_date, package_quantity, total_weight,
+             invoice_file_confirmation, truck_condition_image_confirmation, truck_plate_image_confirmation,
+             technical_file_confirmation)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             data['entry_date'], data['supplier'], data['driver_name'], data['driver_id'],
             data['food_transport_permission'], data['food_transport_validity'],
@@ -355,7 +369,8 @@ def submit_additive_form():
             data.get('observations', None), data['product'], data['lot_number'], data['shelf_life_check'], 
             data['allergen_statement'], data['graphic_system'], data['product_accepted'], 
             data['rejection_reasons'], data['received_by'], data['manufacture_date'], 
-            data['expiry_date'], data['package_quantity'], data['total_weight']
+            data['expiry_date'], data['package_quantity'], data['total_weight'], data['invoice_file_confirmation'],
+            data['truck_condition_image_confirmation'], data['truck_plate_image_confirmation'], data['technical_file_confirmation']
         ))
 
         # Confirmar los cambios
@@ -373,33 +388,266 @@ def submit_additive_form():
 
 @app.route('/submit-files', methods=['POST'])
 def submit_files():
-    # Verificar si los archivos fueron recibidos y guardarlos
+    # Verificar si se recibió el campo 'supplier'
+    if 'supplier' not in request.form:
+        return jsonify({"error": "El campo 'supplier' es obligatorio."}), 400
+
+    # Obtener el nombre del proveedor
+    supplier_name = request.form.get('supplier', 'UNKNOWN').replace(' ', '_')
+
+    product_name = request.form.get('product', 'UNKNOWN').replace(' ', '_')
+
+    # Obtener la fecha actual para los nombres de los archivos
+    current_date = datetime.now().strftime("%d-%m-%Y")
+
+    # Definir carpetas específicas
+    transporte_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'Transporte')
+    producto_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'Producto')
+
+    # Crear las carpetas si no existen
+    os.makedirs(transporte_folder, exist_ok=True)
+    os.makedirs(producto_folder, exist_ok=True)
+
+    # Función para guardar el archivo con el nuevo nombre
+    def save_file(file, folder, extra):
+        if file:
+            original_extension = os.path.splitext(file.filename)[1]
+            new_filename = f"{current_date}_{supplier_name}_{product_name}_{extra}{original_extension}"
+            file_path = os.path.join(folder, new_filename)
+            file.save(file_path)
+            return new_filename
+        return None
+
+    uploaded_files = {}
+
+    # Guardar los archivos y asignarles un extra en su nombre
     if 'invoice_file' in request.files:
-        invoice_file = request.files['invoice_file']
-        if invoice_file:
-            invoice_filename = os.path.join(app.config['UPLOAD_FOLDER'], invoice_file.filename)
-            invoice_file.save(invoice_filename)
-    
+        uploaded_files['invoice_file'] = save_file(request.files['invoice_file'], transporte_folder, 'factura_guia')
+
     if 'truck_condition_image' in request.files:
-        truck_condition_image = request.files['truck_condition_image']
-        if truck_condition_image:
-            truck_condition_filename = os.path.join(app.config['UPLOAD_FOLDER'], truck_condition_image.filename)
-            truck_condition_image.save(truck_condition_filename)
-    
+        uploaded_files['truck_condition_image'] = save_file(request.files['truck_condition_image'], transporte_folder, 'estado_camion')
+
     if 'truck_plate_image' in request.files:
-        truck_plate_image = request.files['truck_plate_image']
-        if truck_plate_image:
-            truck_plate_filename = os.path.join(app.config['UPLOAD_FOLDER'], truck_plate_image.filename)
-            truck_plate_image.save(truck_plate_filename)
-    
+        uploaded_files['truck_plate_image'] = save_file(request.files['truck_plate_image'], transporte_folder, 'placa_del_camion')
+
     if 'technical_file' in request.files:
-        technical_file = request.files['technical_file']
-        if technical_file:
-            technical_filename = os.path.join(app.config['UPLOAD_FOLDER'], technical_file.filename)
-            technical_file.save(technical_filename)
+        uploaded_files['technical_file'] = save_file(request.files['technical_file'], producto_folder, 'ficha_certificado')
 
-    return jsonify({"message": "Archivos subidos exitosamente"}), 200
+    return jsonify({"message": "Archivos subidos exitosamente", "files": uploaded_files}), 200
 
+@app.route('/get-files', methods=['GET'])
+def get_files():
+    try:
+        # Verificar si las carpetas existen
+        transporte_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'Transporte')
+        producto_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'Producto')
+
+        # Comprobar si las carpetas existen
+        if not os.path.exists(transporte_folder):
+            raise FileNotFoundError(f"La carpeta {transporte_folder} no existe.")
+        if not os.path.exists(producto_folder):
+            raise FileNotFoundError(f"La carpeta {producto_folder} no existe.")
+        
+        # Obtener los archivos de las carpetas
+        transporte_files = os.listdir(transporte_folder)
+        producto_files = os.listdir(producto_folder)
+
+        # Si las carpetas están vacías, puedes devolver un mensaje
+        if not transporte_files and not producto_files:
+            return jsonify({"message": "No hay archivos en las carpetas."}), 200
+
+        # Retornar los archivos como respuesta
+        return jsonify({
+            'transporte_files': transporte_files,
+            'producto_files': producto_files
+        }), 200
+
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        print(f"Error inesperado: {e}")
+        return jsonify({"error": "Error interno del servidor."}), 500
+
+@app.route('/submit-just-one-file', methods=['POST'])
+def submit_just_one_file():
+    # Verificar que los campos necesarios estén presentes
+    if 'supplier' not in request.form or 'fileType' not in request.form or 'date' not in request.form:
+        return jsonify({"error": "Los campos 'supplier', 'fileType' y 'date' son obligatorios."}), 400
+
+    supplier_name = request.form['supplier'].replace(' ', '_')
+    product_name = request.form['product'].replace(' ', '_')
+    file_type = request.form['fileType']
+    # Validar y utilizar la fecha enviada
+    try:
+        selected_date = datetime.strptime(request.form['date'], "%d-%m-%Y").strftime("%d-%m-%Y")
+    except ValueError:
+        return jsonify({"error": "El formato de la fecha es inválido. Usa 'dd-mm-yyyy'."}), 400
+
+    # Determinar la ruta de la carpeta donde se guardará el archivo
+    if file_type in ['factura_guia', 'estado_camion', 'placa_camion']:
+        folder_path = os.path.join(app.config['UPLOAD_FOLDER'], 'Transporte')
+    elif file_type == 'ficha_certificado':
+        folder_path = os.path.join(app.config['UPLOAD_FOLDER'], 'Producto')
+    else:
+        return jsonify({"error": "Tipo de archivo no válido."}), 400
+
+    os.makedirs(folder_path, exist_ok=True)
+
+    # Guardar el archivo
+    file = request.files.get('file')
+    if file:
+        original_extension = os.path.splitext(file.filename)[1]
+        new_filename = f"{selected_date}_{supplier_name}_{product_name}_{file_type}{original_extension}"
+        file_path = os.path.join(folder_path, new_filename)
+
+        print(f"Guardando archivo en: {file_path}")
+        file.save(file_path)
+
+        return jsonify({"message": "Archivo subido exitosamente", "filename": new_filename}), 200
+    else:
+        return jsonify({"error": "No se ha enviado ningún archivo."}), 400
+
+
+@app.route('/download/<folder>/<filename>', methods=['GET'])
+def download_file(folder, filename):
+    # Construir la ruta completa
+    folder_path = f"{UPLOAD_FOLDER}/{folder}"
+    try:
+        # Enviar el archivo desde la carpeta correspondiente
+        return send_from_directory(folder_path, filename, as_attachment=True)
+    except FileNotFoundError:
+        # Manejo de error si el archivo no existe
+        abort(404, description="Archivo no encontrado.")
+
+@app.route('/delete-file', methods=['DELETE'])
+def delete_file():
+    try:
+        # Obtener datos del archivo y la carpeta desde la solicitud
+        data = request.get_json()
+        file_name = data['file']
+        folder = data['folder']
+
+        # Determinar la ruta del archivo a eliminar
+        if folder not in ['Transporte', 'Producto']:
+            return jsonify({'error': 'Carpeta no válida'}), 400
+
+        file_path = os.path.join(UPLOAD_FOLDER, folder, file_name)
+
+        # Verificar si el archivo existe
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            return jsonify({'message': 'Archivo eliminado correctamente'}), 200
+        else:
+            return jsonify({'error': 'Archivo no encontrado'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/products', methods=['GET'])
+def get_products():
+    connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("SELECT * FROM product_entry;")
+    products = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return jsonify(products)
+
+# Ruta para actualizar un registro
+@app.route('/products/<int:product_id>', methods=['PUT'])
+def update_product(product_id):
+    data = request.json
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    
+    # Generar los campos dinámicamente
+    update_fields = ", ".join([f"{key} = %s" for key in data.keys()])
+    values = list(data.values()) + [product_id]
+    
+    query = f"UPDATE product_entry SET {update_fields} WHERE id = %s;"
+    cursor.execute(query, values)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return jsonify({"message": "Producto actualizado exitosamente."})
+
+# Ruta para eliminar un registro
+@app.route('/products/<int:product_id>', methods=['DELETE'])
+def delete_product(product_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("DELETE FROM product_entry WHERE id = %s;", (product_id,))
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return jsonify({"message": "Producto eliminado exitosamente."})
+
+@app.route('/download-product-table', methods=['GET'])
+def download_product_table():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # Consulta para seleccionar todas las columnas de la tabla
+        cur.execute('''
+            SELECT id, entry_date, supplier, driver_name, driver_id, 
+                   food_transport_permission, food_transport_validity, 
+                   fumigation_record, last_fumigation_date, invoice_number, 
+                   strange_smells, pests_evidence, clean_truck, uniformed_personnel, 
+                   floor_walls_roof_condition, truck_box_holes, disinfection_sticker, 
+                   foreign_bodies, observations, product, lot_number, 
+                   package_quantity, total_weight, manufacture_date, expiry_date, 
+                   shelf_life_check, allergen_statement, graphic_system, 
+                   product_accepted, rejection_reasons, received_by, 
+                   invoice_file_confirmation, truck_condition_image_confirmation, 
+                   truck_plate_image_confirmation, technical_file_confirmation
+            FROM product_entry
+            ORDER BY entry_date DESC
+        ''')
+        data = cur.fetchall()
+
+        # Crear un libro de trabajo de Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Productos"
+
+        # Encabezados en español
+        headers = [
+            "ID", "Fecha de Ingreso", "Proveedor", "Nombre del Conductor", "ID del Conductor",
+            "Permiso de Transporte de Alimentos", "Vigencia del Permiso", "Registro de Fumigación",
+            "Última Fecha de Fumigación", "Número de Factura", "Olores Extraños", "Evidencia de Plagas",
+            "Camión Limpio", "Personal Uniformado", "Estado del Piso, Paredes y Techo",
+            "Huecos en la Caja del Camión", "Etiqueta de Desinfección", "Cuerpos Extraños",
+            "Observaciones", "Producto", "Número de Lote", "Cantidad de Paquetes", "Peso Total",
+            "Fecha de Fabricación", "Fecha de Expiración", "Verificación de Vida Útil",
+            "Declaración de Alérgenos", "Sistema Gráfico", "Producto Aceptado",
+            "Razones de Rechazo", "Recibido Por", "Confirmación de Factura",
+            "Confirmación de Imagen del Estado del Camión",
+            "Confirmación de Imagen de la Placa del Camión", "Confirmación de Archivo Técnico"
+        ]
+        ws.append(headers)
+
+        # Agregar datos
+        for record in data:
+            ws.append(list(record))
+
+        cur.close()
+        conn.close()
+
+        # Guardar el archivo en un objeto BytesIO y enviarlo
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name="productos.xlsx",
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))

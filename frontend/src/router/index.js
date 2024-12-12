@@ -1,12 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import HomeComponent from '../components/HomeComponent.vue';
-import FormComponent from '../components/FormComponent.vue';
-import PersonnelComponent from '../components/PersonnelComponent.vue';
-import FrecuecyComponent from '../components/FrecuencyComponent.vue';
+import HomeComponent from '../components/Home/HomeComponent.vue';
+import FormComponent from '../components/Personnel/FormComponent.vue';
+import PersonnelComponent from '../components/Personnel/PersonnelComponent.vue';
+import FrecuecyComponent from '../components/Personnel/FrecuencyComponent.vue';
 import WeightComponent from '../components/WeightComponent.vue';
-import LoginComponent from '../components/LoginComponent.vue';
-import HomeControlComponent from '../components/HomeControlComponent.vue';
-import AdditiveStorageForm from '../components/AdditiveStorageForm.vue';
+import LoginComponent from '../components/Login/LoginComponent.vue';
+import HomeControlComponent from '../components/Home/HomeControlComponent.vue';
+import AdditiveStorageForm from '../components/Additive/AdditiveStorageForm.vue';
+import AdditiveFiles from '@/components/Additive/AdditiveFiles.vue';
+import AdditiveRegister from '@/components/Additive/AdditiveRegister.vue';
+import HomeAdditiveComponent from '@/components/Home/HomeAdditiveComponent.vue';
+import LoginAdditiveComponent from '@/components/Login/LoginAdditiveComponent.vue';
 
 const routes = [
   // Ruta para la página principal
@@ -24,8 +28,10 @@ const routes = [
     name: 'Personnel', 
     component: PersonnelComponent,
     beforeEnter: (to, from, next) => {
-      const userId = localStorage.getItem('user_id');
-      if (userId) {
+      const token = localStorage.getItem('authToken');
+      const userArea = localStorage.getItem('user_area');
+    
+    if (token && userArea === 'Talento Humano') {
         next();  // Si está autenticado, accede
       } else {
         next('/login');  // Si no está autenticado, redirige al login
@@ -36,14 +42,32 @@ const routes = [
   // Ruta para la página de frecuencia
   { path: '/frecuency', name: 'Frecuency', component: FrecuecyComponent },
 
-  // Ruta para la página de peso
   { path: '/weight', name: 'WeightComponent', component: WeightComponent },
 
-  
   { path: '/control-home', name: 'HomeControl', component: HomeControlComponent},
   
-
   { path: '/additive-storage-form', name: 'AdditiveStorageForm', component: AdditiveStorageForm },
+
+  { path: '/additive-files', name: 'AdditiveFiles', component: AdditiveFiles},
+
+  {path: '/additive-login', name: 'LoginAdditive', component: LoginAdditiveComponent},
+
+  {
+    path: '/additive-register',
+    component: AdditiveRegister,
+    beforeEnter: (to, from, next) => {
+      const token = localStorage.getItem('authToken');
+      const userArea = localStorage.getItem('user_area');
+    
+    if (token && userArea === 'Laboratorio') {
+        next();  // El usuario está autenticado, permite la entrada
+      } else {
+        next('/additive-login');  // Redirige a la página de login si no está autenticado
+      }
+    },
+  },
+
+  {path: '/additive-home', name: 'HomeAdditive', component: HomeAdditiveComponent},
 ];
 
 const router = createRouter({
