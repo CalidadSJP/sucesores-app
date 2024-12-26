@@ -10,7 +10,6 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 from flask import send_from_directory
 
-
 # Cargar las variables de entorno
 load_dotenv()
 
@@ -352,13 +351,13 @@ def submit_additive_form():
              food_transport_validity, fumigation_record, last_fumigation_date, invoice_number,
              strange_smells, pests_evidence, clean_truck, uniformed_personnel, 
              floor_walls_roof_condition, truck_box_holes, disinfection_sticker,
-             foreign_bodies, observations, product, lot_number, shelf_life_check, 
+             foreign_bodies, product, lot_number, shelf_life_check, 
              allergen_statement, graphic_system, product_accepted, rejection_reasons, 
              received_by, manufacture_date, expiry_date, package_quantity, total_weight,
              invoice_file_confirmation, truck_condition_image_confirmation, truck_plate_image_confirmation,
-             technical_file_confirmation)
+             technical_file_confirmation, liberation)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'EN ESPERA')
         ''', (
             data['entry_date'], data['supplier'], data['driver_name'], data['driver_id'],
             data['food_transport_permission'], data['food_transport_validity'],
@@ -508,7 +507,6 @@ def submit_just_one_file():
     else:
         return jsonify({"error": "No se ha enviado ningún archivo."}), 400
 
-
 @app.route('/download/<folder>/<filename>', methods=['GET'])
 def download_file(folder, filename):
     # Construir la ruta completa
@@ -553,7 +551,6 @@ def get_products():
     connection.close()
     return jsonify(products)
 
-# Ruta para actualizar un registro
 @app.route('/products/<int:product_id>', methods=['PUT'])
 def update_product(product_id):
     data = request.json
@@ -571,7 +568,6 @@ def update_product(product_id):
     connection.close()
     return jsonify({"message": "Producto actualizado exitosamente."})
 
-# Ruta para eliminar un registro
 @app.route('/products/<int:product_id>', methods=['DELETE'])
 def delete_product(product_id):
     connection = get_db_connection()
@@ -595,12 +591,12 @@ def download_product_table():
                    fumigation_record, last_fumigation_date, invoice_number, 
                    strange_smells, pests_evidence, clean_truck, uniformed_personnel, 
                    floor_walls_roof_condition, truck_box_holes, disinfection_sticker, 
-                   foreign_bodies, observations, product, lot_number, 
+                   foreign_bodies, product, lot_number, 
                    package_quantity, total_weight, manufacture_date, expiry_date, 
                    shelf_life_check, allergen_statement, graphic_system, 
                    product_accepted, rejection_reasons, received_by, 
                    invoice_file_confirmation, truck_condition_image_confirmation, 
-                   truck_plate_image_confirmation, technical_file_confirmation
+                   truck_plate_image_confirmation, technical_file_confirmation, liberation
             FROM product_entry
             ORDER BY entry_date DESC
         ''')
@@ -618,12 +614,12 @@ def download_product_table():
             "Última Fecha de Fumigación", "Número de Factura", "Olores Extraños", "Evidencia de Plagas",
             "Camión Limpio", "Personal Uniformado", "Estado del Piso, Paredes y Techo",
             "Huecos en la Caja del Camión", "Etiqueta de Desinfección", "Cuerpos Extraños",
-            "Observaciones", "Producto", "Número de Lote", "Cantidad de Paquetes", "Peso Total",
+            "Producto", "Número de Lote", "Cantidad de Paquetes", "Peso Total",
             "Fecha de Fabricación", "Fecha de Expiración", "Verificación de Vida Útil",
             "Declaración de Alérgenos", "Sistema Gráfico", "Producto Aceptado",
             "Razones de Rechazo", "Recibido Por", "Confirmación de Factura",
             "Confirmación de Imagen del Estado del Camión",
-            "Confirmación de Imagen de la Placa del Camión", "Confirmación de Archivo Técnico"
+            "Confirmación de Imagen de la Placa del Camión", "Confirmación de Archivo Técnico", "Liberación"
         ]
         ws.append(headers)
 
@@ -642,12 +638,300 @@ def download_product_table():
         return send_file(
             output,
             as_attachment=True,
-            download_name="productos.xlsx",
+            download_name="registro-aditivos.xlsx",
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/provider', methods=['GET'])
+def get_provider():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT provider_name FROM providers ORDER BY id ASC")  # Ajusta el nombre de la tabla y columna según tu base de datos
+        providers = [row['provider_name'] for row in cursor.fetchall()]
+        return jsonify(providers)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/product', methods=['GET'])
+def get_product():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT product_name FROM products WHERE product_type IN ('ADITIVO', 'MATERIA PRIMA') ORDER BY id ASC")
+        products = [row['product_name'] for row in cursor.fetchall()]
+        return jsonify(products)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/get-providers', methods=['GET'])
+def get_providers_list():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT id, provider_name FROM providers")
+        providers = cursor.fetchall()
+        return jsonify(providers)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/get-products', methods=['GET'])
+def get_products_list():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("""
+            SELECT p.id, p.product_name, p.product_type, pr.provider_name
+            FROM products p
+            JOIN providers pr ON p.provider_id = pr.id
+        """)
+        products = cursor.fetchall()
+        return jsonify(products)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/add-provider', methods=['POST'])
+def add_provider():
+    data = request.get_json()
+    provider_name = data.get('provider_name').upper()  # Convertir a mayúsculas
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO providers (provider_name) VALUES (%s) RETURNING id", (provider_name,))
+        new_provider_id = cursor.fetchone()[0]
+        conn.commit()
+        return jsonify({'id': new_provider_id, 'provider_name': provider_name}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/add-product', methods=['POST'])
+def add_product():
+    data = request.get_json()
+    product_name = data.get('product_name').upper()  # Convertir a mayúsculas
+    provider_id = data.get('provider_id')
+    product_type = data.get('product_type')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO products (product_name, provider_id, product_type) VALUES (%s, %s, %s) RETURNING id", 
+                       (product_name, provider_id, product_type))
+        new_product_id = cursor.fetchone()[0]
+        conn.commit()
+        return jsonify({'id': new_product_id, 'product_name': product_name, 'provider_id': provider_id, 'product_type': product_type}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/delete-provider/<int:id>', methods=['DELETE'])
+def delete_provider(id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM providers WHERE id = %s RETURNING id", (id,))
+        deleted_provider = cursor.fetchone()
+
+        if deleted_provider:
+            conn.commit()
+            return jsonify({'message': 'Proveedor eliminado exitosamente'}), 200
+        else:
+            return jsonify({'error': 'Proveedor no encontrado'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/delete-product/<int:id>', methods=['DELETE'])
+def delete_products(id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM products WHERE id = %s RETURNING id", (id,))
+        deleted_product = cursor.fetchone()
+
+        if deleted_product:
+            conn.commit()
+            return jsonify({'message': 'Producto eliminado exitosamente'}), 200
+        else:
+            return jsonify({'error': 'Producto no encontrado'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/update-provider/<int:id>', methods=['PUT'])
+def update_provider(id):
+    data = request.get_json()
+    new_provider_name = data.get('provider_name')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE providers SET provider_name = %s WHERE id = %s RETURNING id, provider_name", 
+                       (new_provider_name, id))
+        updated_provider = cursor.fetchone()
+
+        if updated_provider:
+            conn.commit()
+            return jsonify({'id': updated_provider[0], 'provider_name': updated_provider[1]}), 200
+        else:
+            return jsonify({'error': 'Proveedor no encontrado'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/update-product/<int:id>', methods=['PUT'])
+def update_products(id):
+    data = request.get_json()
+    new_product_name = data.get('product_name')
+    new_provider_id = data.get('provider_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            UPDATE products
+            SET product_name = %s, provider_id = %s
+            WHERE id = %s
+            RETURNING id, product_name, provider_id
+            """,
+            (new_product_name, new_provider_id, id),
+        )
+        updated_product = cursor.fetchone()
+
+        if updated_product:
+            conn.commit()
+            return jsonify({
+                'id': updated_product[0],
+                'product_name': updated_product[1],
+                'provider_id': updated_product[2]
+            }), 200
+        else:
+            return jsonify({'error': 'Producto no encontrado'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/get-pending-products', methods=['GET'])
+def get_pending_products():
+    try:
+        # Establecer conexión con la base de datos
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # Consultar productos con estado "EN ESPERA"
+        cur.execute('''
+            SELECT id, entry_date, product, supplier
+            FROM product_entry
+            WHERE liberation = 'EN ESPERA'
+        ''')
+
+        # Obtener los resultados
+        products = cur.fetchall()
+
+        # Convertir los resultados en una lista de diccionarios
+        product_list = [
+            {
+                "id": row[0],
+                "entry_date": row[1].strftime('%Y-%m-%d'),  # Convertir a formato de fecha
+                "product": row[2],
+                "supplier": row[3]
+            }
+            for row in products
+        ]
+
+        # Cerrar conexión
+        cur.close()
+        conn.close()
+
+        return jsonify(product_list), 200
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/submit-release', methods=['POST'])
+def submit_release():
+    try:
+        # Obtener los datos enviados por el cliente
+        data = request.json
+        product_id = data.get('product_id')
+        analysis_match = data.get('analysis_match')
+        release_criteria = data.get('release_criteria')
+
+        if product_id is None or analysis_match is None or release_criteria is None:
+            return jsonify({"error": "Faltan datos obligatorios"}), 400
+
+        # Determinar el estado de liberación basado en las respuestas
+        release_status = 'SI' if analysis_match == 'SI' and release_criteria == 'SI' else 'NO'
+
+        # Conectar a la base de datos
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # Insertar las respuestas en la tabla de liberaciones
+        cur.execute('''
+            INSERT INTO additive_release (product_id, analysis_match, release_criteria, release_status)
+            VALUES (%s, %s, %s, %s)
+        ''', (product_id, analysis_match, release_criteria, release_status))
+
+        # Actualizar el estado de liberación en la tabla product_entry
+        cur.execute('''
+            UPDATE product_entry 
+            SET liberation = %s 
+            WHERE id = %s
+        ''', (release_status, product_id))
+
+        # Confirmar los cambios
+        conn.commit()
+
+        # Cerrar la conexión
+        cur.close()
+        conn.close()
+
+        return jsonify({"message": "Liberación registrada correctamente"}), 200
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))

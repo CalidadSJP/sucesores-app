@@ -1,39 +1,27 @@
 <template>
-    <div class="login-container">
-      <h2>Iniciar sesión</h2>
-      <button @click="$router.push('/additive-home')" class="home-button">
-        <img :src="require('@/assets/home.png')" alt="Home Icon" />
-      </button>
-      <form @submit.prevent="handleLogin"><br>
-        <div class="form-group">
-          <label for="username">Usuario</label>
-          <input 
-            type="text" 
-            id="username" 
-            v-model="username" 
-            class="form-control" 
-            placeholder="Introduce tu usuario"
-            required
-          />
-        </div>
-        <div class="form-group">
-          <label for="password">Contraseña</label>
-          <input 
-            type="password" 
-            id="password" 
-            v-model="password" 
-            class="form-control" 
-            placeholder="Introduce tu contraseña"
-            required
-          />
-        </div>
-        <button type="submit" class="btn btn-success">Iniciar sesión</button>
-      </form>
-      <p v-if="errorMessage" class="text-danger">{{ errorMessage }}</p>
-    </div>
-  </template>
-    
-    <script>
+  <div class="login-container">
+    <h2>Iniciar sesión</h2>
+    <button @click="$router.push('/additive-home')" class="home-button">
+      <img :src="require('@/assets/home.png')" alt="Home Icon" />
+    </button>
+    <form @submit.prevent="handleLogin"><br>
+      <div class="form-group">
+        <label for="username">Usuario</label>
+        <input type="text" id="username" v-model="username" class="form-control" placeholder="Introduce tu usuario"
+          required />
+      </div>
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" v-model="password" class="form-control"
+          placeholder="Introduce tu contraseña" required />
+      </div>
+      <button type="submit" class="btn btn-success">Iniciar sesión</button>
+    </form>
+    <p v-if="errorMessage" class="text-danger">{{ errorMessage }}</p>
+  </div>
+</template>
+
+<script>
 import axios from 'axios';
 
 export default {
@@ -42,7 +30,7 @@ export default {
       username: '',
       password: '',
       errorMessage: '', // Para mostrar mensajes de error
-      area: 'Laboratorio',   
+      area: 'Laboratorio',
     };
   },
   methods: {
@@ -76,60 +64,62 @@ export default {
   },
 };
 </script>
-    
-    <style scoped>
 
-
-  
+<style scoped>
 .login-container {
   max-width: 500px;
-  margin: 150px auto; /* Centra el contenedor con margen superior adecuado */
+  margin: 150px auto;
+  /* Centra el contenedor con margen superior adecuado */
   padding: 20px;
   border: 1px solid #ccc;
   border-radius: 8px;
   background-color: #f9f9f9;
   position: relative;
-  width: 100%; /* Asegura que ocupe el 100% del ancho disponible */
-  box-sizing: border-box; /* Incluye el padding dentro del ancho total */
+  width: 100%;
+  /* Asegura que ocupe el 100% del ancho disponible */
+  box-sizing: border-box;
+  /* Incluye el padding dentro del ancho total */
 }
 
 /* Ajustes para pantallas pequeñas */
 @media (max-width: 600px) {
   .login-container {
-    margin: 50px auto; /* Menor margen superior en pantallas pequeñas */
-    padding: 20px; /* Asegura que haya espacio en todos los lados */
-    width: 90%; /* El contenedor ocupa el 90% del ancho disponible en dispositivos pequeños */
+    margin: 50px auto;
+    /* Menor margen superior en pantallas pequeñas */
+    padding: 20px;
+    /* Asegura que haya espacio en todos los lados */
+    width: 90%;
+    /* El contenedor ocupa el 90% del ancho disponible en dispositivos pequeños */
   }
 }
-  .home-button {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-  
-  .home-button img {
-    width: 24px;
-    height: 24px;
-  }
-  
-  .form-group {
-    margin-bottom: 15px;
-  }
-  
-  .form-control {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-  }
-  
-  .btn {
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
-  }
-  
-    </style>
-    
+
+.home-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.home-button img {
+  width: 24px;
+  height: 24px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+}
+
+.btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+}
+</style>

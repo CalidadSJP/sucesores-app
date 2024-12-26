@@ -9,7 +9,8 @@
         <p class="card-text">Seleccione una de las opciones:</p>
         <div class="d-grid gap-2 col-6 mx-auto">
           <router-link to="/control-home" class="btn btn-outline-primary">Personal</router-link>
-          <router-link to="/additive-home" class="btn btn-outline-success">Ingreso Materia Prima/Material de Empaque/Aditivos</router-link>
+          <router-link to="/additive-home" class="btn btn-outline-success">Ingreso Materia Prima/Material de
+            Empaque/Aditivos</router-link>
           <!--<router-link to="/additive-storage-form" class="btn btn-outline-success">Control Pesos</router-link>-->
           <!-- Se puede añadir más opciones aquí para futuras funcionalidades -->
           <!--<router-link to="/otra-opcion" class="btn btn-secondary">Otra Opción</router-link>-->

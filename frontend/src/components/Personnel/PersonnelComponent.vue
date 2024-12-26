@@ -12,17 +12,18 @@
         <div v-if="isEditing || !person.id" class="card mt-4">
           <div class="card-body">
             <h5 class="card-title">{{ isEditing ? 'Editar' : 'Agregar' }} Personal</h5>
-            
+
             <button @click="logout" class="btn btn-danger logout-button">Cerrar sesión</button>
             <br>
             <form @submit.prevent="isEditing ? updatePersonnel() : addPersonnel()">
               <div class="form-group">
                 <label for="name">Nombre</label>
-                <input v-model="person.name" type="text" class="form-control" id="name" placeholder="Nombre completo" required @blur="toUpperCase"/>
+                <input v-model="person.name" type="text" class="form-control" id="name" placeholder="Nombre completo"
+                  required @blur="toUpperCase" />
               </div><br>
               <div class="form-group">
                 <label for="role">Cargo</label>
-                <input v-model="person.role" type="text" class="form-control" id="role" placeholder="Cargo" required/>
+                <input v-model="person.role" type="text" class="form-control" id="role" placeholder="Cargo" required />
               </div><br>
               <div class="form-group">
                 <label for="id_area">Área</label>
@@ -30,7 +31,8 @@
                   <option v-for="area in areas" :key="area.id_area" :value="area.id_area">{{ area.name_area }}</option>
                 </select>
               </div><br>
-              <button type="submit" class="btn btn-success mr-2 action-button">{{ isEditing ? 'Actualizar' : 'Agregar' }}</button>
+              <button type="submit" class="btn btn-success mr-2 action-button">{{ isEditing ? 'Actualizar' : 'Agregar'
+                }}</button>
               <button type="button" class="btn btn-secondary action-button" @click="cancelEdit">Cancelar</button>
             </form>
           </div>
@@ -40,13 +42,8 @@
         <!-- Tarjeta de lista de personal con filtro -->
         <div class="card personnel-list-card">
           <div class="card-header">
-            <input 
-              v-model="searchQuery" 
-              type="text" 
-              class="form-control my-2" 
-              placeholder="Buscar por nombre, cargo o área"
-              @input="filterPersonnel"
-            />
+            <input v-model="searchQuery" type="text" class="form-control my-2"
+              placeholder="Buscar por nombre, cargo o área" @input="filterPersonnel" />
           </div>
 
           <div class="card-body">
@@ -216,22 +213,22 @@ export default {
       }
     },
     async deletePersonnel(id) {
-  // Solicitar confirmación antes de eliminar
-  const confirmation = window.confirm('¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.');
+      // Solicitar confirmación antes de eliminar
+      const confirmation = window.confirm('¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.');
 
-  // Proceder solo si el usuario confirma
-  if (confirmation) {
-    try {
-      await axios.delete(`${process.env.VUE_APP_API_URL}/api/delete-personnel/${id}`);
-      alert('Usuario eliminado exitosamente.');
-      this.fetchPersonnel(); // Refrescar la lista de personal después de eliminar
-    } catch (error) {
-      console.error('Error al eliminar personal:', error);
-    }
-  } else {
-    alert('Eliminación cancelada.');
-  }
-},
+      // Proceder solo si el usuario confirma
+      if (confirmation) {
+        try {
+          await axios.delete(`${process.env.VUE_APP_API_URL}/api/delete-personnel/${id}`);
+          alert('Usuario eliminado exitosamente.');
+          this.fetchPersonnel(); // Refrescar la lista de personal después de eliminar
+        } catch (error) {
+          console.error('Error al eliminar personal:', error);
+        }
+      } else {
+        alert('Eliminación cancelada.');
+      }
+    },
     cancelEdit() {
       this.resetForm();
     },
@@ -332,6 +329,7 @@ export default {
   color: #019c54;
   transition: background-color 0.3s ease;
 }
+
 .pagination-animated .page-link:hover {
   background-color: #019c54;
   color: #fff;
@@ -348,5 +346,4 @@ export default {
   background-color: #019c35;
   border-color: #019c35;
 }
-
 </style>

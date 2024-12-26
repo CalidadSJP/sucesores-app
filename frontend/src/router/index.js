@@ -11,6 +11,8 @@ import AdditiveFiles from '@/components/Additive/AdditiveFiles.vue';
 import AdditiveRegister from '@/components/Additive/AdditiveRegister.vue';
 import HomeAdditiveComponent from '@/components/Home/HomeAdditiveComponent.vue';
 import LoginAdditiveComponent from '@/components/Login/LoginAdditiveComponent.vue';
+import AddProductOrProvider from '@/components/Additive/AddProductOrProvider.vue';
+import AdditiveRelease from '@/components/Additive/AdditiveRelease.vue';
 
 const routes = [
   // Ruta para la página principal
@@ -68,6 +70,10 @@ const routes = [
   },
 
   {path: '/additive-home', name: 'HomeAdditive', component: HomeAdditiveComponent},
+
+  {path: '/add-product-provider', name: 'AddProductOrProvider', component: AddProductOrProvider},
+
+  {path: '/additive-release', name: 'AdditiveRelease', component: AdditiveRelease}
 ];
 
 const router = createRouter({

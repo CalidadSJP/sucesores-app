@@ -264,8 +264,8 @@ export default {
   } finally {
     this.isLoading = false;
   }
-},
-async loadAreas() {
+    },
+    async loadAreas() {
   this.isLoading = true;
   try {
     const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-areas`);
@@ -276,7 +276,7 @@ async loadAreas() {
   } finally {
     this.isLoading = false;
   }
-},
+    },
     filterOperarios() {
       const selectedArea = this.form.area;
       if (selectedArea) {
@@ -328,7 +328,7 @@ async loadAreas() {
   } finally {
     this.isLoading = false; // Detener la animación de carga
   }
-},
+    },
 
     resetForm() {
       this.form = {
