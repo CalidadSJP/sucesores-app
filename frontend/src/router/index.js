@@ -13,6 +13,11 @@ import HomeAdditiveComponent from '@/components/Home/HomeAdditiveComponent.vue';
 import LoginAdditiveComponent from '@/components/Login/LoginAdditiveComponent.vue';
 import AddProductOrProvider from '@/components/Additive/AddProductOrProvider.vue';
 import AdditiveRelease from '@/components/Additive/AdditiveRelease.vue';
+import AddMaterialOrProvider from '@/components/Packaging/AddMaterialOrProvider.vue';
+import MaterialFiles from '@/components/Packaging/MaterialFiles.vue';
+import PackagingStorageForm from '@/components/Packaging/PackagingStorageForm.vue';
+import MaterialRegister from '@/components/Packaging/MaterialRegister.vue';
+import LoginMaterialComponent from '@/components/Login/LoginMaterialComponent.vue';
 
 const routes = [
   // Ruta para la página principal
@@ -73,8 +78,33 @@ const routes = [
 
   {path: '/add-product-provider', name: 'AddProductOrProvider', component: AddProductOrProvider},
 
-  {path: '/additive-release', name: 'AdditiveRelease', component: AdditiveRelease}
+  {path: '/additive-release', name: 'AdditiveRelease', component: AdditiveRelease},
+
+  {path: '/add-material-provider', name: 'AddMaterialOrProvider', component: AddMaterialOrProvider},
+
+  { path: '/material-files', name: 'MaterialFiles', component: MaterialFiles},
+
+  { path: '/material-login', name: 'LoginMaterialComponent', component: LoginMaterialComponent},
+
+  { path: '/material-storage-form', name: 'PackagingStorageForm', component: PackagingStorageForm},
+
+  {
+    path: '/material-register',
+    component: MaterialRegister,
+    beforeEnter: (to, from, next) => {
+      const token = localStorage.getItem('authToken');
+      const userArea = localStorage.getItem('user_area');
+    
+    if (token && userArea === 'Empaque') {
+        next();  // El usuario está autenticado, permite la entrada
+      } else {
+        next('/material-login');  // Redirige a la página de login si no está autenticado
+      }
+    },
+  }
 ];
+
+
 
 const router = createRouter({
   history: createWebHistory(),

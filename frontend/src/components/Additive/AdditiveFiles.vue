@@ -240,7 +240,6 @@ export default {
         alert("Hubo un error al obtener los archivos. Inténtalo de nuevo.");
       }
     },
-
     // Función para ordenar archivos por fecha (extraída del nombre del archivo)
     sortFilesByDate(files) {
       return files.sort((a, b) => {
@@ -249,7 +248,6 @@ export default {
         return new Date(dateB) - new Date(dateA); // Orden descendente (más reciente primero)
       });
     },
-
     // Función para extraer la fecha del nombre del archivo (en formato 'dd-mm-yyyy')
     extractDateFromFileName(fileName) {
       const match = fileName.match(/^(\d{2}-\d{2}-\d{4})/); // Extrae la fecha en formato 'dd-mm-yyyy'
