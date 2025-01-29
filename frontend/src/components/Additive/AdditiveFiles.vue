@@ -401,7 +401,7 @@ export default {
         console.error("Error al obtener proveedores:", error);
       }
     },
-    
+
     async fetchProducts() {
       try {
         const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/product`);

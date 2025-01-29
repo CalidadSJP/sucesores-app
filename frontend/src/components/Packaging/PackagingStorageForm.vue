@@ -23,15 +23,12 @@
                     <div class="mb-3">
                         <label for="supplier" class="form-label">Proveedor</label>
                         <select class="form-select" id="supplier" v-model="form.supplier" required>
-                            <option value="" disabled>Seleccione...</option>
+                            <option value="">Seleccione...</option>
                             <option v-for="supplier in suppliers" :key="supplier" :value="supplier">
                                 {{ supplier }}
                             </option>
                         </select>
-                    </div><br>
-
-                    <!-- DOCUMENTOS -->
-                    <h4 class="mt-4">Documentos</h4><br>
+                    </div>
 
                     <!-- Nombre del chofer -->
                     <div class="mb-3">
@@ -45,67 +42,6 @@
                         <label for="driverId" class="form-label">No. de cédula del chofer</label>
                         <input type="text" class="form-control" id="driverId" v-model="form.driver_id">
                     </div>
-
-                    <!-- Permiso de Transporte de Alimentos -->
-                    <div class="mb-3">
-                        <label for="foodTransportPermission" class="form-label">Permiso de Transporte de
-                            Alimentos</label>
-                        <select class="form-select" id="foodTransportPermission"
-                            v-model="form.food_transport_permission">
-                            <option value="SI">SI</option>
-                            <option value="NO">NO</option>
-                            <option value="NO_APLICA">NO APLICA</option>
-                        </select>
-                    </div>
-
-                    <!-- Validez del permiso de transporte -->
-                    <div class="mb-3">
-                        <label for="foodTransportValidity" class="form-label">Validez del Permiso de Transporte</label>
-                        <input type="text" class="form-control" id="foodTransportValidity"
-                            @input="convertToUppercase('food_transport_validity')"
-                            v-model="form.food_transport_validity">
-                    </div>
-
-                    <!-- Registro de Fumigación -->
-                    <div class="mb-3">
-                        <label for="fumigationRecord" class="form-label">Registro de Fumigación</label>
-                        <select class="form-select" id="fumigationRecord" v-model="form.fumigation_record">
-                            <option value="SI">SI</option>
-                            <option value="NO">NO</option>
-                            <option value="NO_APLICA">NO APLICA</option>
-                        </select>
-                    </div>
-
-                    <!-- Última fecha de fumigación -->
-                    <div class="mb-3">
-                        <label for="lastFumigationDate" class="form-label">Última Fumigación</label>
-                        <input type="date" class="form-control" id="lastFumigationDate"
-                            v-model="form.last_fumigation_date">
-                    </div>
-
-                    <!-- Número de factura -->
-                    <div class="mb-3">
-                        <label for="invoiceNumber" class="form-label">Número de factura/guía de remisión</label>
-                        <input type="text" class="form-control" id="invoiceNumber"
-                            @input="convertToUppercase('invoice_number')" v-model="form.invoice_number">
-                    </div>
-
-
-                    <div class="mb-3">
-                        <label class="form-label">Factura/Guía de remisión</label>
-                        <select class="form-select" v-model="form.invoice_file_confirmation">
-                            <option value="">Selecciona una opción</option>
-                            <option value="SI">SI</option>
-                            <option value="NO">NO</option>
-                        </select>
-
-                        <!-- Campo de subir archivo si el usuario selecciona "Sí" -->
-                        <div v-if="form.invoice_file_confirmation === 'SI'" class="mt-2">
-                            <label for="invoiceFile" class="form-label">Factura/Guía de remisión</label>
-                            <input type="file" class="form-control" id="invoiceFile" ref="invoiceFile"
-                                @change="handleFileUpload('invoice_file', $event)">
-                        </div>
-                    </div><br>
 
                     <!-- ESTADO DEL CAMIÓN -->
                     <h4 class="mt-4">Estado del Camión</h4><br>
@@ -158,17 +94,8 @@
 
                     <!-- Huecos en la caja del camión -->
                     <div class="mb-3">
-                        <label for="truckBoxHoles" class="form-label">Agujeros en cajón</label>
+                        <label for="truckBoxHoles" class="form-label">¿Transporta solo material de empaque?</label>
                         <select class="form-select" id="truckBoxHoles" v-model="form.truck_box_holes">
-                            <option value="SI">SI</option>
-                            <option value="NO">NO</option>
-                        </select>
-                    </div>
-
-                    <!-- Sticker de desinfección -->
-                    <div class="mb-3">
-                        <label for="disinfectionSticker" class="form-label">Sticker de desinfección</label>
-                        <select class="form-select" id="disinfectionSticker" v-model="form.disinfection_sticker">
                             <option value="SI">SI</option>
                             <option value="NO">NO</option>
                         </select>
@@ -204,7 +131,7 @@
                             <input type="file" class="form-control" id="truckPlateImage" ref="truckPlateImage"
                                 @change="handleFileUpload('truck_plate_image', $event)">
                         </div>
-                    </div> 
+                    </div>
 
 
                     <button type="button" class="btn btn-secondary mt-3" @click="clearTransportFields">Limpiar
@@ -219,21 +146,46 @@
                 </div>
                 <div class="card-body">
 
+                    <!-- Número de factura -->
+                    <div class="mb-3">
+                        <label for="invoiceNumber" class="form-label">Número de factura/guía de remisión</label>
+                        <input type="text" class="form-control" id="invoiceNumber"
+                            @input="convertToUppercase('invoice_number')" v-model="form.invoice_number">
+                    </div>
+
+
+                    <div class="mb-3">
+                        <label class="form-label">Factura/Guía de remisión</label>
+                        <select class="form-select" v-model="form.invoice_file_confirmation">
+                            <option value="">Selecciona una opción</option>
+                            <option value="SI">SI</option>
+                            <option value="NO">NO</option>
+                        </select>
+
+                        <!-- Campo de subir archivo si el usuario selecciona "Sí" -->
+                        <div v-if="form.invoice_file_confirmation === 'SI'" class="mt-2">
+                            <label for="invoiceFile" class="form-label">Factura/Guía de remisión</label>
+                            <input type="file" class="form-control" id="invoiceFile" ref="invoiceFile"
+                                @change="handleFileUpload('invoice_file', $event)">
+                        </div>
+                    </div>
+
 
                     <!-- Marca -->
                     <div class="mb-3">
                         <label for="brand" class="form-label">Marca</label>
-                        <select class="form-select" id="brand" v-model="form.brand" required>
-                            <option value="" disabled>Seleccione...</option>
+                        <select class="form-select" id="brand" v-model="form.brand" @change="fetchProductsByBrand"
+                            required>
+                            <option value="">Seleccione...</option>
                             <option v-for="brand in brands" :key="brand" :value="brand">
                                 {{ brand }}
                             </option>
                         </select>
                     </div>
 
-                    <!-- Producto -->
+                    <!-- Codigos -->
                     <div class="mb-3">
-                        <label for="product" class="form-label">Producto</label>
+                        <label for="product" class="form-label">Codigo</label>
                         <select class="form-select" id="product" v-model="form.product" required>
                             <option value="" disabled>Seleccione...</option>
                             <option v-for="product in products" :key="product" :value="product">
@@ -242,37 +194,47 @@
                         </select>
                     </div>
 
+                    <!-- Nombre del producto -->
+                    <div class="mb-3">
+                        <label for="productName" class="form-label">Nombre del Producto</label>
+                        <input type="text" class="form-control" id="productName" :value="selectedProductName"
+                            disabled />
+                    </div>
+
+                    <!-- Tipo del producto -->
+                    <div class="mb-3">
+                        <label for="productType" class="form-label">Tipo del Producto</label>
+                        <input type="text" class="form-control" id="productType" :value="selectedProductType"
+                            disabled />
+                    </div>
+
                     <!-- Número de Lote -->
                     <div class="mb-3">
                         <label for="lotNumber" class="form-label">Lote</label>
-                        <input type="text" class="form-control" id="lotNumber" v-model="form.lot_number" required>
+                        <input type="text" class="form-control" id="lotNumber" v-model="form.lot_number">
                     </div>
 
                     <!-- Cantidad de paquetes -->
                     <div class="mb-3">
                         <label for="packageQuantity" class="form-label">Cantidad de bultos</label>
-                        <input type="number" class="form-control" id="packageQuantity" v-model="form.package_quantity"
-                            required>
+                        <input type="number" class="form-control" id="packageQuantity" v-model="form.package_quantity">
                     </div>
-
+                    <!-- Cantidad de unidades -->
+                    <div class="mb-3">
+                        <label for="unitQuantity" class="form-label">Cantidad en unidades</label>
+                        <input type="number" class="form-control" id="unitQuantity" v-model="form.unit_quantity">
+                    </div>
                     <!-- Peso Total -->
                     <div class="mb-3">
-                        <label for="totalWeight" class="form-label">Cantidad total (Kg/Sobres)</label>
-                        <input type="number" placeholder="1.0" step="0.01" min="0" max="1000" class="form-control"
-                            id="totalWeight" v-model="form.total_weight" required>
+                        <label for="totalWeight" class="form-label">Cantidad total (Kg)</label>
+                        <input type="number" placeholder="1.0" step="0.01" min="0" max="100000" class="form-control"
+                            id="totalWeight" v-model="form.total_weight">
                     </div>
 
                     <!-- Fecha de fabricación -->
                     <div class="mb-3">
                         <label for="manufactureDate" class="form-label">Fecha de fabricación</label>
-                        <input type="date" class="form-control" id="manufactureDate" v-model="form.manufacture_date"
-                            required>
-                    </div>
-
-                    <!-- Fecha de caducidad -->
-                    <div class="mb-3">
-                        <label for="expiryDate" class="form-label">Fecha de caducidad</label>
-                        <input type="date" class="form-control" id="expiryDate" v-model="form.expiry_date" required>
+                        <input type="date" class="form-control" id="manufactureDate" v-model="form.manufacture_date">
                     </div>
 
                     <!-- Confirmación y Archivo: Technical File -->
@@ -291,15 +253,13 @@
                         </div>
                     </div>
 
-
-
-
                     <!-- ESTADO DEL PRODUCTO -->
                     <h4 class="mt-4">Estado del Producto</h4><br>
 
                     <!-- Cuerpos extraños -->
                     <div class="mb-3">
-                        <label for="foreignBodies" class="form-label">Cuerpos extraños</label>
+                        <label for="foreignBodies" class="form-label">¿El material de empaque se encuentra bien
+                            protegido?</label>
                         <select class="form-select" id="foreignBodies" v-model="form.foreign_bodies">
                             <option value="SI">SI</option>
                             <option value="NO">NO</option>
@@ -308,9 +268,9 @@
 
                     <!-- Fecha de revisión de vida útil -->
                     <div class="mb-3">
-                        <label for="shelfLifeCheck" class="form-label">El producto tiene por lo menos 6 meses de vida
-                            útil?</label>
-                        <select class="form-select" id="shelfLifeCheck" v-model="form.shelf_life_check" required>
+                        <label for="shelfLifeCheck" class="form-label">¿El producto ha sido elaborado máximo hace 3
+                            meses?</label>
+                        <select class="form-select" id="shelfLifeCheck" v-model="form.shelf_life_check">
                             <option value="SI">SI</option>
                             <option value="NO">NO</option>
                         </select>
@@ -318,30 +278,21 @@
 
                     <!-- Declaración de alérgenos -->
                     <div class="mb-3">
-                        <label for="allergenStatement" class="form-label">Declaración de alérgenos</label>
-                        <select class="form-select" id="allergenStatement" v-model="form.allergen_statement" required>
+                        <label for="allergenStatement" class="form-label">¿Es clara la declaración de alérgenos?</label>
+                        <select class="form-select" id="allergenStatement" v-model="form.allergen_statement">
                             <option value="CUMPLE">CUMPLE</option>
                             <option value="NO CUMPLE">NO CUMPLE</option>
                             <option value="NO APLICA">NO APLICA</option>
                         </select>
                     </div>
 
-                    <!-- Sistema Gráfico -->
-                    <div class="mb-3">
-                        <label for="graphicSystem" class="form-label">Sistema Gráfico</label>
-                        <select class="form-select" id="graphicSystem" v-model="form.graphic_system" required>
-                            <option value="CUMPLE">CUMPLE</option>
-                            <option value="NO CUMPLE">NO CUMPLE</option>
-                            <option value="NO APLICA">NO APLICA</option>
-                        </select>
-                    </div>
 
                     <!-- Producto aceptado -->
                     <div class="mb-3">
                         <label for="productAccepted" class="form-label">Se ACEPTA el producto luego de la inspección
                             visual
-                            (producto íntegro y bien codificado)</label>
-                        <select class="form-select" id="productAccepted" v-model="form.product_accepted" required>
+                            (producto íntegro)</label>
+                        <select class="form-select" id="productAccepted" v-model="form.product_accepted">
                             <option value="SI">SI</option>
                             <option value="NO">NO</option>
                         </select>
@@ -351,17 +302,18 @@
                     <div class="mb-3">
                         <label for="rejectionReasons" class="form-label">En caso de que la respuesta sea no, especifique
                             las razones
-                            por las que no se recibió el producto </label>
+                            por las que no se aceptó el producto </label>
                         <textarea class="form-control" id="rejectionReasons"
                             @input="convertToUppercase('rejection_reasons')"
                             v-model="form.rejection_reasons"></textarea>
                     </div>
-
-                    <!-- Recibido por -->
                     <div class="mb-3">
                         <label for="receivedBy" class="form-label">Recibido por</label>
-                        <input type="text" class="form-control" id="receivedBy"
-                            @input="convertToUppercase('received_by')" v-model="form.received_by" required>
+                        <select class="form-select" id="receivedBy" v-model="form.received_by" required>
+                            <option v-for="option in receivedByOptions" :key="option" :value="option">
+                                {{ option }}
+                            </option>
+                        </select>
                     </div>
 
                     <button type="button" class="btn btn-secondary mt-3" @click="clearProductFields">Limpiar
@@ -388,10 +340,6 @@ export default {
                 supplier: '',
                 driver_name: '',
                 driver_id: '',
-                food_transport_permission: '',
-                food_transport_validity: '',
-                fumigation_record: '',
-                last_fumigation_date: '',
                 invoice_number: '',
                 invoice_file: null,
                 strange_smells: '',
@@ -400,21 +348,18 @@ export default {
                 uniformed_personnel: '',
                 floor_walls_roof_condition: '',
                 truck_box_holes: '',
-                disinfection_sticker: '',
                 truck_condition_image: null,
                 truck_plate_image: null,
                 foreign_bodies: '',
-                brand: '',
+                brand: null,
                 product: '',
                 lot_number: '',
                 technical_file: null,
                 package_quantity: '',
                 total_weight: '',
                 manufacture_date: '',
-                expiry_date: '',
                 shelf_life_check: '',
                 allergen_statement: '',
-                graphic_system: '',
                 product_accepted: '',
                 rejection_reasons: '',
                 received_by: '',
@@ -422,10 +367,19 @@ export default {
                 truck_condition_image_confirmation: '',
                 truck_plate_image_confirmation: '',
                 technical_file_confirmation: '',
+                unit_quantity: ''
             },
             suppliers: [], // Aquí se almacenarán los proveedores
             products: [], // Aquí se almacenarán los productos
-            brands:[]
+            brands: [],
+            selectedProductName: "",
+            selectedProductType: '',
+            receivedByOptions: [
+                "FREDDY ENRIQUEZ",
+                "LOUIS SUCRE",
+                "SUPERVISOR DE CALIDAD",
+                "OTRO",
+            ]
         };
     },
     mounted() {
@@ -433,29 +387,42 @@ export default {
         this.fetchProducts();
         this.fetchBrands();
     },
+    watch: {
+        'form.product'(newCode) {
+            if (newCode) {
+                this.fetchProductName(newCode);
+                this.fetchProductType(newCode);
+            } else {
+                this.selectedProductName = ""; // Limpiar el nombre si no hay código seleccionado
+                this.selectedProductType = "";
+            }
+        },
+        'form.brand'() {
+            this.fetchProductsByBrandProvider(); // Llama a la función para filtrar productos por marca y proveedor
+
+        },
+        'form.supplier'() {
+            this.fetchProductsByBrandProvider(); // Llama a la función para filtrar productos por marca y proveedor
+
+        }
+    },
     methods: {
         clearTransportFields() {
             this.form.entry_date = '';
             this.form.supplier = '';
             this.form.driver_name = '';
             this.form.driver_id = '';
-            this.form.food_transport_permission = '';
-            this.form.food_transport_validity = '';
-            this.form.fumigation_record = '';
-            this.form.last_fumigation_date = '';
-            this.form.invoice_number = '';
             this.form.strange_smells = '';
             this.form.pests_evidence = '';
             this.form.clean_truck = '';
             this.form.uniformed_personnel = '';
             this.form.floor_walls_roof_condition = '';
             this.form.truck_box_holes = '';
-            this.form.disinfection_sticker = '';
-            if (this.$refs.invoiceFile) this.$refs.invoiceFile.value = null;
             if (this.$refs.truckConditionImage) this.$refs.truckConditionImage.value = null;
             if (this.$refs.truckPlateImage) this.$refs.truckPlateImage.value = null;
         },
         clearProductFields() {
+            this.form.invoice_number = '';
             this.form.product = '';
             this.form.foreign_bodies = '';
             this.form.lot_number = '';
@@ -463,15 +430,13 @@ export default {
             this.form.package_quantity = '';
             this.form.total_weight = '';
             this.form.manufacture_date = '';
-            this.form.expiry_date = '';
             this.form.shelf_life_check = '';
             this.form.allergen_statement = '';
-            this.form.graphic_system = '';
             this.form.product_accepted = '';
             this.form.rejection_reasons = '';
             this.form.received_by = '';
-            this.form.brand ='';
-
+            this.form.brand = '';
+            if (this.$refs.invoiceFile) this.$refs.invoiceFile.value = null;
             if (this.$refs.technicalFile) this.$refs.technicalFile.value = null;
 
         },
@@ -525,6 +490,19 @@ export default {
                     throw new Error("El campo 'Producto' no puede estar vacío.");
                 }
 
+                if (this.form.brand) {
+                    formData.append('brand', this.form.brand.trim());
+                } else {
+                    throw new Error("El campo 'Marca' no puede estar vacío.");
+                }
+
+                // **Nuevo: Agregar fecha al FormData**
+                if (this.form.entry_date) {
+                    formData.append('entry_date', this.form.entry_date);
+                } else {
+                    throw new Error("El campo 'Fecha de ingreso' no puede estar vacío.");
+                }
+
                 // Realizar solicitud
                 const response = await axios.post(
                     `${process.env.VUE_APP_API_URL}/api/submit-materials-files`,
@@ -547,15 +525,23 @@ export default {
             }
         },
         async submitForm() {
+
+
             try {
                 // Copiar el formulario actual y convertir los valores de texto a mayúsculas
                 const formToSubmit = { ...this.form };
+
+                if (!formToSubmit.manufacture_date) {
+                    formToSubmit.manufacture_date = null;
+                }
+
 
                 Object.keys(formToSubmit).forEach((key) => {
                     if (typeof formToSubmit[key] === 'string') {
                         formToSubmit[key] = formToSubmit[key].toUpperCase();
                     }
                 });
+
 
                 // Enviar los datos al backend como JSON
                 const response = await axios.post(
@@ -582,15 +568,14 @@ export default {
             }
         },
         resetForm() {
+            this.form.invoice_number = '';
             this.form.foreign_bodies = '';
             this.form.lot_number = '';
             this.form.package_quantity = '';
             this.form.total_weight = '';
             this.form.manufacture_date = '';
-            this.form.expiry_date = '';
             this.form.shelf_life_check = '';
             this.form.allergen_statement = '';
-            this.form.graphic_system = '';
             this.form.product_accepted = '';
             this.form.rejection_reasons = '';
 
@@ -608,7 +593,7 @@ export default {
         },
         async fetchProducts() {
             try {
-                const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/material`);
+                const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-code`);
                 this.products = response.data; // Suponiendo que el backend devuelve un arreglo de strings
             } catch (error) {
                 console.error('Error al obtener productos:', error);
@@ -620,6 +605,38 @@ export default {
                 this.brands = response.data; // Suponiendo que el backend devuelve un arreglo de strings
             } catch (error) {
                 console.error('Error al obtener marcas:', error);
+            }
+        },
+        async fetchProductsByBrandProvider() {
+            try {
+                const brandEncoded = this.form.brand ? encodeURIComponent(this.form.brand.trim()) : "null";
+                const supplierEncoded = this.form.supplier ? encodeURIComponent(this.form.supplier.trim()) : "null";
+
+                const response = await axios.get(
+                    `${process.env.VUE_APP_API_URL}/api/get-products-by-brand-provider/${brandEncoded}/${supplierEncoded}`
+                );
+
+                this.products = response.data.map(product => product.code); // Extrae solo los códigos de los productos
+            } catch (error) {
+                console.error('Error al obtener productos:', error);
+            }
+        },
+        async fetchProductName(code) {
+            try {
+                const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-product-name/${code}`);
+                this.selectedProductName = response.data.material_name;
+            } catch (error) {
+                console.error('Error al obtener el nombre del producto:', error);
+                this.selectedProductName = "Nombre no disponible"; // Mensaje de error amigable
+            }
+        },
+        async fetchProductType(code) {
+            try {
+                const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-product-type/${code}`);
+                this.selectedProductType = response.data.material_type;
+            } catch (error) {
+                console.error('Error al obtener el tipo del producto:', error);
+                this.selectedProductType = "Tipo no disponible"; // Mensaje de error amigable
             }
         }
     },

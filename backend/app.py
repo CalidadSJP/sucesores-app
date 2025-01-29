@@ -40,7 +40,9 @@ app.config['UPLOAD_MATERIAL_FOLDER'] = UPLOAD_MATERIAL_FOLDER
 def index():
     return render_template('index.html')
 
-@app.route('/submit-form', methods=['POST'])
+#PAGINA FORMULARIO DEL PERSONAL
+
+@app.route('/submit-form', methods=['POST']) #Método para subir el formulario
 def submit_form():
     try:
         data = request.json
@@ -81,7 +83,7 @@ def submit_form():
         print(f"Error general: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/download-inspection', methods=['GET'])
+@app.route('/download-inspection', methods=['GET']) #Método para descargar el registro de inpección del personal
 def download_inspection():
     try:
         conn = get_db_connection()
@@ -133,11 +135,9 @@ def download_inspection():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/favicon.ico')
-def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
+#PAGINA DE GESTIÓN DE PERSONAL
 
-@app.route('/get-personnel', methods=['GET'])
+@app.route('/get-personnel', methods=['GET']) # Obtener la lista del personal
 def get_personnel():
     try:
         conn = get_db_connection()
@@ -153,7 +153,7 @@ def get_personnel():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/get-areas', methods=['GET'])
+@app.route('/get-areas', methods=['GET']) # Listar areas de la planta
 def get_areas():
     try:
         conn = get_db_connection()
@@ -169,7 +169,7 @@ def get_areas():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/get-roles', methods=['GET'])
+@app.route('/get-roles', methods=['GET'])# Listar cargos del personal
 def get_roles():
     try:
         conn = get_db_connection()
@@ -187,7 +187,7 @@ def get_roles():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/add-personnel', methods=['POST'])
+@app.route('/add-personnel', methods=['POST']) # Añadir una persona al personal
 def add_personnel():
     try:
         data = request.json
@@ -216,7 +216,7 @@ def add_personnel():
         print(f"Error al añadir personal: {str(e)}")  # Mostrar el error
         return jsonify({"error": str(e)}), 500
 
-@app.route('/update-personnel/<int:id>', methods=['PUT'])
+@app.route('/update-personnel/<int:id>', methods=['PUT']) # Editar informacion de una persona 
 def update_personnel(id):
     try:
         data = request.json
@@ -238,7 +238,7 @@ def update_personnel(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/delete-personnel/<id>', methods=['DELETE'])
+@app.route('/delete-personnel/<id>', methods=['DELETE']) # Eliminar una persona del personal
 def delete_personnel(id):
     try:
         conn = get_db_connection()
@@ -255,7 +255,10 @@ def delete_personnel(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/inspection-frequency', methods=['GET'])
+
+#PAGINA FRECUENCIA DEL PERSONAL
+
+@app.route('/inspection-frequency', methods=['GET']) # Obtener la frecuencia con la que se insepcciona una persona 
 def get_inspection_frequency():
     try:
         conn = get_db_connection()
@@ -276,7 +279,10 @@ def get_inspection_frequency():
     except Exception as e:
         return jsonify({'error': f"Error interno del servidor: {str(e)}"}), 500
 
-@app.route('/login', methods=['POST'])
+
+#PAGINA DE LOGIN 
+
+@app.route('/login', methods=['POST']) # Comparar informacion para el inicio de sesión
 def login():
     data = request.get_json()  # Recibe los datos del formulario (username, password)
     username = data.get('username')
@@ -301,7 +307,7 @@ def login():
             'message': 'Usuario o contraseña incorrectos'
         }), 401
 
-@app.route('/login-supervisor', methods=['POST'])
+@app.route('/login-supervisor', methods=['POST']) # Comparar informacion para el inicio de sesión (Teniendo en cuenta el area)
 def login_supervisor():
     data = request.get_json()  # Recibe los datos del formulario (username, password, area)
     username = data.get('username')
@@ -335,8 +341,10 @@ def login_supervisor():
             'success': False,
             'message': 'Usuario, contraseña o área incorrectos'
         }), 401
-    
-@app.route('/submit-additive-form', methods=['POST'])
+
+#PAGINA "FORMULARIO DE ADITIVOS"
+
+@app.route('/submit-additive-form', methods=['POST']) # Subir Formulario de Ingreso de Aditivos 
 def submit_additive_form():
     try:
         # Obtiene los datos JSON
@@ -388,7 +396,7 @@ def submit_additive_form():
         print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/submit-files', methods=['POST'])
+@app.route('/submit-files', methods=['POST']) # Subir Archivos del Formulario de Ingreso de Aditivos
 def submit_files():
     # Verificar si se recibió el campo 'supplier'
     if 'supplier' not in request.form:
@@ -437,7 +445,9 @@ def submit_files():
 
     return jsonify({"message": "Archivos subidos exitosamente", "files": uploaded_files}), 200
 
-@app.route('/get-files', methods=['GET'])
+#PAGINA "ARCHIVOS | ADITIVOS"
+
+@app.route('/get-files', methods=['GET']) # Listar los archivos |ADITIVOS
 def get_files():
     try:
         # Verificar si las carpetas existen
@@ -471,7 +481,7 @@ def get_files():
         print(f"Error inesperado: {e}")
         return jsonify({"error": "Error interno del servidor."}), 500
 
-@app.route('/submit-just-one-file', methods=['POST'])
+@app.route('/submit-just-one-file', methods=['POST']) # Subir un solo archivo | ADITIVOS
 def submit_just_one_file():
     # Verificar que los campos necesarios estén presentes
     if 'supplier' not in request.form or 'fileType' not in request.form or 'date' not in request.form:
@@ -510,7 +520,7 @@ def submit_just_one_file():
     else:
         return jsonify({"error": "No se ha enviado ningún archivo."}), 400
 
-@app.route('/download/<folder>/<filename>', methods=['GET'])
+@app.route('/download/<folder>/<filename>', methods=['GET']) # Descargar archivo elegido | ADITIVOS
 def download_file(folder, filename):
     # Construir la ruta completa
     folder_path = f"{UPLOAD_FOLDER}/{folder}"
@@ -521,7 +531,7 @@ def download_file(folder, filename):
         # Manejo de error si el archivo no existe
         abort(404, description="Archivo no encontrado.")
 
-@app.route('/delete-file', methods=['DELETE'])
+@app.route('/delete-file', methods=['DELETE']) # Eliminar archivo elegido | ADITIVOS
 def delete_file():
     try:
         # Obtener datos del archivo y la carpeta desde la solicitud
@@ -544,7 +554,9 @@ def delete_file():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/products', methods=['GET'])
+# PÁGINA "REGISTRO DE ADITIVOS"
+
+@app.route('/products', methods=['GET']) # Listar registro del ingreso de aditivos
 def get_products():
     connection = get_db_connection()
     cursor = connection.cursor(cursor_factory=RealDictCursor)
@@ -554,7 +566,7 @@ def get_products():
     connection.close()
     return jsonify(products)
 
-@app.route('/products/<int:product_id>', methods=['PUT'])
+@app.route('/products/<int:product_id>', methods=['PUT']) # Editar un registo | Ingreso de Aditivos
 def update_product(product_id):
     data = request.json
     connection = get_db_connection()
@@ -571,7 +583,7 @@ def update_product(product_id):
     connection.close()
     return jsonify({"message": "Producto actualizado exitosamente."})
 
-@app.route('/products/<int:product_id>', methods=['DELETE'])
+@app.route('/products/<int:product_id>', methods=['DELETE']) # Eliminar un registro | Ingreso de Aditivos
 def delete_product(product_id):
     connection = get_db_connection()
     cursor = connection.cursor()
@@ -581,7 +593,7 @@ def delete_product(product_id):
     connection.close()
     return jsonify({"message": "Producto eliminado exitosamente."})
 
-@app.route('/download-product-table', methods=['GET'])
+@app.route('/download-product-table', methods=['GET']) # Descargar registro de ingreso de Aditivos
 def download_product_table():
     try:
         conn = get_db_connection()
@@ -648,7 +660,7 @@ def download_product_table():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/provider', methods=['GET'])
+@app.route('/provider', methods=['GET']) 
 def get_provider():
     try:
         conn = get_db_connection()
@@ -678,9 +690,9 @@ def get_product():
             cursor.close()
             conn.close()
 
-#Pagina "Agregar Productos y Proveedores"
+#Pagina "Agregar Productos y Proveedores | ADITIVOS"
 
-@app.route('/get-providers', methods=['GET'])
+@app.route('/get-providers', methods=['GET']) # Listar proveedores | Aditivos
 def get_providers_list():
     try:
         conn = get_db_connection()
@@ -695,7 +707,7 @@ def get_providers_list():
             cursor.close()
             conn.close()
 
-@app.route('/get-products', methods=['GET'])
+@app.route('/get-products', methods=['GET']) # Listar productos | Aditivos
 def get_products_list():
     try:
         conn = get_db_connection()
@@ -714,7 +726,7 @@ def get_products_list():
             cursor.close()
             conn.close()
 
-@app.route('/add-provider', methods=['POST'])
+@app.route('/add-provider', methods=['POST']) # Añadir proveedores | Aditivos
 def add_provider():
     data = request.get_json()
     provider_name = data.get('provider_name').upper()  # Convertir a mayúsculas
@@ -733,7 +745,7 @@ def add_provider():
             cursor.close()
             conn.close()
 
-@app.route('/add-product', methods=['POST'])
+@app.route('/add-product', methods=['POST']) # Añadir producto | Aditivos
 def add_product():
     data = request.get_json()
     product_name = data.get('product_name').upper()  # Convertir a mayúsculas
@@ -755,7 +767,7 @@ def add_product():
             cursor.close()
             conn.close()
 
-@app.route('/delete-provider/<int:id>', methods=['DELETE'])
+@app.route('/delete-provider/<int:id>', methods=['DELETE']) # Eliminar proveedor | Aditivos
 def delete_provider(id):
     try:
         conn = get_db_connection()
@@ -775,7 +787,7 @@ def delete_provider(id):
             cursor.close()
             conn.close()
 
-@app.route('/delete-product/<int:id>', methods=['DELETE'])
+@app.route('/delete-product/<int:id>', methods=['DELETE']) # Eliminar producto | Aditivos
 def delete_products(id):
     try:
         conn = get_db_connection()
@@ -795,7 +807,7 @@ def delete_products(id):
             cursor.close()
             conn.close()
 
-@app.route('/update-provider/<int:id>', methods=['PUT'])
+@app.route('/update-provider/<int:id>', methods=['PUT']) # Editar proveedor seleccionado | Aditivos
 def update_provider(id):
     data = request.get_json()
     new_provider_name = data.get('provider_name')
@@ -819,7 +831,7 @@ def update_provider(id):
             cursor.close()
             conn.close()
 
-@app.route('/update-product/<int:id>', methods=['PUT'])
+@app.route('/update-product/<int:id>', methods=['PUT']) # Editar producto seleccionado | Aditivos
 def update_products(id):
     data = request.get_json()
     new_product_name = data.get('product_name')
@@ -857,7 +869,7 @@ def update_products(id):
 
 #Pagina "Liberacion de producto"
 
-@app.route('/get-pending-products', methods=['GET'])
+@app.route('/get-pending-products', methods=['GET']) #Listar Productos por Liberar | Aditivos
 def get_pending_products():
     try:
         # Establecer conexión con la base de datos
@@ -894,7 +906,7 @@ def get_pending_products():
         print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/submit-release', methods=['POST'])
+@app.route('/submit-release', methods=['POST']) # Liberar el producto seleccionado | Aditivos
 def submit_release():
     try:
         # Obtener los datos enviados por el cliente
@@ -941,7 +953,7 @@ def submit_release():
 
 #Pagina "Añadir Proveedores o Material de Empaque"
 
-@app.route('/get-providers-material', methods=['GET'])
+@app.route('/get-providers-material', methods=['GET']) # Listar proveedores | Material de empaque
 def get_providers_material_list():
 
     try:
@@ -957,15 +969,32 @@ def get_providers_material_list():
             cursor.close()
             conn.close()
 
-@app.route('/get-materials', methods=['GET'])
+@app.route('/get-brand-material', methods=['GET']) # Obtener los nombres de las marcas | Material de Empaque
+def get_brand_material():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT id, brand_name FROM brand")
+        providers = cursor.fetchall()
+        return jsonify(providers)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/get-materials', methods=['GET']) # Listar Material de Empaque
 def get_products_material_list():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute("""
-            SELECT m.id, m.material_name, m.material_type, prm.provider_name
-            FROM packaging_material m
+            SELECT m.id, m.code, m.code_sap, m.material_name, m.material_type, prm.provider_name, b.brand_name
+            FROM materials m
             JOIN providers_material prm ON m.provider_id = prm.id
+            JOIN brand b ON m.brand_id = b.id; 
+
         """)
         materials = cursor.fetchall()
         return jsonify(materials)
@@ -976,7 +1005,7 @@ def get_products_material_list():
             cursor.close()
             conn.close()
 
-@app.route('/add-provider-material', methods=['POST'])
+@app.route('/add-provider-material', methods=['POST']) # Añadir proveedor | Material de Empaque 
 def add_provider_material():
     data = request.get_json()
     provider_name = data.get('provider_name').upper()  # Convertir a mayúsculas
@@ -995,20 +1024,25 @@ def add_provider_material():
             cursor.close()
             conn.close()
 
-@app.route('/add-material', methods=['POST'])
+@app.route('/add-material', methods=['POST']) # Añadir nuevo material de empaque
 def add_material():
     data = request.get_json()
     material_name = data.get('material_name').upper()  # Convertir a mayúsculas
     provider_id = data.get('provider_id')
+    code = data.get('code')
+    code_sap = data.get('code_sap')
+    material_type = data.get('material_type').upper()
+    brand_id = data.get('brand_id')
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO packaging_material (material_name, provider_id, material_type) VALUES (%s, %s, 'MATERIAL DE EMPAQUE') RETURNING id", 
-                       (material_name, provider_id))
+        cursor.execute("INSERT INTO materials (code, code_sap, material_name, provider_id, material_type, brand_id) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id", 
+                       (code, code_sap, material_name, provider_id, material_type, brand_id))
         new_material_id = cursor.fetchone()[0]
         conn.commit()
-        return jsonify({'id': new_material_id, 'product_name': material_name, 'provider_id': provider_id}), 201
+        return jsonify({'message': 'Material guardado exitosamente','id': new_material_id,'code': code, 'code_sap': code_sap, 'product_name': material_name, 'provider_id': provider_id, 'material_type': material_type, 'brand_id': brand_id}), 201
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
@@ -1016,7 +1050,7 @@ def add_material():
             cursor.close()
             conn.close()
 
-@app.route('/delete-provider-material/<int:id>', methods=['DELETE'])
+@app.route('/delete-provider-material/<int:id>', methods=['DELETE']) # Eliminar proveedot | Material de empaque
 def delete_provider_material(id):
     try:
         conn = get_db_connection()
@@ -1036,12 +1070,12 @@ def delete_provider_material(id):
             cursor.close()
             conn.close()
 
-@app.route('/delete-material/<int:id>', methods=['DELETE'])
+@app.route('/delete-material/<int:id>', methods=['DELETE']) # Eliminar material seleccionado
 def delete_material(id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM packaging_material WHERE id = %s RETURNING id", (id,))
+        cursor.execute("DELETE FROM materials WHERE id = %s RETURNING id", (id,))
         deleted_product = cursor.fetchone()
 
         if deleted_product:
@@ -1056,7 +1090,7 @@ def delete_material(id):
             cursor.close()
             conn.close()
 
-@app.route('/update-provider-material/<int:id>', methods=['PUT'])
+@app.route('/update-provider-material/<int:id>', methods=['PUT']) # Editar proveedor | Material de empaque
 def update_provider_material(id):
     data = request.get_json()
     new_provider_name = data.get('provider_name')
@@ -1080,23 +1114,27 @@ def update_provider_material(id):
             cursor.close()
             conn.close()
 
-@app.route('/update-material/<int:id>', methods=['PUT'])
+@app.route('/update-material/<int:id>', methods=['PUT']) # Editar material de empaque seleccionado
 def update_materials(id):
     data = request.get_json()
     new_material_name = data.get('material_name')
     new_provider_id = data.get('provider_id')
+    new_code = data.get('code')
+    new_code_sap = data.get('code_sap')
+    new_material_type = data.get('material_type')
+    new_brand_id = data.get('brand_id')
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
             """
-            UPDATE packaging_material
-            SET material_name = %s, provider_id = %s
+            UPDATE materials
+            SET code = %s, code_sap = %s, material_name = %s, provider_id = %s, material_type = %s, brand_id = %s
             WHERE id = %s
-            RETURNING id, material_name, provider_id
+            RETURNING id, code, code_sap, material_name, provider_id, material_type, brand_id
             """,
-            (new_material_name, new_provider_id, id),
+            (new_code, new_code_sap, new_material_name, new_provider_id, new_material_type, new_brand_id, id),
         )
         updated_material = cursor.fetchone()
 
@@ -1104,8 +1142,12 @@ def update_materials(id):
             conn.commit()
             return jsonify({
                 'id': updated_material[0],
-                'product_name': updated_material[1],
-                'provider_id': updated_material[2]
+                'code': updated_material[1],
+                'code_sap': updated_material[2],
+                'material_name': updated_material[3],
+                'provider_id': updated_material[4],
+                'material_type': updated_material[5],
+                'brand_id': updated_material[6]               
             }), 200
         else:
             return jsonify({'error': 'Producto no encontrado'}), 404
@@ -1116,10 +1158,9 @@ def update_materials(id):
             cursor.close()
             conn.close()
 
-
 #Página "Formulario de ingreso Material de Empaque"
 
-@app.route('/submit-material-form', methods=['POST'])
+@app.route('/submit-material-form', methods=['POST']) # Subir formulario material de empaque
 def submit_material_form():
     try:
         # Obtiene los datos JSON
@@ -1128,34 +1169,31 @@ def submit_material_form():
         conn = get_db_connection()
         cur = conn.cursor()
 
-        last_fumigation_date = data.get('last_fumigation_date') or None
-
         # Insertar los datos en la tabla correspondiente
         cur.execute('''
             INSERT INTO material_entry
-            (entry_date, supplier, driver_name, driver_id, food_transport_permission,
-             food_transport_validity, fumigation_record, last_fumigation_date, invoice_number,
+            (entry_date, supplier, driver_name, driver_id, invoice_number,
              strange_smells, pests_evidence, clean_truck, uniformed_personnel, 
-             floor_walls_roof_condition, truck_box_holes, disinfection_sticker,
+             floor_walls_roof_condition, truck_box_holes,
              foreign_bodies, brand, product, lot_number, shelf_life_check, 
-             allergen_statement, graphic_system, product_accepted, rejection_reasons, 
-             received_by, manufacture_date, expiry_date, package_quantity, total_weight,
+             allergen_statement, product_accepted, rejection_reasons, 
+             received_by, manufacture_date, package_quantity, unit_quantity, total_weight,
              invoice_file_confirmation, truck_condition_image_confirmation, truck_plate_image_confirmation,
              technical_file_confirmation)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )
         ''', (
             data['entry_date'], data['supplier'], data['driver_name'], data['driver_id'],
-            data['food_transport_permission'], data['food_transport_validity'],
-            data['fumigation_record'], last_fumigation_date, data['invoice_number'],
+            data['invoice_number'],
             data['strange_smells'], data['pests_evidence'], data['clean_truck'],
             data['uniformed_personnel'], data['floor_walls_roof_condition'], 
-            data['truck_box_holes'], data['disinfection_sticker'], data['foreign_bodies'], data['brand'],
+            data['truck_box_holes'], data['foreign_bodies'], data['brand'],
             data['product'], data['lot_number'], data['shelf_life_check'], 
-            data['allergen_statement'], data['graphic_system'], data['product_accepted'], 
+            data['allergen_statement'], data['product_accepted'], 
             data['rejection_reasons'], data['received_by'], data['manufacture_date'], 
-            data['expiry_date'], data['package_quantity'], data['total_weight'], data['invoice_file_confirmation'],
+            data['package_quantity'], data['unit_quantity'], data['total_weight'], data['invoice_file_confirmation'],
             data['truck_condition_image_confirmation'], data['truck_plate_image_confirmation'], data['technical_file_confirmation']
+            
         ))
 
         # Confirmar los cambios
@@ -1171,7 +1209,7 @@ def submit_material_form():
         print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/submit-materials-files', methods=['POST'])
+@app.route('/submit-materials-files', methods=['POST']) # Subir archivos | Material de empaque
 def submit_material_files():
     # Verificar si se recibió el campo 'supplier'
     if 'supplier' not in request.form:
@@ -1180,16 +1218,26 @@ def submit_material_files():
     # Obtener el nombre del proveedor
     supplier_name = request.form.get('supplier', 'UNKNOWN').replace(' ', '_')
 
+    # Obtener el nombre del producto
     product_name = request.form.get('product', 'UNKNOWN').replace(' ', '_')
 
-    brand_name = request.form.get('brand', 'UNKNOWN').replace(' ', '_')
+    # Obtener el nombre de la marca (agregar este paso)
+    brand_name = request.form.get('brand', 'UNKNOWN').replace(' ', '_')  # Asegúrate de que este campo esté presente en el formulario
 
-    # Obtener la fecha actual para los nombres de los archivos
-    current_date = datetime.now().strftime("%d-%m-%Y")
+    provided_date = request.form.get('entry_date', None)
+    if provided_date:
+        # Validar el formato de la fecha (YYYY-MM-DD)
+        try:
+            formatted_date = datetime.strptime(provided_date, "%Y-%m-%d").strftime("%d-%m-%Y")
+        except ValueError:
+            return jsonify({"error": "El formato de la fecha es inválido. Use 'YYYY-MM-DD'."}), 400
+    else:
+        formatted_date = datetime.now().strftime("%d-%m-%Y")
+    
 
     # Definir carpetas específicas
-    transporte_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'Transporte')
-    producto_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'Producto')
+    transporte_folder = os.path.join(app.config['UPLOAD_MATERIAL_FOLDER'], 'Transporte')
+    producto_folder = os.path.join(app.config['UPLOAD_MATERIAL_FOLDER'], 'Producto')
 
     # Crear las carpetas si no existen
     os.makedirs(transporte_folder, exist_ok=True)
@@ -1199,7 +1247,7 @@ def submit_material_files():
     def save_file(file, folder, extra):
         if file:
             original_extension = os.path.splitext(file.filename)[1]
-            new_filename = f"{current_date}_{supplier_name}_{brand_name}_{product_name}_{extra}{original_extension}"
+            new_filename = f"{formatted_date}_{supplier_name}_{brand_name}_{product_name}_{extra}{original_extension}"  # Incluir la marca aquí
             file_path = os.path.join(folder, new_filename)
             file.save(file_path)
             return new_filename
@@ -1209,7 +1257,7 @@ def submit_material_files():
 
     # Guardar los archivos y asignarles un extra en su nombre
     if 'invoice_file' in request.files:
-        uploaded_files['invoice_file'] = save_file(request.files['invoice_file'], transporte_folder, 'factura_guia')
+        uploaded_files['invoice_file'] = save_file(request.files['invoice_file'], producto_folder, 'factura_guia')
 
     if 'truck_condition_image' in request.files:
         uploaded_files['truck_condition_image'] = save_file(request.files['truck_condition_image'], transporte_folder, 'estado_camion')
@@ -1222,7 +1270,7 @@ def submit_material_files():
 
     return jsonify({"message": "Archivos subidos exitosamente", "files": uploaded_files}), 200
 
-@app.route('/providers-material', methods=['GET'])
+@app.route('/providers-material', methods=['GET']) # Listar proveedores | Material de empaque
 def get_providers_material():
     try:
         conn = get_db_connection()
@@ -1237,7 +1285,7 @@ def get_providers_material():
             cursor.close()
             conn.close()
 
-@app.route('/brand', methods=['GET'])
+@app.route('/brand', methods=['GET']) # Listar marcas | Material de empaque
 def get_brand():
     try:
         conn = get_db_connection()
@@ -1252,10 +1300,111 @@ def get_brand():
             cursor.close()
             conn.close()
 
+@app.route('/get-code', methods=['GET']) # Listar codigos de cada material
+def get_code():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT code FROM materials")
+        codes = [row['code'] for row in cursor.fetchall()]
+        return jsonify(codes)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/get-product-type/<code>', methods=['GET']) # Mostrar el tipo de material de empaque elegido
+def get_product_type_by_code(code):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT material_type FROM materials WHERE code = %s", (code,))
+        result = cursor.fetchone()
+        if result:
+            return jsonify(result)  # Devuelve {"material_name": "Nombre del producto"}
+        else:
+            return jsonify({'error': 'Código no encontrado'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/get-product-name/<code>', methods=['GET']) # Mostrar el nombre del material de empaque elegido
+def get_product_name_by_code(code):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT material_name FROM materials WHERE code = %s", (code,))
+        result = cursor.fetchone()
+        if result:
+            return jsonify(result)  # Devuelve {"material_name": "Nombre del producto"}
+        else:
+            return jsonify({'error': 'Código no encontrado'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/get-products-by-brand/<brand>', methods=['GET']) 
+def get_products_by_brand(brand):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("""
+            SELECT m.code
+            FROM materials m
+            JOIN brand b ON m.brand_id = b.id
+            WHERE b.brand_name = %s
+        """, (brand,))
+        products = cursor.fetchall()
+        return jsonify(products)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
+@app.route('/get-products-by-brand-provider/<brand>/<provider>', methods=['GET']) # Listar materiales de acuerdo a la marca y proveedor elegidos
+def get_products_by_brand_provider(brand, provider):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+        query = """
+            SELECT p.code
+            FROM materials p
+            INNER JOIN brand b ON p.brand_id = b.id
+            INNER JOIN providers_material pr ON p.provider_id = pr.id
+            WHERE b.brand_name = %s AND pr.provider_name = %s
+        """
+        params = [brand, provider]
+
+        query += " ORDER BY p.code ASC"
+
+        cursor.execute(query, params)
+        products = cursor.fetchall()
+
+        print("Productos devueltos:", products)
+
+        return jsonify(products)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
 
 #Pagina "Pagina de archivos Material de empaque"
 
-@app.route('/get-material-files', methods=['GET'])
+@app.route('/get-material-files', methods=['GET']) # Listar archivos | Material de empaque
 def get_material_files():
     try:
         # Verificar si las carpetas existen
@@ -1289,7 +1438,7 @@ def get_material_files():
         print(f"Error inesperado: {e}")
         return jsonify({"error": "Error interno del servidor."}), 500
 
-@app.route('/submit-just-one-file-material', methods=['POST'])
+@app.route('/submit-just-one-file-material', methods=['POST']) # Subir un archivo | Material de empaque
 def submit_just_one_file_material():
     # Verificar que los campos necesarios estén presentes
     if 'supplier' not in request.form or 'fileType' not in request.form or 'date' not in request.form or 'brand' not in request.form:
@@ -1306,9 +1455,9 @@ def submit_just_one_file_material():
         return jsonify({"error": "El formato de la fecha es inválido. Usa 'dd-mm-yyyy'."}), 400
 
     # Determinar la ruta de la carpeta donde se guardará el archivo
-    if file_type in ['factura_guia', 'estado_camion', 'placa_camion']:
+    if file_type in ['estado_camion', 'placa_camion']:
         folder_path = os.path.join(app.config['UPLOAD_MATERIAL_FOLDER'], 'Transporte')
-    elif file_type == 'ficha_certificado':
+    elif file_type in ['factura_guia', 'ficha_certificado']:
         folder_path = os.path.join(app.config['UPLOAD_MATERIAL_FOLDER'], 'Producto')
     else:
         return jsonify({"error": "Tipo de archivo no válido."}), 400
@@ -1329,7 +1478,7 @@ def submit_just_one_file_material():
     else:
         return jsonify({"error": "No se ha enviado ningún archivo."}), 400
 
-@app.route('/download-material-file/<folder>/<filename>', methods=['GET'])
+@app.route('/download-material-file/<folder>/<filename>', methods=['GET']) # Descargar archivo seleccionado | Material de empque
 def download_material_file(folder, filename):
     # Construir la ruta completa
     folder_path = f"{UPLOAD_MATERIAL_FOLDER}/{folder}"
@@ -1340,7 +1489,7 @@ def download_material_file(folder, filename):
         # Manejo de error si el archivo no existe
         abort(404, description="Archivo no encontrado.")
 
-@app.route('/delete-material-file', methods=['DELETE'])
+@app.route('/delete-material-file', methods=['DELETE']) # Eliminar archivo seleccionado | Material de empqeu
 def delete_material_file():
     try:
         # Obtener datos del archivo y la carpeta desde la solicitud
@@ -1363,7 +1512,7 @@ def delete_material_file():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/provider-material', methods=['GET'])
+@app.route('/provider-material', methods=['GET']) # Listar proveedores | Material de Empaque
 def get_provider_material():
     try:
         conn = get_db_connection()
@@ -1378,12 +1527,12 @@ def get_provider_material():
             cursor.close()
             conn.close()
 
-@app.route('/material', methods=['GET'])
+@app.route('/material', methods=['GET']) 
 def get_material():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute("SELECT material_name FROM packaging_material ORDER BY id ASC")
+        cursor.execute("SELECT material_name FROM packaging_material ORDER BY material_name ASC")
         products = [row['material_name'] for row in cursor.fetchall()]
         return jsonify(products)
     except Exception as e:
@@ -1393,11 +1542,9 @@ def get_material():
             cursor.close()
             conn.close()
 
-
 #PAGINA "REGISTRO DE MATERIAL DE EMPAQUE"
 
-
-@app.route('/materials', methods=['GET'])
+@app.route('/materials', methods=['GET']) # Listar registro de ingreso de material de empaque
 def get_material_list():
     connection = get_db_connection()
     cursor = connection.cursor(cursor_factory=RealDictCursor)
@@ -1407,7 +1554,7 @@ def get_material_list():
     connection.close()
     return jsonify(products)
 
-@app.route('/materials/<int:material_id>', methods=['PUT'])
+@app.route('/materials/<int:material_id>', methods=['PUT']) # Editar registro | Ingreso de material de empaque
 def update_material_list(material_id):
     data = request.json
     connection = get_db_connection()
@@ -1424,7 +1571,7 @@ def update_material_list(material_id):
     connection.close()
     return jsonify({"message": "Producto actualizado exitosamente."})
 
-@app.route('/materials/<int:material_id>', methods=['DELETE'])
+@app.route('/materials/<int:material_id>', methods=['DELETE']) # Eliminar registro | Ingreso de material de empaque
 def delete_material_list(material_id):
     connection = get_db_connection()
     cursor = connection.cursor()
@@ -1434,7 +1581,7 @@ def delete_material_list(material_id):
     connection.close()
     return jsonify({"message": "Producto eliminado exitosamente."})
 
-@app.route('/download-material-table', methods=['GET'])
+@app.route('/download-material-table', methods=['GET']) # Descargar registro | Ingreso de material de empaque
 def download_material_table():
     try:
         conn = get_db_connection()
@@ -1442,13 +1589,12 @@ def download_material_table():
 
         # Consulta para seleccionar todas las columnas de la tabla
         cur.execute('''
-            SELECT id, entry_date, supplier, driver_name, driver_id, food_transport_permission,
-             food_transport_validity, fumigation_record, last_fumigation_date, invoice_number,
+            SELECT id, entry_date, supplier, driver_name, driver_id, invoice_number,
              strange_smells, pests_evidence, clean_truck, uniformed_personnel, 
-             floor_walls_roof_condition, truck_box_holes, disinfection_sticker,
+             floor_walls_roof_condition, truck_box_holes,
              foreign_bodies, brand, product, lot_number, shelf_life_check, 
-             allergen_statement, graphic_system, product_accepted, rejection_reasons, 
-             received_by, manufacture_date, expiry_date, package_quantity, total_weight,
+             allergen_statement, product_accepted, rejection_reasons, 
+             received_by, manufacture_date, package_quantity, unit_quantity, total_weight,
              invoice_file_confirmation, truck_condition_image_confirmation, truck_plate_image_confirmation,
              technical_file_confirmation
             FROM material_entry
@@ -1464,13 +1610,12 @@ def download_material_table():
         # Encabezados en español
         headers = [
             "ID", "Fecha de Ingreso", "Proveedor", "Nombre del Conductor", "ID del Conductor",
-            "Permiso de Transporte de Alimentos", "Vigencia del Permiso", "Registro de Fumigación",
-            "Última Fecha de Fumigación", "Número de Factura", "Olores Extraños", "Evidencia de Plagas",
+            "Número de Factura", "Olores Extraños", "Evidencia de Plagas",
             "Camión Limpio", "Personal Uniformado", "Estado del Piso, Paredes y Techo",
-            "Huecos en la Caja del Camión", "Etiqueta de Desinfección", "Cuerpos Extraños", "Marca",
-            "Producto", "Número de Lote", "Cantidad de Paquetes", "Peso Total",
-            "Fecha de Fabricación", "Fecha de Expiración", "Verificación de Vida Útil",
-            "Declaración de Alérgenos", "Sistema Gráfico", "Producto Aceptado",
+            "Huecos en la Caja del Camión", "Cuerpos Extraños", "Marca",
+            "Producto", "Número de Lote", "Cantidad de Paquetes", "Cantidad de unidades", "Peso Total",
+            "Fecha de Fabricación", "Verificación de Vida Útil",
+            "Declaración de Alérgenos", "Producto Aceptado",
             "Razones de Rechazo", "Recibido Por", "Confirmación de Factura",
             "Confirmación de Imagen del Estado del Camión",
             "Confirmación de Imagen de la Placa del Camión", "Confirmación de Archivo Técnico"
@@ -1498,8 +1643,6 @@ def download_material_table():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))

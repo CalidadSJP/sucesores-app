@@ -72,38 +72,39 @@
         </div>
 
         <!-- Tarjeta para listar productos -->
-<div class="card mb-4">
-    <div class="card-header">
-        <h5>Lista de Productos</h5>
-    </div>
-    <div class="card-body">
-        <!-- Contenedor con desplazamiento horizontal -->
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th scope="col">Nombre del Producto</th>
-                        <th scope="col">Proveedor</th>
-                        <th scope="col">Tipo de Producto</th>
-                        <th scope="col">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="product in products" :key="product.id">
-                        <td>{{ product.product_name }}</td>
-                        <td>{{ product.provider_name }}</td>
-                        <td>{{ product.product_type }}</td>
-                        <td class="d-flex">
-                            <!-- Botón para abrir la tarjeta de edición -->
-                            <button class="btn btn-warning btn-sm" @click="editProduct(product)">Editar</button>
-                            <button class="btn btn-danger btn-sm ms-2" @click="confirmDeleteProduct(product.id)">Eliminar</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Lista de Productos</h5>
+            </div>
+            <div class="card-body">
+                <!-- Contenedor con desplazamiento horizontal -->
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th scope="col">Nombre del Producto</th>
+                                <th scope="col">Proveedor</th>
+                                <th scope="col">Tipo de Producto</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="product in products" :key="product.id">
+                                <td>{{ product.product_name }}</td>
+                                <td>{{ product.provider_name }}</td>
+                                <td>{{ product.product_type }}</td>
+                                <td class="d-flex">
+                                    <!-- Botón para abrir la tarjeta de edición -->
+                                    <button class="btn btn-warning btn-sm" @click="editProduct(product)">Editar</button>
+                                    <button class="btn btn-danger btn-sm ms-2"
+                                        @click="confirmDeleteProduct(product.id)">Eliminar</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
         <!-- Tarjeta para editar producto -->
         <div v-if="productToEdit" class="card mt-4" ref="editProductCard">
@@ -167,7 +168,6 @@ export default {
                 console.error("Error al obtener proveedores:", error);
             }
         },
-
         async fetchProducts() {
             try {
                 const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-products`);
@@ -177,7 +177,6 @@ export default {
                 console.error("Error al obtener productos:", error);
             }
         },
-
         convertToUppercase(field) {
             this[field] = this[field].toUpperCase();
         },
@@ -196,7 +195,6 @@ export default {
                 }
             }
         },
-
         async addProduct() {
             if (this.newProductName && this.newProductProvider && this.newProductType) {
                 try {
@@ -216,7 +214,6 @@ export default {
                 }
             }
         },
-
         async confirmDeleteProvider(id) {
             if (confirm("¿Estás seguro de que deseas eliminar este proveedor?")) {
                 try {
@@ -229,7 +226,6 @@ export default {
                 }
             }
         },
-
         async confirmDeleteProduct(id) {
             if (confirm("¿Estás seguro de que deseas eliminar este producto?")) {
                 try {
@@ -241,15 +237,13 @@ export default {
                     console.error("Error al eliminar producto:", error);
                 }
             }
-        }
-        ,
+        },
         editProvider(provider) {
             const newName = prompt("Editar nombre del proveedor", provider.provider_name);
             if (newName && newName !== provider.provider_name) {
                 this.updateProvider(provider.id, newName);
             }
         },
-
         async updateProvider(id, newName) {
             try {
                 const response = await axios.put(`${process.env.VUE_APP_API_URL}/api/update-provider/${id}`, {
@@ -265,9 +259,7 @@ export default {
             } catch (error) {
                 console.error("Error al editar proveedor:", error);
             }
-        }
-
-        ,
+        },
         editProduct(product) {
             this.productToEdit = { ...product }; // Crear copia del producto
 
@@ -275,8 +267,8 @@ export default {
                 const editCard = this.$refs.editProductCard;
                 if (editCard) {
                     editCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-     }
-    });
+                }
+            });
         },
         async saveProductEdits() {
             try {

@@ -305,7 +305,7 @@ export default {
         row.technical_file_confirmation === "NO"
       );
     },
-    
+
     logout() {
       // Limpia el almacenamiento local y redirige al usuario
       localStorage.removeItem('authToken'); // Elimina el token

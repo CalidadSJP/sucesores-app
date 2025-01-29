@@ -59,20 +59,27 @@
                 <!-- Paginación -->
                 <nav aria-label="Paginación" class="d-flex justify-content-center mt-4">
                     <ul class="pagination">
+                        <!-- Botón Anterior -->
                         <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                            <button class="page-link bg-success text-white border-success"
-                                @click="currentPage--">Anterior</button>
+                            <button class="page-link bg-success text-white border-success" @click="previousPage">
+                                Anterior
+                            </button>
                         </li>
-                        <li class="page-item" v-for="page in totalPages" :key="page"
+
+                        <!-- Botones de Páginas -->
+                        <li class="page-item" v-for="page in visiblePages" :key="page"
                             :class="{ active: currentPage === page }">
                             <button class="page-link" @click="currentPage = page"
                                 :class="currentPage === page ? 'active-page' : 'bg-success text-white border-success'">
                                 {{ page }}
                             </button>
                         </li>
+
+                        <!-- Botón Siguiente -->
                         <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                            <button class="page-link bg-success text-white border-success"
-                                @click="currentPage++">Siguiente</button>
+                            <button class="page-link bg-success text-white border-success" @click="nextPage">
+                                Siguiente
+                            </button>
                         </li>
                     </ul>
                 </nav>
@@ -96,13 +103,9 @@ export default {
                 "Fecha de Entrada",
                 "Proveedor",
                 "Marca",
-                "Producto",
+                "Codigo",
                 "Nombre del Conductor",
                 "ID del Conductor",
-                "Permiso Transporte Alimentos",
-                "Validez Transporte Alimentos",
-                "Registro Fumigación",
-                "Última Fumigación",
                 "Número Factura",
                 "Olores Extraños",
                 "Evidencia Plagas",
@@ -110,16 +113,13 @@ export default {
                 "Personal Uniformado",
                 "Condición Paredes/Suelo/Techo",
                 "Huecos en Caja Camión",
-                "Sticker Desinfección",
                 "Cuerpos Extraños",
                 "Número de Lote",
                 "Cantidad de Paquetes",
                 "Peso Total",
                 "Fecha de Fabricación",
-                "Fecha de Expiración",
                 "Revisión Vida Útil",
                 "Declaración Alergénicos",
-                "Sistema Gráfico",
                 "Producto Aceptado",
                 "Razones de Rechazo",
                 "Recibido Por",
@@ -136,10 +136,6 @@ export default {
                 "product",
                 "driver_name",
                 "driver_id",
-                "food_transport_permission",
-                "food_transport_validity",
-                "fumigation_record",
-                "last_fumigation_date",
                 "invoice_number",
                 "strange_smells",
                 "pests_evidence",
@@ -147,16 +143,13 @@ export default {
                 "uniformed_personnel",
                 "floor_walls_roof_condition",
                 "truck_box_holes",
-                "disinfection_sticker",
                 "foreign_bodies",
                 "lot_number",
                 "package_quantity",
                 "total_weight",
                 "manufacture_date",
-                "expiry_date",
                 "shelf_life_check",
                 "allergen_statement",
-                "graphic_system",
                 "product_accepted",
                 "rejection_reasons",
                 "received_by",
@@ -165,15 +158,29 @@ export default {
                 "truck_plate_image_confirmation",
                 "technical_file_confirmation",
             ],
-            tableData: [],
+            tableData: [],        // Datos completos
             editableRow: null,
-            searchQuery: "",
-            currentPage: 1,
-            itemsPerPage: 20,
+            searchQuery: "",      // Consulta de búsqueda
+            currentPage: 1,       // Página actual
+            itemsPerPage: 10,     // Elementos por página
+            pagesPerGroup: 5
         };
     },
     computed: {
-        // Filtrar datos basado en la búsqueda
+
+        totalPages() {
+            return Math.ceil(this.filteredData.length / this.itemsPerPage);
+        },
+        visiblePages() {
+            const start = Math.floor((this.currentPage - 1) / this.pagesPerGroup) * this.pagesPerGroup + 1;
+            const end = Math.min(start + this.pagesPerGroup - 1, this.totalPages);
+
+            const pages = [];
+            for (let i = start; i <= end; i++) {
+                pages.push(i);
+            }
+            return pages;
+        },
         filteredData() {
             if (!this.searchQuery) {
                 return this.tableData;
@@ -185,16 +192,12 @@ export default {
                 )
             );
         },
-        // Paginar los datos filtrados
         paginatedData() {
             const start = (this.currentPage - 1) * this.itemsPerPage;
             const end = start + this.itemsPerPage;
             return this.filteredData.slice(start, end);
         },
-        // Calcular total de páginas
-        totalPages() {
-            return Math.ceil(this.filteredData.length / this.itemsPerPage);
-        },
+
     },
     methods: {
         fetchTableData() {
@@ -225,7 +228,6 @@ export default {
                     console.error("Error al obtener los datos:", error);
                 });
         },
-
         formatDate(dateString) {
             // Crear un objeto de fecha a partir de la cadena recibida
             const date = new Date(dateString);
@@ -241,11 +243,9 @@ export default {
             // Devolver la fecha en formato yyyy-mm-dd
             return `${year}-${month}-${day}`;
         },
-
         editRow(index) {
             this.editableRow = index;
         },
-
         saveRow(index) {
             const updatedRow = this.tableData[index];
 
@@ -260,7 +260,6 @@ export default {
                     console.error("Error al actualizar el registro:", error);
                 });
         },
-
         deleteRow(id) {
             // Mostrar el mensaje de confirmación
             const confirmDelete = window.confirm("¿Estás seguro de que deseas eliminar este registro?");
@@ -280,7 +279,6 @@ export default {
                 console.log("Eliminación cancelada");
             }
         },
-
         downloadExcel() {
             axios({
                 url: `${process.env.VUE_APP_API_URL}/api/download-material-table`,
@@ -291,7 +289,7 @@ export default {
                     const url = window.URL.createObjectURL(new Blob([response.data]));
                     const link = document.createElement('a');
                     link.href = url;
-                    link.setAttribute('download', 'registro-aditivos.xlsx');
+                    link.setAttribute('download', 'registro-material-empaque.xlsx');
                     document.body.appendChild(link);
                     link.click();
                     link.remove();
@@ -300,8 +298,7 @@ export default {
                     console.error("Error al descargar el archivo:", error);
                     alert("Ocurrió un error al intentar descargar el archivo.");
                 });
-        }
-        ,
+        },
         shouldShowRedirectButton(row) {
             // Mostrar el botón de enlace solo si alguna columna de confirmación tiene 'NO'
             return (
@@ -311,13 +308,22 @@ export default {
                 row.technical_file_confirmation === "NO"
             );
         },
-
         logout() {
             // Limpia el almacenamiento local y redirige al usuario
             localStorage.removeItem('authToken'); // Elimina el token
             localStorage.removeItem('user_area'); // Elimina el área
             localStorage.removeItem('user_id'); // Elimina el ID del usuario
             this.$router.push('/material-login'); // Redirige al login
+        },
+        previousPage() {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+            }
+        },
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage++;
+            }
         }
     }
     ,

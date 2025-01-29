@@ -18,16 +18,16 @@
           <div class="section-left w-50 pe-3">
             <h4 class="text-center mb-3">Materia Prima/Aditivos</h4><br>
             <button @click="$router.push('/additive-storage-form')" class="btn btn-success mb-3 w-100">
-              Formulario-Ingreso de Aditivos
+              Formulario | Ingreso de Aditivos
             </button>
             <button @click="$router.push('/additive-register')" class="btn btn-success mb-3 w-100">
-              Consulta Historial-Ingreso de Aditivos
+              Consulta Historial | Ingreso de Aditivos
             </button>
             <button @click="$router.push('/additive-files')" class="btn btn-secondary mb-3 w-100">
-              Ingresar Archivos-Aditivos
+              Ingresar Archivos | Aditivos
             </button>
             <button @click="$router.push('/add-product-provider')" class="btn btn-secondary mb-3 w-100">
-              Agregar Producto o Proveedor
+              Listar | Agregar | Productos o Proveedores
             </button>
           </div>
 
@@ -35,16 +35,16 @@
           <div class="section-right w-50 ps-3">
             <h4 class="text-center mb-3">Material de Empaque</h4><br>
             <button @click="$router.push('/material-storage-form')" class="btn btn-success mb-3 w-100">
-              Formulario-Ingreso de Material de Empaque
+              Formulario | Ingreso de Material de Empaque
             </button>
             <button @click="$router.push('/material-register')" class="btn btn-success mb-3 w-100">
-              Consulta Historial-Material de Empaque
+              Consulta Historial | Material de Empaque
             </button>
             <button @click="$router.push('/material-files')" class="btn btn-secondary mb-3 w-100">
-              Ingresar Archivos-Material de Empaque
+              Ingresar Archivos | Material de Empaque
             </button>
             <button @click="$router.push('/add-material-provider')" class="btn btn-secondary mb-3 w-100">
-              Agregar Producto o Proveedor
+              Listar | Agregar | Productos o Proveedores
             </button>
           </div>
         </div>
@@ -68,7 +68,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 90vh;
+  height: 95vh;
   background-color: #ffffff;
   padding: 20px;
 }

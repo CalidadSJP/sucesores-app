@@ -19,7 +19,7 @@
                         <div class="mb-3">
                             <label for="brand" class="form-label">Marca</label>
                             <select v-model="brand" id="brand" class="form-select" required>
-                                <option value="" disabled>Selecciona un proveedor</option>
+                                <option value="" disabled>Selecciona una marca</option>
                                 <option v-for="brand in brands" :key="brand" :value="brand">
                                     {{ brand }}
                                 </option>
@@ -108,7 +108,7 @@
                             Anterior
                         </button>
                         <ul class="pagination mb-0">
-                            <li v-for="page in totalTransportePages" :key="page"
+                            <li v-for="page in visibleTransportePages" :key="page"
                                 :class="['page-item', { active: page === currentTransportePage }]">
                                 <button @click="goToPage('transporte', page)" class="page-link btn btn-success"
                                     :class="{ 'btn-active': page === currentTransportePage }">
@@ -159,7 +159,7 @@
                             Anterior
                         </button>
                         <ul class="pagination mb-0">
-                            <li v-for="page in totalProductoPages" :key="page"
+                            <li v-for="page in visibleProductoPages" :key="page"
                                 :class="['page-item', { active: page === currentProductoPage }]">
                                 <button @click="goToPage('producto', page)" class="page-link btn btn-success"
                                     :class="{ 'btn-active': page === currentProductoPage }">
@@ -167,12 +167,12 @@
                                 </button>
                             </li>
                         </ul>
-
                         <button @click="nextPage('producto')" class="btn btn-outline-success ms-2"
                             :disabled="currentProductoPage >= totalProductoPages">
                             Siguiente
                         </button>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -199,10 +199,11 @@ export default {
             brand: "",
             brands: [],
             // Paginación
-            currentTransportePage: 1,
-            totalTransportePages: 1,
-            currentProductoPage: 1,
-            totalProductoPages: 1,
+            currentTransportePage: 1,   // Página actual para Transporte
+            totalTransportePages: 30,  // Total de páginas para Transporte (ajusta según tus datos)
+            currentProductoPage: 1,   // Página actual
+            totalProductoPages: 20,  // Total de páginas (ajusta según tus datos)
+            pagesPerGroup: 5,
             filesPerPage: 10
         };
     },
@@ -222,12 +223,33 @@ export default {
                 file.toLowerCase().includes(this.transporteFilter.toLowerCase())
             );
         },
-
         // Filtrar los archivos de producto
         filteredProductoFiles() {
             return this.productoFiles.filter(file =>
                 file.toLowerCase().includes(this.productoFilter.toLowerCase())
             );
+        },
+        visibleProductoPages() {
+            // Calcular el rango actual
+            const start = Math.floor((this.currentProductoPage - 1) / this.pagesPerGroup) * this.pagesPerGroup + 1;
+            const end = Math.min(start + this.pagesPerGroup - 1, this.totalProductoPages);
+
+            // Crear el array con las páginas visibles
+            const pages = [];
+            for (let i = start; i <= end; i++) {
+                pages.push(i);
+            }
+            return pages;
+        },
+        visibleTransportePages() {
+            const start = Math.floor((this.currentTransportePage - 1) / this.pagesPerGroup) * this.pagesPerGroup + 1;
+            const end = Math.min(start + this.pagesPerGroup - 1, this.totalTransportePages);
+
+            const pages = [];
+            for (let i = start; i <= end; i++) {
+                pages.push(i);
+            }
+            return pages;
         }
     },
     mounted() {
@@ -335,7 +357,6 @@ export default {
                 }
             }
         },
-
         resetForm() {
             this.selectedFile = null;
             this.date = null;
@@ -344,35 +365,30 @@ export default {
             this.selectedFolder = null;
             this.brand = '';
         },
-
         generateDownloadUrl(file, folder) {
             return `${process.env.VUE_APP_API_URL}/api/download-material-file/${folder}/${file}`;
         },
-
-        goToPage(listType, page) {
-            if (listType === "transporte") {
+        goToPage(type, page) {
+            if (type === 'transporte' && page >= 1 && page <= this.totalTransportePages) {
                 this.currentTransportePage = page;
-            } else if (listType === "producto") {
+            } else if (type === 'producto' && page >= 1 && page <= this.totalProductoPages) {
                 this.currentProductoPage = page;
             }
         },
-
-        previousPage(listType) {
-            if (listType === "transporte" && this.currentTransportePage > 1) {
+        previousPage(type) {
+            if (type === 'transporte' && this.currentTransportePage > 1) {
                 this.currentTransportePage--;
-            } else if (listType === "producto" && this.currentProductoPage > 1) {
+            } else if (type === 'producto' && this.currentProductoPage > 1) {
                 this.currentProductoPage--;
             }
         },
-
-        nextPage(listType) {
-            if (listType === "transporte" && this.currentTransportePage < this.totalTransportePages) {
+        nextPage(type) {
+            if (type === 'transporte' && this.currentTransportePage < this.totalTransportePages) {
                 this.currentTransportePage++;
-            } else if (listType === "producto" && this.currentProductoPage < this.totalProductoPages) {
+            } else if (type === 'producto' && this.currentProductoPage < this.totalProductoPages) {
                 this.currentProductoPage++;
             }
         },
-
         cancelUpload() {
             this.selectedFolder = null;
             this.date = "";
@@ -381,14 +397,12 @@ export default {
             this.selectedFile = null;
             this.product = "";
         },
-
         async confirmDelete(file, folder) {
             const confirmation = confirm(`¿Estás seguro de eliminar el archivo ${file}?`);
             if (confirmation) {
                 this.deleteFile(file, folder);
             }
         },
-
         async deleteFile(file, folder) {
             try {
                 const response = await axios.delete(`${process.env.VUE_APP_API_URL}/api/delete-material-file`, {
@@ -405,7 +419,6 @@ export default {
                 alert("Hubo un error al eliminar el archivo. Inténtalo de nuevo.");
             }
         },
-
         async fetchProviders() {
             try {
                 const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/provider-material`);
@@ -418,10 +431,9 @@ export default {
                 console.error("Error al obtener proveedores:", error);
             }
         },
-
         async fetchProducts() {
             try {
-                const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/material`);
+                const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-code`);
                 if (response.status === 200) {
                     this.products = response.data; // Asigna los productos obtenidos
                 } else {

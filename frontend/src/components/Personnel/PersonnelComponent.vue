@@ -9,7 +9,7 @@
         <h1 class="page-title">Gestión de Personal</h1> <!-- Título principal -->
 
         <!-- Formulario para agregar o editar personal -->
-        <div v-if="isEditing || !person.id" class="card mt-4">
+        <div v-if="isEditing || !person.id" class="card mt-4 add-personnel">
           <div class="card-body">
             <h5 class="card-title">{{ isEditing ? 'Editar' : 'Agregar' }} Personal</h5>
 
@@ -18,12 +18,11 @@
             <form @submit.prevent="isEditing ? updatePersonnel() : addPersonnel()">
               <div class="form-group">
                 <label for="name">Nombre</label>
-                <input v-model="person.name" type="text" class="form-control" id="name" placeholder="Nombre completo"
-                  required @blur="toUpperCase" />
+                <input v-model="person.name" type="text" class="form-control" id="name" required @blur="toUpperCase" />
               </div><br>
               <div class="form-group">
                 <label for="role">Cargo</label>
-                <input v-model="person.role" type="text" class="form-control" id="role" placeholder="Cargo" required />
+                <input v-model="person.role" type="text" class="form-control" id="role" required />
               </div><br>
               <div class="form-group">
                 <label for="id_area">Área</label>
@@ -114,7 +113,7 @@ export default {
       currentPage: 1,
       perPage: 10, // Número de elementos por página, ajustable
       searchQuery: '',
-      pageGroupSize: 5, // Tamaño del grupo de páginas
+      pageGroupSize: 3, // Tamaño del grupo de páginas
     };
   },
   computed: {
@@ -286,7 +285,7 @@ export default {
 
 <style scoped>
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -297,6 +296,7 @@ export default {
 }
 
 .personnel-list-title {
+  max-width: 1000px;
   margin-top: 30px;
   font-size: 1.5rem;
 }
@@ -309,8 +309,14 @@ export default {
 
 /* Estilo para la tarjeta de la lista de personal */
 .personnel-list-card {
+  max-width: 1400px;
   margin-top: 20px;
 }
+
+.add-personnel {
+  max-width: 1400px;
+}
+
 
 /* Estilo para el botón de cerrar sesión */
 .logout-button {
