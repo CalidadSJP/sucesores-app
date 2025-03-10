@@ -18,6 +18,10 @@ import MaterialFiles from '@/components/Packaging/MaterialFiles.vue';
 import PackagingStorageForm from '@/components/Packaging/PackagingStorageForm.vue';
 import MaterialRegister from '@/components/Packaging/MaterialRegister.vue';
 import LoginMaterialComponent from '@/components/Login/LoginMaterialComponent.vue';
+import LoginAddAdditives from '@/components/Login/LoginAddAdditives.vue';
+import LoginAddMaterials from '@/components/Login/LoginAddMaterials.vue';
+import InspectionView from '@/components/Personnel/InspectionView.vue';
+import LoginInspectionRegister from '@/components/Login/LoginInspectionRegister.vue';
 
 const routes = [
   // Ruta para la página principal
@@ -30,15 +34,15 @@ const routes = [
   { path: '/form', name: 'Form', component: FormComponent },
 
   // Ruta para la página de personal (protegida)
-  { 
-    path: '/personnel', 
-    name: 'Personnel', 
+  {
+    path: '/personnel',
+    name: 'Personnel',
     component: PersonnelComponent,
     beforeEnter: (to, from, next) => {
       const token = localStorage.getItem('authToken');
       const userArea = localStorage.getItem('user_area');
-    
-    if (token && userArea === 'Talento Humano') {
+
+      if (token && userArea === 'Talento Humano') {
         next();  // Si está autenticado, accede
       } else {
         next('/login');  // Si no está autenticado, redirige al login
@@ -46,18 +50,17 @@ const routes = [
     }
   },
 
-  // Ruta para la página de frecuencia
   { path: '/frecuency', name: 'Frecuency', component: FrecuecyComponent },
 
   { path: '/weight', name: 'WeightComponent', component: WeightComponent },
 
-  { path: '/control-home', name: 'HomeControl', component: HomeControlComponent},
-  
+  { path: '/control-home', name: 'HomeControl', component: HomeControlComponent },
+
   { path: '/additive-storage-form', name: 'AdditiveStorageForm', component: AdditiveStorageForm },
 
-  { path: '/additive-files', name: 'AdditiveFiles', component: AdditiveFiles},
+  { path: '/additive-files', name: 'AdditiveFiles', component: AdditiveFiles },
 
-  {path: '/additive-login', name: 'LoginAdditive', component: LoginAdditiveComponent},
+  { path: '/additive-login', name: 'LoginAdditive', component: LoginAdditiveComponent },
 
   {
     path: '/additive-register',
@@ -65,8 +68,8 @@ const routes = [
     beforeEnter: (to, from, next) => {
       const token = localStorage.getItem('authToken');
       const userArea = localStorage.getItem('user_area');
-    
-    if (token && userArea === 'Laboratorio') {
+
+      if (token && userArea === 'Laboratorio') {
         next();  // El usuario está autenticado, permite la entrada
       } else {
         next('/additive-login');  // Redirige a la página de login si no está autenticado
@@ -74,19 +77,47 @@ const routes = [
     },
   },
 
-  {path: '/additive-home', name: 'HomeAdditive', component: HomeAdditiveComponent},
+  { path: '/additive-home', name: 'HomeAdditive', component: HomeAdditiveComponent },
 
-  {path: '/add-product-provider', name: 'AddProductOrProvider', component: AddProductOrProvider},
+  {
+    path: '/add-product-provider', name: 'AddProductOrProvider', component: AddProductOrProvider,
+    beforeEnter: (to, from, next) => {
+      const token = localStorage.getItem('authToken');
+      const userArea = localStorage.getItem('user_area');
 
-  {path: '/additive-release', name: 'AdditiveRelease', component: AdditiveRelease},
+      if (token && userArea === 'Administrativo') {
+        next();  // El usuario está autenticado, permite la entrada
+      } else {
+        next('/add-additives-login');  // Redirige a la página de login si no está autenticado
+      }
+    },
+  },
 
-  {path: '/add-material-provider', name: 'AddMaterialOrProvider', component: AddMaterialOrProvider},
+  { path: '/additive-release', name: 'AdditiveRelease', component: AdditiveRelease },
 
-  { path: '/material-files', name: 'MaterialFiles', component: MaterialFiles},
+  {
+    path: '/add-material-provider', name: 'AddMaterialOrProvider', component: AddMaterialOrProvider,
+    beforeEnter: (to, from, next) => {
+      const token = localStorage.getItem('authToken');
+      const userArea = localStorage.getItem('user_area');
 
-  { path: '/material-login', name: 'LoginMaterialComponent', component: LoginMaterialComponent},
+      if (token && userArea === 'Administrativo') {
+        next();  // El usuario está autenticado, permite la entrada
+      } else {
+        next('/add-materials-login');  // Redirige a la página de login si no está autenticado
+      }
+    },
+  },
 
-  { path: '/material-storage-form', name: 'PackagingStorageForm', component: PackagingStorageForm},
+  { path: '/material-files', name: 'MaterialFiles', component: MaterialFiles },
+
+  { path: '/material-login', name: 'LoginMaterialComponent', component: LoginMaterialComponent },
+
+  { path: '/add-additives-login', name: 'LoginAddAdditives', component: LoginAddAdditives },
+
+  { path: '/add-materials-login', name: 'LoginAddMaterials', component: LoginAddMaterials },
+
+  { path: '/material-storage-form', name: 'PackagingStorageForm', component: PackagingStorageForm },
 
   {
     path: '/material-register',
@@ -94,14 +125,30 @@ const routes = [
     beforeEnter: (to, from, next) => {
       const token = localStorage.getItem('authToken');
       const userArea = localStorage.getItem('user_area');
-    
-    if (token && userArea === 'Empaque') {
+
+      if (token && userArea === 'Empaque') {
         next();  // El usuario está autenticado, permite la entrada
       } else {
         next('/material-login');  // Redirige a la página de login si no está autenticado
       }
     },
-  }
+  },
+
+  {
+    path: '/inspection-view', name: 'InspectionView', component: InspectionView,
+    beforeEnter: (to, from, next) => {
+      const token = localStorage.getItem('authToken');
+      const userArea = localStorage.getItem('user_area');
+
+      if (token && userArea === 'Calidad') {
+        next();  // El usuario está autenticado, permite la entrada
+      } else {
+        next('/login-inspection-view');  // Redirige a la página de login si no está autenticado
+      }
+    },
+  },
+
+  { path: '/login-inspection-view', name: 'LoginInspectionRegister', component: LoginInspectionRegister }
 ];
 
 

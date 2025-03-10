@@ -16,7 +16,7 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label">1) Concuerda con análisis internos?</label>
+            <label class="form-label">1) ¿Certificado de Análisis cumple con especificaciones? / ¿Concuerda con análisis internos?</label>
             <div>
               <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="analysis" id="analysisYes" value="SI"
@@ -25,8 +25,13 @@
               </div>
               <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="analysis" id="analysisNo" value="NO"
-                  v-model="analysisMatch" />
+                  v-model="analysisMatch" required/>
                 <label class="form-check-label" for="analysisNo">No</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="analysis" id="analysisNoAply" value="NO APLICA"
+                  v-model="analysisMatch" required/>
+                <label class="form-check-label" for="analysisNo">No Aplica</label>
               </div>
             </div>
           </div>

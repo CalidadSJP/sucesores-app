@@ -11,13 +11,16 @@
         </button>
 
         <button @click="$router.push('/form')" class="btn btn-success mb-3 w-100">
-          Control de Practicas de Personal
+          Formulario | Control de Practicas de Personal
+        </button>
+        <button @click="$router.push('/inspection-view')" class="btn btn-secondary mb-3 w-100">
+          Registro | Control de Prácticas de Personal
         </button>
         <button @click="showLoginModal = true" class="btn btn-secondary w-100">
           Descargar Registro Control de Practicas de Personal
         </button>
         <button @click="$router.push('/personnel')" class="btn btn-warning mt-3 w-100">
-          Gestion de Personal
+          Gestión de Personal
         </button>
       </div>
     </div>
@@ -124,7 +127,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 80vh;
+  height: 95vh;
   background-color: #f8f9fa;
   padding-left: 20px;
   /* Añadir espacio desde la izquierda */

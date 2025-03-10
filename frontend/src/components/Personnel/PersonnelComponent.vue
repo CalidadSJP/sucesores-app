@@ -46,29 +46,31 @@
           </div>
 
           <div class="card-body">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Nombre</th>
-                  <th>Cargo</th>
-                  <th>Área</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(person, index) in paginatedPersonnel" :key="person.id">
-                  <td>{{ index + 1 }}</td>
-                  <td>{{ person.name }}</td>
-                  <td>{{ person.role }}</td>
-                  <td>{{ getAreaName(person.id_area) }}</td>
-                  <td>
-                    <button @click="editPersonnel(person)" class="btn btn-info action-button">Editar</button>
-                    <button @click="deletePersonnel(person.id)" class="btn btn-danger action-button">Eliminar</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th>Cargo</th>
+                    <th>Área</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(person, index) in paginatedPersonnel" :key="person.id">
+                    <td>{{ index + 1 }}</td>
+                    <td>{{ person.name }}</td>
+                    <td>{{ person.role }}</td>
+                    <td>{{ getAreaName(person.id_area) }}</td>
+                    <td>
+                      <button @click="editPersonnel(person)" class="btn btn-info action-button">Editar</button>
+                      <button @click="deletePersonnel(person.id)" class="btn btn-danger action-button">Eliminar</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <nav aria-label="Page navigation" class="card-footer"><br>
@@ -288,6 +290,7 @@ export default {
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
+  
 }
 
 .page-title {
@@ -349,7 +352,7 @@ export default {
 }
 
 .pagination-green .page-item.active .page-link {
-  background-color: #019c35;
-  border-color: #019c35;
+  background-color: #59da86;
+  border-color: #59da86;
 }
 </style>

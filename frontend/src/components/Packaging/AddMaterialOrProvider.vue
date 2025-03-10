@@ -4,8 +4,11 @@
 
         <!-- Tarjeta para agregar proveedores y productos -->
         <div class="card mb-4">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5>Agregar</h5>
+                <div>
+                    <button @click="logout" class="btn btn-danger">Cerrar sesión</button>
+                </div>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -443,6 +446,13 @@ export default {
             if (this.currentPage < this.totalPages) {
                 this.currentPage++;
             }
+        },
+        logout() {
+            // Limpia el almacenamiento local y redirige al usuario
+            localStorage.removeItem('authToken'); // Elimina el token
+            localStorage.removeItem('user_area'); // Elimina el área
+            localStorage.removeItem('user_id'); // Elimina el ID del usuario
+            this.$router.push('/add-materials-login'); // Redirige al login
         }
     },
     mounted() {

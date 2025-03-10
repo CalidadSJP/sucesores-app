@@ -58,7 +58,7 @@ export default {
         }
       } catch (error) {
         // En caso de error, muestra un mensaje genérico
-        this.errorMessage = 'Hubo un error al intentar iniciar sesión';
+        this.errorMessage = 'Usuario o contraseña incorrectos';
       }
     }
   },

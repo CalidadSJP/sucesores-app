@@ -9,6 +9,7 @@ from openpyxl import Workbook
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from flask import send_from_directory
+import numpy as np
 
 # Cargar las variables de entorno
 load_dotenv()
@@ -279,6 +280,45 @@ def get_inspection_frequency():
     except Exception as e:
         return jsonify({'error': f"Error interno del servidor: {str(e)}"}), 500
 
+
+#PAGINA DE REVISION DE INSPECCION DEL PERSONAL
+
+@app.route('/inspection-register', methods=['GET']) # Listar registfDOWro de ingreso de material de empaque
+def inspetion_register():
+    connection = get_db_connection()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("SELECT * FROM inspection;")
+    products = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return jsonify(products)
+
+@app.route('/inspection-register/<int:id>', methods=['PUT']) # Editar registro | Ingreso de material de empaque
+def update_inspection_register(id):
+    data = request.json
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    
+    # Generar los campos dinámicamente
+    update_fields = ", ".join([f"{key} = %s" for key in data.keys()])
+    values = list(data.values()) + [id]
+    
+    query = f"UPDATE inspection SET {update_fields} WHERE id = %s;"
+    cursor.execute(query, values)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return jsonify({"message": "Registro actualizado exitosamente."})
+
+@app.route('/inspection-register/<int:id>', methods=['DELETE']) # Eliminar registro | Ingreso de material de empaque
+def delete_inspection_register(id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("DELETE FROM inspection WHERE id = %s;", (id,))
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return jsonify({"message": "Registro eliminado exitosamente."})
 
 #PAGINA DE LOGIN 
 
@@ -919,7 +959,10 @@ def submit_release():
             return jsonify({"error": "Faltan datos obligatorios"}), 400
 
         # Determinar el estado de liberación basado en las respuestas
-        release_status = 'SI' if analysis_match == 'SI' and release_criteria == 'SI' else 'NO'
+        if (analysis_match == 'SI' and release_criteria == 'SI') or (analysis_match == 'NO APLICA' and release_criteria == 'SI'):
+            release_status = 'SI'
+        else:
+            release_status = 'NO'
 
         # Conectar a la base de datos
         conn = get_db_connection()
@@ -959,7 +1002,7 @@ def get_providers_material_list():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute("SELECT id, provider_name FROM providers_material")
+        cursor.execute("SELECT id, provider_name FROM providers_material ORDER BY provider_name ASC")
         providers = cursor.fetchall()
         return jsonify(providers)
     except Exception as e:
@@ -974,7 +1017,7 @@ def get_brand_material():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute("SELECT id, brand_name FROM brand")
+        cursor.execute("SELECT id, brand_name FROM brand ORDER BY brand_name ASC")
         providers = cursor.fetchall()
         return jsonify(providers)
     except Exception as e:
@@ -1275,7 +1318,7 @@ def get_providers_material():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute("SELECT provider_name FROM providers_material ORDER BY id ASC")  # Ajusta el nombre de la tabla y columna según tu base de datos
+        cursor.execute("SELECT provider_name FROM providers_material ORDER BY provider_name ASC")  # Ajusta el nombre de la tabla y columna según tu base de datos
         providers = [row['provider_name'] for row in cursor.fetchall()]
         return jsonify(providers)
     except Exception as e:
@@ -1290,7 +1333,7 @@ def get_brand():
     try:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute("SELECT brand_name FROM brand ORDER BY id ASC")
+        cursor.execute("SELECT brand_name FROM brand ORDER BY brand_name ASC")
         brands = [row['brand_name'] for row in cursor.fetchall()]
         return jsonify(brands)
     except Exception as e:
@@ -1643,6 +1686,155 @@ def download_material_table():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+#PÁGINA CONTROL DE PESOS (EN PROCESO/NO TERMINADO)
+
+@app.route('/get-product-info', methods=['GET'])
+def get_product_info():
+    # Obtener el EAN13 desde los parámetros de la solicitud
+    ean13 = request.args.get('ean13')
+
+    if not ean13:
+        return jsonify({"error": "EAN13 es requerido"}), 400
+
+    try:
+        # Conectar a la base de datos
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Consulta para obtener la información del producto, uniendo la tabla 'article' con la tabla 'brand'
+        query = """
+        SELECT 
+            a.ean13, 
+            a.ean14, 
+            a.weight AS peso_neto, 
+            a.format AS formato, 
+            a.brand_id, 
+            b.brand_name AS marca
+        FROM article a
+        JOIN brand b ON a.brand_id = b.id
+        WHERE a.ean13 = %s
+        """
+        cursor.execute(query, (ean13,))
+        product = cursor.fetchone()
+
+        # Cerrar la conexión
+        cursor.close()
+        conn.close()
+
+        # Verificar si el producto existe
+        if product:
+            return jsonify(product), 200
+        else:
+            return jsonify({"error": "Producto no encontrado"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/get-balers', methods=['GET'])
+def get_balers():
+    try:
+        # Conectar a la base de datos
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Consulta para obtener todas las empacadoras
+        query = "SELECT id, baler_name FROM balers"
+        cursor.execute(query)
+        balers = cursor.fetchall()
+
+        # Cerrar conexión
+        cursor.close()
+        conn.close()
+
+        return jsonify(balers), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/save-weight-control', methods=['POST'])
+def save_weight_control():
+    try:
+        data = request.json
+
+        # Extraer datos principales
+        date = data.get('date', datetime.today().strftime('%Y-%m-%d'))
+        baler = data.get('baler')
+        net_weight = float(data.get('net_weight'))  # Qnom
+        format_ = data.get('format')
+        brand = data.get('brand')
+        lot = data.get('lot')
+        manufacture_date = data.get('manufacture_date')
+        expiry_date = data.get('expiry_date')
+
+        # Extraer los pesos ingresados
+        pesos = [float(p) for p in data.get('weights', []) if p not in [None, ""]]
+
+        # 📌 **Regla (a) - Error promedio del lote (R87 3.2)**
+        # La cantidad real promedio del lote debe ser al menos igual a la cantidad nominal (Qnom)
+        if pesos:
+            average = float(round(np.mean(pesos), 2))  # c = promedio del lote
+            minimum = float(round(np.min(pesos), 2))
+            maximum = float(round(np.max(pesos), 2))
+            std_dev = float(round(np.std(pesos, ddof=1), 2)) if len(pesos) > 1 else 0.0
+        else:
+            average, minimum, maximum, std_dev = None, None, None, None
+
+        # 📌 **Calcular Tolerancia (3% de Qnom)**
+        T = net_weight * 0.03  # T = Qnom * 0.03
+
+        # 📌 **Regla (b) - Verificar el número de preempacados con error T1 (R87 3.3.2)**
+        # No más del 2.5% de los preempacados pueden estar en el rango de error T1.
+        count_T1 = sum((net_weight - 2 * T) <= p < (net_weight - T) for p in pesos)
+        percent_T1 = (count_T1 / len(pesos)) * 100 if pesos else 0
+
+        # 📌 **Regla (c) - Verificar el número de preempacados con error T2 (R87 3.3.3)**
+        # No debe haber ningún preempacado con error T2.
+        count_T2 = sum(p < (net_weight - 2 * T) for p in pesos)
+
+        # 📌 **Evaluación Final**
+        if average < net_weight:
+            result = "Rechazado - Promedio insuficiente"  # 🚨 Incumple regla (a)
+        elif count_T2 > 0:
+            result = "Rechazado - Error T2 presente"  # 🚨 Incumple regla (c)
+        elif percent_T1 > 2.5:
+            result = "Rechazado - Demasiados errores T1"  # 🚨 Incumple regla (b)
+        else:
+            result = "Aceptado"
+
+        # Conectar a la base de datos
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # Insertar los datos en la base de datos
+        query = """
+            INSERT INTO weight_control (
+                date, baler, net_weight, format, brand, lot, 
+                manufacture_date, expiry_date, average, minimum, maximum, standard_deviation,
+                p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, 
+                p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30,
+                result
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                      %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                      %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        values = [
+            date, baler, net_weight, format_, brand, lot, manufacture_date, expiry_date,
+            average, minimum, maximum, std_dev
+        ] + pesos + [None] * (30 - len(pesos)) + [result]  # Llenar con NULL y agregar resultado
+
+        cur.execute(query, values)
+        conn.commit()
+
+        # Cerrar la conexión
+        cur.close()
+        conn.close()
+
+        return jsonify({"message": "Registro guardado exitosamente", "result": result}), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
