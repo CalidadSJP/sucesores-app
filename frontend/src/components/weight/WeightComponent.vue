@@ -226,6 +226,7 @@ export default {
         if (response.status === 201) {
           alert('Registro guardado exitosamente');
           this.resetForm(); // Reiniciar el formulario después de guardar
+          this.$router.push('/weight-resume');
         } else {
           alert('Error al guardar los datos');
         }

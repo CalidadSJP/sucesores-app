@@ -11,6 +11,8 @@ from datetime import datetime
 from flask import send_from_directory
 import numpy as np
 
+#Reiniciar servicio: httpd.exe -k restart -n "sucesores-app"
+
 # Cargar las variables de entorno
 load_dotenv()
 
@@ -1690,7 +1692,7 @@ def download_material_table():
 
 #PÁGINA CONTROL DE PESOS (EN PROCESO/NO TERMINADO)
 
-@app.route('/get-product-info', methods=['GET'])
+@app.route('/get-product-info', methods=['GET']) # Obtener datos del producto producto | Control del pesos
 def get_product_info():
     # Obtener el EAN13 desde los parámetros de la solicitud
     ean13 = request.args.get('ean13')
@@ -1732,7 +1734,7 @@ def get_product_info():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/get-balers', methods=['GET'])
+@app.route('/get-balers', methods=['GET']) # Obtener los nombres de las empacadoras | Control de pesos
 def get_balers():
     try:
         # Conectar a la base de datos
@@ -1760,47 +1762,52 @@ def save_weight_control():
         # Extraer datos principales
         date = data.get('date', datetime.today().strftime('%Y-%m-%d'))
         baler = data.get('baler')
-        net_weight = float(data.get('net_weight'))  # Qnom
+        net_weight = float(data.get('net_weight'))  # Peso nominal (Qnom)
         format_ = data.get('format')
         brand = data.get('brand')
         lot = data.get('lot')
         manufacture_date = data.get('manufacture_date')
         expiry_date = data.get('expiry_date')
 
-        # Extraer los pesos ingresados
+        # Extraer los pesos y asegurarse de que sean numéricos
         pesos = [float(p) for p in data.get('weights', []) if p not in [None, ""]]
 
-        # 📌 **Regla (a) - Error promedio del lote (R87 3.2)**
-        # La cantidad real promedio del lote debe ser al menos igual a la cantidad nominal (Qnom)
+        # Cálculo de tolerancia (3% del peso nominal)
+        T = round(net_weight * 0.03, 2)  # Tolerancia del 3%
+
+        # Cálculo de límites máximos operativos
+        limite_maximo_operativo = round(net_weight + (T / 2), 2)
+        limite_minimo_operativo = round(net_weight - (T / 3), 2)
+
+      # Calcular estadísticas de peso
         if pesos:
-            average = float(round(np.mean(pesos), 2))  # c = promedio del lote
-            minimum = float(round(np.min(pesos), 2))
-            maximum = float(round(np.max(pesos), 2))
-            std_dev = float(round(np.std(pesos, ddof=1), 2)) if len(pesos) > 1 else 0.0
+            average = float(np.mean(pesos))  # Convertir np.float64 a float
+            minimum = float(np.min(pesos))
+            maximum = float(np.max(pesos))
+            std_dev = float(np.std(pesos, ddof=1)) if len(pesos) > 1 else 0.0
         else:
             average, minimum, maximum, std_dev = None, None, None, None
 
-        # 📌 **Calcular Tolerancia (3% de Qnom)**
-        T = net_weight * 0.03  # T = Qnom * 0.03
+        # Cálculo de errores T1 y T2
+        rango_T1_min = net_weight - 2 * T  # Límite inferior de T1
+        rango_T1_max = net_weight - T      # Límite superior de T1
+        rango_T2 = net_weight - 2 * T      # Límite inferior de T2
 
-        # 📌 **Regla (b) - Verificar el número de preempacados con error T1 (R87 3.3.2)**
-        # No más del 2.5% de los preempacados pueden estar en el rango de error T1.
-        count_T1 = sum((net_weight - 2 * T) <= p < (net_weight - T) for p in pesos)
+        # Contar unidades con error T1 y T2
+        count_T1 = sum(rango_T1_min <= p < rango_T1_max for p in pesos)
+        count_T2 = sum(p < rango_T2 for p in pesos)
+
+        # Porcentaje de unidades con error T1
         percent_T1 = (count_T1 / len(pesos)) * 100 if pesos else 0
 
-        # 📌 **Regla (c) - Verificar el número de preempacados con error T2 (R87 3.3.3)**
-        # No debe haber ningún preempacado con error T2.
-        count_T2 = sum(p < (net_weight - 2 * T) for p in pesos)
-
-        # 📌 **Evaluación Final**
+        # Determinar el resultado de aceptación del lote
+        result = "Aceptado"
         if average < net_weight:
-            result = "Rechazado - Promedio insuficiente"  # 🚨 Incumple regla (a)
-        elif count_T2 > 0:
-            result = "Rechazado - Error T2 presente"  # 🚨 Incumple regla (c)
+            result = "Rechazado - Promedio insuficiente"
         elif percent_T1 > 2.5:
-            result = "Rechazado - Demasiados errores T1"  # 🚨 Incumple regla (b)
-        else:
-            result = "Aceptado"
+            result = "Rechazado - Demasiados errores T1"
+        elif count_T2 > 0:
+            result = "Rechazado - Error T2 presente"
 
         # Conectar a la base de datos
         conn = get_db_connection()
@@ -1813,15 +1820,16 @@ def save_weight_control():
                 manufacture_date, expiry_date, average, minimum, maximum, standard_deviation,
                 p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, 
                 p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30,
-                result
+                count_T1, count_T2, percent_T1, result, limite_maximo_operativo, limite_minimo_operativo
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                       %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-                      %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                      %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                      %s, %s, %s, %s, %s, %s, %s)
         """
         values = [
             date, baler, net_weight, format_, brand, lot, manufacture_date, expiry_date,
             average, minimum, maximum, std_dev
-        ] + pesos + [None] * (30 - len(pesos)) + [result]  # Llenar con NULL y agregar resultado
+        ] + pesos + [None] * (30 - len(pesos)) + [count_T1, count_T2, percent_T1, result, limite_maximo_operativo, limite_minimo_operativo]
 
         cur.execute(query, values)
         conn.commit()
@@ -1830,11 +1838,89 @@ def save_weight_control():
         cur.close()
         conn.close()
 
-        return jsonify({"message": "Registro guardado exitosamente", "result": result}), 201
+        return jsonify({
+            "message": "Registro guardado exitosamente",
+            "average": average,
+            "min": minimum,
+            "max": maximum,
+            "std_dev": std_dev,
+            "count_T1": count_T1,
+            "count_T2": count_T2,
+            "percent_T1": percent_T1,
+            "result": result,
+            "limite_maximo_operativo": limite_maximo_operativo,
+            "limite_minimo_operativo": limite_minimo_operativo
+        }), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/get-last-weight-summary', methods=['GET'])
+def get_last_weight_summary():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute("""
+            SELECT date, baler, net_weight, format, brand, lot, 
+                   manufacture_date, expiry_date, average, minimum, maximum, standard_deviation, 
+                   count_t1, count_t2, 
+                   limite_maximo_operativo, limite_minimo_operativo, result
+            FROM weight_control 
+            ORDER BY id DESC 
+            LIMIT 1
+        """)
+        last_record = cur.fetchone()
+
+        cur.close()
+        conn.close()
+
+        if last_record:
+            return jsonify(last_record), 200
+        else:
+            return jsonify({"message": "No hay registros"}), 404
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
+@app.route('/get-weight-history', methods=['GET'])
+def get_weight_history():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Obtener el último registro
+        cur.execute("""
+            SELECT p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
+                   p11, p12, p13, p14, p15, p16, p17, p18, p19, p20,
+                   p21, p22, p23, p24, p25, p26, p27, p28, p29, p30,
+                   limite_maximo_operativo, limite_minimo_operativo, average
+            FROM weight_control
+            ORDER BY id DESC
+            LIMIT 1
+        """)
+        record = cur.fetchone()
+
+        cur.close()
+        conn.close()
+
+        if record:
+            # Extraer los pesos en una lista
+            weights = [{"x": i+1, "y": record[f"p{i+1}"]} for i in range(30)]
+
+            return jsonify({
+                "weights": weights,
+                "limite_maximo_operativo": record["limite_maximo_operativo"],
+                "limite_minimo_operativo": record["limite_minimo_operativo"],
+                "average": record["average"]
+            }), 200
+        else:
+            return jsonify({"message": "No hay registros"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+    
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))

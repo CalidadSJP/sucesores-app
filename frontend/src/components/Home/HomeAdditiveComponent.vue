@@ -34,7 +34,7 @@
             Formulario | Ingreso de Aditivos
           </button>
           <button @click="$router.push('/additive-files')" class="btn btn-success mb-3 w-100">
-            Ingresar Archivos | Aditivos
+            Ingresar/Visulizar Archivos | Aditivos
           </button>
           <button @click="$router.push('/additive-register')" class="btn btn-secondary mb-3 w-100">
             Consulta Historial | Ingreso de Aditivos
@@ -51,7 +51,7 @@
             Formulario | Ingreso de Material de Empaque
           </button>
           <button @click="$router.push('/material-files')" class="btn btn-success mb-3 w-100">
-            Ingresar Archivos | Material de Empaque
+            Ingresar/Visualizar Archivos | Material de Empaque
           </button>
           <button @click="$router.push('/add-material-provider')" class="btn btn-secondary mb-3 w-100">
             Listar | Agregar | Productos o Proveedores

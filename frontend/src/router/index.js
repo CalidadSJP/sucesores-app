@@ -3,7 +3,7 @@ import HomeComponent from '../components/Home/HomeComponent.vue';
 import FormComponent from '../components/Personnel/FormComponent.vue';
 import PersonnelComponent from '../components/Personnel/PersonnelComponent.vue';
 import FrecuecyComponent from '../components/Personnel/FrecuencyComponent.vue';
-import WeightComponent from '../components/WeightComponent.vue';
+import WeightComponent from '../components/weight/WeightComponent.vue';
 import LoginComponent from '../components/Login/LoginComponent.vue';
 import HomeControlComponent from '../components/Home/HomeControlComponent.vue';
 import AdditiveStorageForm from '../components/Additive/AdditiveStorageForm.vue';
@@ -22,6 +22,7 @@ import LoginAddAdditives from '@/components/Login/LoginAddAdditives.vue';
 import LoginAddMaterials from '@/components/Login/LoginAddMaterials.vue';
 import InspectionView from '@/components/Personnel/InspectionView.vue';
 import LoginInspectionRegister from '@/components/Login/LoginInspectionRegister.vue';
+import WeightResume from '@/components/weight/WeightResume.vue';
 
 const routes = [
   // Ruta para la página principal
@@ -148,7 +149,9 @@ const routes = [
     },
   },
 
-  { path: '/login-inspection-view', name: 'LoginInspectionRegister', component: LoginInspectionRegister }
+  { path: '/login-inspection-view', name: 'LoginInspectionRegister', component: LoginInspectionRegister },
+
+  { path: '/weight-resume', name: 'WeightResume', component: WeightResume}
 ];
 
 
