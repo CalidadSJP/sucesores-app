@@ -212,6 +212,7 @@ export default {
         format: this.form.formato, // Formato
         brand: this.form.marca, // Marca
         lot: this.form.lote, // Lote
+        ean13: this.form.ean13,
         manufacture_date: this.form.fechaFabricacion, // Fecha de fabricación
         expiry_date: this.form.fechaVencimiento, // Fecha de vencimiento
         weights: this.form.pesos.map(p => (p !== "" ? parseFloat(p) : null)) // Convertir pesos a números, dejando NULL los vacíos

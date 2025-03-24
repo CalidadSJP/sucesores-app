@@ -1754,7 +1754,7 @@ def get_balers():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/save-weight-control', methods=['POST'])
+@app.route('/save-weight-control', methods=['POST']) # Subir el nuevo registro de control de pesos
 def save_weight_control():
     try:
         data = request.json
@@ -1766,20 +1766,42 @@ def save_weight_control():
         format_ = data.get('format')
         brand = data.get('brand')
         lot = data.get('lot')
+        ean13 = data.get('ean13')
         manufacture_date = data.get('manufacture_date')
         expiry_date = data.get('expiry_date')
 
         # Extraer los pesos y asegurarse de que sean numéricos
         pesos = [float(p) for p in data.get('weights', []) if p not in [None, ""]]
 
-        # Cálculo de tolerancia (3% del peso nominal)
-        T = round(net_weight * 0.03, 2)  # Tolerancia del 3%
+        # Cálculo de tolerancia basado en la fórmula proporcionada
+        if net_weight < 100:
+            error_T1 = net_weight * 0.045  # 4.5% de net_weight
+        elif net_weight >= 200 and net_weight < 300:
+            error_T1 = 9
+        elif net_weight >= 300 and net_weight < 500:
+            error_T1 = net_weight * 0.03  # 3% de net_weight
+        elif net_weight >= 500 and net_weight < 1000:
+            error_T1 = 15
+        elif net_weight >= 1000 and net_weight < 10000:
+            error_T1 = net_weight * 0.015  # 1.5% de net_weight
+        elif net_weight >= 10000 and net_weight < 15000:
+            error_T1 = 150
+        elif net_weight >= 15000 and net_weight < 50000:
+            error_T1 = net_weight * 0.01  # 1% de net_weight
+        else:
+            error_T1 = "ERROR TOLERANCIA"  # Error en tolerancia si no cae en los rangos
+
+        if error_T1 == "ERROR TOLERANCIA":
+            return jsonify({"error": "Error en los rangos de tolerancia para el peso nominal"}), 400
+
+        # Cálculo de ERROR T2
+        error_T2 = error_T1 * 2
 
         # Cálculo de límites máximos operativos
-        limite_maximo_operativo = round(net_weight + (T / 2), 2)
-        limite_minimo_operativo = round(net_weight - (T / 3), 2)
+        limite_maximo_operativo = round(net_weight + (net_weight * 0.02), 2)
+        limite_minimo_operativo = round(net_weight - (net_weight * 0.03), 2)
 
-      # Calcular estadísticas de peso
+        # Calcular estadísticas de peso
         if pesos:
             average = float(np.mean(pesos))  # Convertir np.float64 a float
             minimum = float(np.min(pesos))
@@ -1788,10 +1810,10 @@ def save_weight_control():
         else:
             average, minimum, maximum, std_dev = None, None, None, None
 
-        # Cálculo de errores T1 y T2
-        rango_T1_min = net_weight - 2 * T  # Límite inferior de T1
-        rango_T1_max = net_weight - T      # Límite superior de T1
-        rango_T2 = net_weight - 2 * T      # Límite inferior de T2
+        # Calcular errores T1 y T2
+        rango_T1_min = net_weight - 2 * error_T1  # Límite inferior de T1
+        rango_T1_max = net_weight - error_T1      # Límite superior de T1
+        rango_T2 = net_weight - 2 * error_T1      # Límite inferior de T2
 
         # Contar unidades con error T1 y T2
         count_T1 = sum(rango_T1_min <= p < rango_T1_max for p in pesos)
@@ -1820,16 +1842,16 @@ def save_weight_control():
                 manufacture_date, expiry_date, average, minimum, maximum, standard_deviation,
                 p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, 
                 p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30,
-                count_T1, count_T2, percent_T1, result, limite_maximo_operativo, limite_minimo_operativo
+                count_T1, count_T2, percent_T1, result, limite_maximo_operativo, limite_minimo_operativo, ean13
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                       %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                       %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                      %s, %s, %s, %s, %s, %s, %s)
+                      %s, %s, %s, %s, %s, %s, %s, %s)
         """
         values = [
             date, baler, net_weight, format_, brand, lot, manufacture_date, expiry_date,
             average, minimum, maximum, std_dev
-        ] + pesos + [None] * (30 - len(pesos)) + [count_T1, count_T2, percent_T1, result, limite_maximo_operativo, limite_minimo_operativo]
+        ] + pesos + [None] * (30 - len(pesos)) + [count_T1, count_T2, percent_T1, result, limite_maximo_operativo, limite_minimo_operativo, ean13]
 
         cur.execute(query, values)
         conn.commit()
@@ -1849,7 +1871,8 @@ def save_weight_control():
             "percent_T1": percent_T1,
             "result": result,
             "limite_maximo_operativo": limite_maximo_operativo,
-            "limite_minimo_operativo": limite_minimo_operativo
+            "limite_minimo_operativo": limite_minimo_operativo,
+            "ean13": ean13
         }), 201
 
     except Exception as e:
@@ -1857,15 +1880,16 @@ def save_weight_control():
 
 @app.route('/get-last-weight-summary', methods=['GET'])
 def get_last_weight_summary():
+
     try:
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
         cur.execute("""
             SELECT date, baler, net_weight, format, brand, lot, 
-                   manufacture_date, expiry_date, average, minimum, maximum, standard_deviation, 
+                   manufacture_date, expiry_date, average, minimum, maximum, standard_deviation,  
                    count_t1, count_t2, 
-                   limite_maximo_operativo, limite_minimo_operativo, result
+                   limite_maximo_operativo, limite_minimo_operativo, result, ean13
             FROM weight_control 
             ORDER BY id DESC 
             LIMIT 1
@@ -1883,16 +1907,16 @@ def get_last_weight_summary():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @app.route('/get-weight-history', methods=['GET'])
 def get_weight_history():
+
     try:
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
         # Obtener el último registro
         cur.execute("""
-            SELECT p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
+            SELECT net_weight, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
                    p11, p12, p13, p14, p15, p16, p17, p18, p19, p20,
                    p21, p22, p23, p24, p25, p26, p27, p28, p29, p30,
                    limite_maximo_operativo, limite_minimo_operativo, average
@@ -1910,6 +1934,7 @@ def get_weight_history():
             weights = [{"x": i+1, "y": record[f"p{i+1}"]} for i in range(30)]
 
             return jsonify({
+                "net_weight": record["net_weight"],
                 "weights": weights,
                 "limite_maximo_operativo": record["limite_maximo_operativo"],
                 "limite_minimo_operativo": record["limite_minimo_operativo"],
@@ -1921,6 +1946,36 @@ def get_weight_history():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-    
+@app.route('/get-last-weights', methods=['GET'])
+def get_last_weights():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Obtener el último registro de pesos
+        cur.execute("""
+            SELECT p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
+                   p11, p12, p13, p14, p15, p16, p17, p18, p19, p20,
+                   p21, p22, p23, p24, p25, p26, p27, p28, p29, p30
+            FROM weight_control
+            ORDER BY id DESC
+            LIMIT 1
+        """)
+        record = cur.fetchone()
+
+        cur.close()
+        conn.close()
+
+        if record:
+            # Convertir los pesos en una lista simple
+            weights = [record[f"p{i+1}"] for i in range(30)]
+
+            return jsonify({"weights": weights}), 200
+        else:
+            return jsonify({"message": "No hay registros"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
