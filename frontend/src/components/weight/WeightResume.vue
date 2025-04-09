@@ -2,8 +2,12 @@
     <div class="container mt-4">
         <!-- Tarjeta 1: Datos generales -->
         <div class="card">
-            <div class="card-header text-center">
+            <div class="card-header custom-header bg-primary text-center text-white">
                 <h3>Datos</h3>
+                <button @click="$router.push('/weight')" class="btn btn-primary custom-back-button">
+                    <img src="@/assets/back-arrow.png" alt="Regresar" class="button-icon" />
+                    <span class="button-text">Regresar</span>
+                </button>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -15,7 +19,7 @@
             </div>
         </div>
         <div class="card mt-4">
-            <div class="card-header text-center">
+            <div class="card-header bg-primary text-center text-white">
                 <h3>Pesos Registrados</h3>
             </div>
             <div class="card-body">
@@ -29,7 +33,7 @@
         </div>
         <!-- Tarjeta 2: Estadísticas de peso -->
         <div class="card mt-4">
-            <div class="card-header text-center">
+            <div class="card-header bg-primary text-center text-white">
                 <h3>Resultados</h3>
             </div>
             <div class="card-body">
@@ -44,10 +48,10 @@
         <!-- Gráfico de dispersión -->
         <div class="card mt-4">
             <div class="card-body">
-                <h4 class="text-center">Dispersión de Pesos</h4>
+                <h4 class="text-center">Dispersión de Pesos</h4><br>
                 <Scatter id="weight-scatter" :data="chartData" :options="chartOptions" />
             </div>
-        </div><br><br>
+        </div><br><br><br><br>
     </div>
 </template>
 
@@ -325,5 +329,64 @@ export default {
     width: 100%;
     max-height: 400px;
     /* Para no dejarlo demasiado grande */
+}
+
+.custom-back-button {
+    display: flex;
+    /* Activa flexbox para alinear elementos */
+    align-items: center;
+    /* Alinea verticalmente ícono y texto */
+    justify-content: center;
+    /* Centra contenido horizontalmente dentro del botón */
+    background-color: #ffffff;
+    /* Cambia al color deseado */
+    color: rgb(0, 0, 0);
+    /* Texto negro */
+    border: none;
+    /* Elimina bordes */
+    border-radius: 8px;
+    /* Bordes redondeados */
+    padding: 10px 20px;
+    /* Añade espaciado interno */
+    font-size: 16px;
+    /* Tamaño del texto */
+    font-weight: bold;
+    /* Hace el texto más visible */
+    cursor: pointer;
+    /* Cambia el cursor al pasar sobre el botón */
+    gap: 10px;
+    /* Espaciado entre el ícono y el texto */
+    transition: background-color 0.3s;
+    /* Animación al cambiar color */
+}
+
+
+/* Cambia el color al pasar el mouse */
+.custom-back-button:hover {
+    background-color: #e3e6e9;
+    /* Cambia ligeramente el color */
+}
+
+/* Estilo para el ícono */
+.button-icon {
+    width: 22px;
+    /* Tamaño del ícono */
+    height: 22px;
+    /* Tamaño del ícono */
+}
+
+.custom-header {
+    display: flex;
+    /* Usa flexbox para alinear los elementos */
+    align-items: center;
+    /* Alinea verticalmente los elementos */
+    justify-content: space-between;
+    /* Separa el título del botón */
+    flex-wrap: wrap;
+    /* Permite que el contenido haga wrap si no cabe */
+    padding: 20px;
+    /* Añade espacio dentro del header */
+    gap: 10px;
+    /* Espaciado entre los elementos */
 }
 </style>

@@ -23,6 +23,7 @@ import LoginAddMaterials from '@/components/Login/LoginAddMaterials.vue';
 import InspectionView from '@/components/Personnel/InspectionView.vue';
 import LoginInspectionRegister from '@/components/Login/LoginInspectionRegister.vue';
 import WeightResume from '@/components/weight/WeightResume.vue';
+import WeightRegister from '@/components/weight/WeightRegister.vue';
 
 const routes = [
   // Ruta para la página principal
@@ -151,7 +152,9 @@ const routes = [
 
   { path: '/login-inspection-view', name: 'LoginInspectionRegister', component: LoginInspectionRegister },
 
-  { path: '/weight-resume', name: 'WeightResume', component: WeightResume}
+  { path: '/weight-resume', name: 'WeightResume', component: WeightResume},
+
+  { path: '/weight-register', name: 'WeightRegister', component: WeightRegister}
 ];
 
 

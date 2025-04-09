@@ -2,14 +2,20 @@
   <div class="container mt-5">
     <!-- Primera Tarjeta: Datos del Producto -->
     <div class="card mb-4 card-large">
-      <div class="card-header d-flex align-items-center">
-        <h4>Datos del Producto</h4>
-        <!-- Botón para ir a HomeComponent con una imagen y texto -->
-        <router-link to="/" class="back-link d-flex align-items-center ms-auto">
-          <img src="@/assets/home.png" alt="Regresar" class="back-icon"
-            style="width: 20px; height: 20px; margin-right: 5px;" />
-          <span class="card-text">Inicio</span>
-        </router-link>
+      <div class="card-header d-flex bg-success text-white custom-header align-items-center">
+        <h4>Datos</h4>
+
+        <!-- Contenedor para los botones alineados a la derecha -->
+        <div class="button-group">
+          <button @click="$router.push('/')" class="btn btn-primary custom-back-button">
+            <img src="@/assets/home.png" alt="Regresar" class="button-icon" />
+            <span class="button-text">Regresar</span>
+          </button>
+          <button @click="$router.push('/weight-register')" class="btn btn-primary custom-back-button">
+            <img src="@/assets/register.png" alt="Registro" class="button-icon" />
+            <span class="button-text">Registro</span>
+          </button>
+        </div>
       </div>
       <div class="card-body">
         <!-- Fecha Actual -->
@@ -82,7 +88,7 @@
 
     <!-- Segunda Tarjeta: Pesos del Producto -->
     <div class="card mb-4 card-large">
-      <div class="card-header">
+      <div class="card-header bg-success text-white">
         <h4>Pesos del Producto</h4>
       </div>
       <div class="card-body">
@@ -273,6 +279,79 @@ export default {
   margin-right: 5px;
 }
 
+.custom-back-button {
+  display: flex;
+  /* Activa flexbox para alinear elementos */
+  align-items: center;
+  /* Alinea verticalmente ícono y texto */
+  justify-content: center;
+  /* Centra contenido horizontalmente dentro del botón */
+  background-color: #ffffff;
+  /* Cambia al color deseado */
+  color: rgb(0, 0, 0);
+  /* Texto negro */
+  border: none;
+  /* Elimina bordes */
+  border-radius: 8px;
+  /* Bordes redondeados */
+  padding: 10px 20px;
+  /* Añade espaciado interno */
+  font-size: 16px;
+  /* Tamaño del texto */
+  font-weight: bold;
+  /* Hace el texto más visible */
+  cursor: pointer;
+  /* Cambia el cursor al pasar sobre el botón */
+  gap: 10px;
+  /* Espaciado entre el ícono y el texto */
+  transition: background-color 0.3s;
+  /* Animación al cambiar color */
+}
+
+.custom-register-button {
+  display: flex;
+  /* Activa flexbox para alinear elementos */
+  align-items: center;
+  /* Alinea verticalmente ícono y texto */
+  justify-content: center;
+  /* Centra contenido horizontalmente dentro del botón */
+  background-color: #ffffff;
+  /* Cambia al color deseado */
+  color: rgb(0, 0, 0);
+  /* Texto negro */
+  border: none;
+  /* Elimina bordes */
+  border-radius: 8px;
+  /* Bordes redondeados */
+  padding: 10px 20px;
+  /* Añade espaciado interno */
+  font-size: 16px;
+  /* Tamaño del texto */
+  font-weight: bold;
+  /* Hace el texto más visible */
+  cursor: pointer;
+  /* Cambia el cursor al pasar sobre el botón */
+  gap: 10px;
+  /* Espaciado entre el ícono y el texto */
+  transition: background-color 0.3s;
+  /* Animación al cambiar color */
+}
+
+
+/* Cambia el color al pasar el mouse */
+.custom-back-button:hover {
+  background-color: #e3e6e9;
+  /* Cambia ligeramente el color */
+}
+
+/* Estilo para el ícono */
+.button-icon {
+  width: 22px;
+  /* Tamaño del ícono */
+  height: 22px;
+  /* Tamaño del ícono */
+}
+
 .card-text {
   font-size: 23px;
   /* Ajusta el tamaño de la palabra según sea necesario */
@@ -304,4 +383,26 @@ export default {
   padding-right: 0;
   /* Elimina el padding derecho */
 }
+
+.custom-header {
+  display: flex;
+  /* Usa flexbox para alinear los elementos */
+  align-items: center;
+  /* Alinea verticalmente los elementos */
+  justify-content: space-between;
+  /* Separa el título del botón */
+  flex-wrap: wrap;
+  /* Permite que el contenido haga wrap si no cabe */
+  padding: 20px;
+  /* Añade espacio dentro del header */
+  gap: 10px;
+  /* Espaciado entre los elementos */
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-left: auto; /* Empuja el grupo a la derecha */
+}
+
 </style>

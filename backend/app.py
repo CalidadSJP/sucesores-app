@@ -7,7 +7,7 @@ from flask_cors import CORS
 from io import BytesIO
 from openpyxl import Workbook
 from werkzeug.utils import secure_filename
-from datetime import datetime
+from datetime import datetime, date
 from flask import send_from_directory
 import numpy as np
 
@@ -281,7 +281,6 @@ def get_inspection_frequency():
 
     except Exception as e:
         return jsonify({'error': f"Error interno del servidor: {str(e)}"}), 500
-
 
 #PAGINA DE REVISION DE INSPECCION DEL PERSONAL
 
@@ -1447,7 +1446,7 @@ def get_products_by_brand_provider(brand, provider):
             conn.close()
 
 
-#Pagina "Pagina de archivos Material de empaque"
+#"Pagina de archivos Material de empaque"
 
 @app.route('/get-material-files', methods=['GET']) # Listar archivos | Material de empaque
 def get_material_files():
@@ -1714,7 +1713,7 @@ def get_product_info():
             a.format AS formato, 
             a.brand_id, 
             b.brand_name AS marca
-        FROM article a
+        FROM articles a
         JOIN brand b ON a.brand_id = b.id
         WHERE a.ean13 = %s
         """
@@ -1878,7 +1877,7 @@ def save_weight_control():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/get-last-weight-summary', methods=['GET'])
+@app.route('/get-last-weight-summary', methods=['GET']) #Obtener la información de la ultimo ingreso de pesos
 def get_last_weight_summary():
 
     try:
@@ -1907,7 +1906,7 @@ def get_last_weight_summary():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/get-weight-history', methods=['GET'])
+@app.route('/get-weight-history', methods=['GET']) # Obtener los datos para el grafico de dispersion | Control de pesos
 def get_weight_history():
 
     try:
@@ -1946,7 +1945,7 @@ def get_weight_history():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@app.route('/get-last-weights', methods=['GET'])
+@app.route('/get-last-weights', methods=['GET']) # Obtener los ultimos pesos ingresados
 def get_last_weights():
     try:
         conn = get_db_connection()
@@ -1973,6 +1972,151 @@ def get_last_weights():
             return jsonify({"weights": weights}), 200
         else:
             return jsonify({"message": "No hay registros"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/weight-control', methods=['GET'])
+def get_weight_control_data():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        query = """
+        SELECT id, date, baler, net_weight, format, brand, lot, manufacture_date, expiry_date, 
+               average, minimum, maximum, standard_deviation, 
+               p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, 
+               p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, 
+               p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, 
+               result, count_t1, count_t2, percent_t1, 
+               limite_maximo_operativo, limite_minimo_operativo, ean13
+        FROM weight_control
+        ORDER BY date DESC
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        # Obtener nombres de columnas
+        column_names = [desc[0] for desc in cursor.description]
+
+        # Convertir los datos a lista de diccionarios
+        data = [dict(zip(column_names, row)) for row in rows]
+
+        # Formatear las fechas a 'DD-MM-YYYY'
+        for row in data:
+            if row.get('date'):
+                row['date'] = row['date'].strftime('%d-%m-%Y')  # Formato de la fecha
+            if row.get('manufacture_date'):
+                row['manufacture_date'] = row['manufacture_date'].strftime('%d-%m-%Y')
+            if row.get('expiry_date'):
+                row['expiry_date'] = row['expiry_date'].strftime('%d-%m-%Y')
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(data)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/weight-control/<int:id>', methods=['PUT'])  # Editar registro de control de peso
+def update_weight_control(id):
+    data = request.json
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    # Generar los campos dinámicamente para la actualización
+    update_fields = ", ".join([f"{key} = %s" for key in data.keys()])
+    values = list(data.values()) + [id]
+
+    # Consulta de actualización
+    query = f"UPDATE weight_control SET {update_fields} WHERE id = %s;"
+    
+    cursor.execute(query, values)
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return jsonify({"message": "Registro de peso actualizado exitosamente."})
+
+@app.route('/weight-control/<int:id>', methods=['DELETE'])  # Eliminar registro de control de peso
+def delete_weight_control(id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    # Ejecutar eliminación
+    cursor.execute("DELETE FROM weight_control WHERE id = %s;", (id,))
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+
+    return jsonify({"message": "Registro de peso eliminado exitosamente."})
+
+
+@app.route('/download-weight-control', methods=['GET'])  # Descargar registro | Control de peso
+def download_weight_control_excel():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute('''
+            SELECT id, date, baler, net_weight, format, brand, lot, manufacture_date, expiry_date, 
+                   average, minimum, maximum, standard_deviation, 
+                   p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, 
+                   p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, 
+                   p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, 
+                   result, count_t1, count_t2, percent_t1, 
+                   limite_maximo_operativo, limite_minimo_operativo, ean13
+            FROM weight_control
+            ORDER BY date DESC
+        ''')
+        data = cur.fetchall()
+
+        # Crear el archivo Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Control de Peso"
+
+        # Encabezados
+        headers = [
+            "ID", "Fecha", "Empacador", "Peso Neto", "Formato", "Marca", "Lote",
+            "Fecha de Fabricación", "Fecha de Vencimiento",
+            "Promedio", "Mínimo", "Máximo", "Desviación Estándar",
+        ]
+        headers += [f"P{i}" for i in range(1, 31)]
+        headers += [
+            "Resultado", "Cantidad T1", "Cantidad T2", "Porcentaje T1",
+            "Límite Máx. Operativo", "Límite Mín. Operativo", "EAN13"
+        ]
+        ws.append(headers)
+
+        # Función para convertir fechas a string
+        def safe_str(value):
+            if isinstance(value, (datetime, date)):
+                return value.strftime('%d-%m-%Y')
+            return value
+
+        # Agregar filas de datos
+        for row in data:
+            formatted_row = [safe_str(value) for value in row]
+            ws.append(formatted_row)
+
+        cur.close()
+        conn.close()
+
+        # Guardar en BytesIO
+        output = BytesIO()
+        wb.save(output)
+        wb.close()
+        output.seek(0)
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name="registro_pesos.xlsx",
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
