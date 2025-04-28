@@ -24,6 +24,8 @@ import InspectionView from '@/components/Personnel/InspectionView.vue';
 import LoginInspectionRegister from '@/components/Login/LoginInspectionRegister.vue';
 import WeightResume from '@/components/weight/WeightResume.vue';
 import WeightRegister from '@/components/weight/WeightRegister.vue';
+import ArticlesList from '@/components/Articles/ArticlesList.vue';
+import HumidityControl from '@/components/Humidity/HumidityControl.vue';
 
 const routes = [
   // Ruta para la página principal
@@ -36,10 +38,7 @@ const routes = [
   { path: '/form', name: 'Form', component: FormComponent },
 
   // Ruta para la página de personal (protegida)
-  {
-    path: '/personnel',
-    name: 'Personnel',
-    component: PersonnelComponent,
+  { path: '/personnel', name: 'Personnel', component: PersonnelComponent,
     beforeEnter: (to, from, next) => {
       const token = localStorage.getItem('authToken');
       const userArea = localStorage.getItem('user_area');
@@ -64,9 +63,7 @@ const routes = [
 
   { path: '/additive-login', name: 'LoginAdditive', component: LoginAdditiveComponent },
 
-  {
-    path: '/additive-register',
-    component: AdditiveRegister,
+  { path: '/additive-register', component: AdditiveRegister,
     beforeEnter: (to, from, next) => {
       const token = localStorage.getItem('authToken');
       const userArea = localStorage.getItem('user_area');
@@ -81,8 +78,7 @@ const routes = [
 
   { path: '/additive-home', name: 'HomeAdditive', component: HomeAdditiveComponent },
 
-  {
-    path: '/add-product-provider', name: 'AddProductOrProvider', component: AddProductOrProvider,
+  { path: '/add-product-provider', name: 'AddProductOrProvider', component: AddProductOrProvider,
     beforeEnter: (to, from, next) => {
       const token = localStorage.getItem('authToken');
       const userArea = localStorage.getItem('user_area');
@@ -97,8 +93,7 @@ const routes = [
 
   { path: '/additive-release', name: 'AdditiveRelease', component: AdditiveRelease },
 
-  {
-    path: '/add-material-provider', name: 'AddMaterialOrProvider', component: AddMaterialOrProvider,
+  { path: '/add-material-provider', name: 'AddMaterialOrProvider', component: AddMaterialOrProvider,
     beforeEnter: (to, from, next) => {
       const token = localStorage.getItem('authToken');
       const userArea = localStorage.getItem('user_area');
@@ -121,9 +116,7 @@ const routes = [
 
   { path: '/material-storage-form', name: 'PackagingStorageForm', component: PackagingStorageForm },
 
-  {
-    path: '/material-register',
-    component: MaterialRegister,
+  { path: '/material-register', component: MaterialRegister,
     beforeEnter: (to, from, next) => {
       const token = localStorage.getItem('authToken');
       const userArea = localStorage.getItem('user_area');
@@ -136,8 +129,7 @@ const routes = [
     },
   },
 
-  {
-    path: '/inspection-view', name: 'InspectionView', component: InspectionView,
+  { path: '/inspection-view', name: 'InspectionView', component: InspectionView,
     beforeEnter: (to, from, next) => {
       const token = localStorage.getItem('authToken');
       const userArea = localStorage.getItem('user_area');
@@ -154,10 +146,13 @@ const routes = [
 
   { path: '/weight-resume', name: 'WeightResume', component: WeightResume},
 
-  { path: '/weight-register', name: 'WeightRegister', component: WeightRegister}
+  { path: '/weight-register', name: 'WeightRegister', component: WeightRegister},
+
+  { path: '/articles-list', name: 'ArticlesList', component: ArticlesList},
+
+  { path: '/humidity-control', name: 'HumidityControl', component: HumidityControl},
+
 ];
-
-
 
 const router = createRouter({
   history: createWebHistory(),

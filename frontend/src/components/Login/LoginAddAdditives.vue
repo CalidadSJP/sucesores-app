@@ -115,6 +115,7 @@
     width: 100%;
     padding: 8px;
     margin-top: 5px;
+    font-weight: 400 !important;
   }
   
   .btn {

@@ -90,25 +90,27 @@
             </li>
           </ul>
           <!-- Paginación de archivos en Transporte -->
-          <div class="mt-3 d-flex justify-content-center align-items-center">
-            <button @click="previousPage('transporte')" class="btn btn-outline-success me-2"
-              :disabled="currentTransportePage <= 1">
+          <div class="pagination-container mt-4 d-flex justify-content-center align-items-center gap-2">
+            <button @click="previousPage('transporte')" class="pagination-btn" :disabled="currentTransportePage <= 1">
               Anterior
             </button>
-            <ul class="pagination mb-0">
-              <li v-for="page in totalTransportePages" :key="page"
-                :class="['page-item', { active: page === currentTransportePage }]">
-                <button @click="goToPage('transporte', page)" class="page-link btn btn-success"
-                  :class="{ 'btn-active': page === currentTransportePage }">
+
+            <ul class="pagination mb-0 d-flex gap-1">
+              <li v-for="page in visibleTransportePages" :key="page"
+                :class="['page-item-custom', { active: page === currentTransportePage }]">
+                <button @click="goToPage('transporte', page)" class="page-link-custom"
+                  :class="{ 'active-page': page === currentTransportePage }">
                   {{ page }}
                 </button>
               </li>
             </ul>
-            <button @click="nextPage('transporte')" class="btn btn-outline-success ms-2"
+
+            <button @click="nextPage('transporte')" class="pagination-btn"
               :disabled="currentTransportePage >= totalTransportePages">
               Siguiente
             </button>
           </div>
+
         </div>
       </div>
 
@@ -140,26 +142,27 @@
             </li>
           </ul>
           <!-- Paginación de archivos en Producto -->
-          <div class="mt-3 d-flex justify-content-center align-items-center">
-            <button @click="previousPage('producto')" class="btn btn-outline-success me-2"
-              :disabled="currentProductoPage <= 1">
+          <div class="pagination-container mt-4 d-flex justify-content-center align-items-center gap-2">
+            <button @click="previousPage('producto')" class="pagination-btn" :disabled="currentProductoPage <= 1">
               Anterior
             </button>
-            <ul class="pagination mb-0">
-              <li v-for="page in totalProductoPages" :key="page"
-                :class="['page-item', { active: page === currentProductoPage }]">
-                <button @click="goToPage('producto', page)" class="page-link btn btn-success"
-                  :class="{ 'btn-active': page === currentProductoPage }">
+
+            <ul class="pagination mb-0 d-flex gap-1">
+              <li v-for="page in visibleProductoPages" :key="page"
+                :class="['page-item-custom', { active: page === currentProductoPage }]">
+                <button @click="goToPage('producto', page)" class="page-link-custom"
+                  :class="{ 'active-page': page === currentProductoPage }">
                   {{ page }}
                 </button>
               </li>
             </ul>
 
-            <button @click="nextPage('producto')" class="btn btn-outline-success ms-2"
+            <button @click="nextPage('producto')" class="pagination-btn"
               :disabled="currentProductoPage >= totalProductoPages">
               Siguiente
             </button>
           </div>
+
         </div>
       </div>
     </div>
@@ -185,10 +188,9 @@ export default {
       product: "", // Producto seleccionado
       // Paginación
       currentTransportePage: 1,
-      totalTransportePages: 1,
       currentProductoPage: 1,
-      totalProductoPages: 1,
-      filesPerPage: 10
+      filesPerPage: 10,
+
     };
   },
   computed: {
@@ -207,13 +209,38 @@ export default {
         file.toLowerCase().includes(this.transporteFilter.toLowerCase())
       );
     },
+    visibleTransportePages() {
+      const start = Math.floor((this.currentTransportePage - 1) / 3) * 3 + 1;
+      const end = Math.min(start + 2, this.totalTransportePages);
+      const pages = [];
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      return pages;
+    },
+    visibleProductoPages() {
+      const start = Math.floor((this.currentProductoPage - 1) / 3) * 3 + 1;
+      const end = Math.min(start + 2, this.totalProductoPages);
+      const pages = [];
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      return pages;
+    },
 
     // Filtrar los archivos de producto
     filteredProductoFiles() {
       return this.productoFiles.filter(file =>
         file.toLowerCase().includes(this.productoFilter.toLowerCase())
       );
-    }
+    },
+    totalTransportePages() {
+      return Math.ceil(this.filteredTransporteFiles.length / this.filesPerPage);
+    },
+    totalProductoPages() {
+      return Math.ceil(this.filteredProductoFiles.length / this.filesPerPage);
+    },
+
   },
   mounted() {
     this.fetchFiles();
@@ -230,8 +257,6 @@ export default {
           this.transporteFiles = this.sortFilesByDate(response.data.transporte_files);
           this.productoFiles = this.sortFilesByDate(response.data.producto_files);
 
-          this.totalTransportePages = Math.ceil(this.transporteFiles.length / this.filesPerPage);
-          this.totalProductoPages = Math.ceil(this.productoFiles.length / this.filesPerPage);
         } else {
           console.error("Error al obtener archivos.");
         }
@@ -480,5 +505,61 @@ export default {
   flex-shrink: 0;
   /* Evita que los botones cambien de tamaño */
   display: flex;
+}
+
+.pagination-container {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.pagination-btn {
+  background-color: #fff;
+  color: #198754;
+  border: 2px solid #198754;
+  padding: 6px 14px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #198754;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-item-custom {
+  list-style: none;
+}
+
+.page-link-custom {
+  border: none;
+  background-color: #f8f9fa;
+  color: #198754;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-link-custom:hover {
+  background-color: #d1e7dd;
+  color: #0f5132;
+  cursor: pointer;
+}
+
+.active-page {
+  background-color: #198754;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(25, 135, 84, 0.5);
 }
 </style>

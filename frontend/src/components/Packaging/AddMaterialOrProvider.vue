@@ -19,6 +19,13 @@
                         <input type="text" id="provider-name" v-model="newProvider" class="form-control"
                             @input="convertToUppercase('newProvider')" placeholder="Ingrese el nombre del proveedor" />
                         <br><button class="btn btn-primary mt-2" @click="addProvider">Agregar Proveedor</button>
+                        <br><br><br>
+                        <h5>Agregar Marca</h5><br>
+                        <label for="brand-name" class="form-label">Nombre de la Marca</label>
+                        <input type="text" id="brand-name" v-model="newBrandName" class="form-control"
+                            @input="convertToUppercase('newBrandName')" placeholder="Ingrese el nombre de la marca" />
+                        <br><button class="btn btn-primary mt-2" @click="addBrand">Agregar Marca</button>
+
                     </div>
 
                     <!-- Sección para agregar producto -->
@@ -239,6 +246,7 @@ export default {
             newProductType: "",
             newBrand: "",
             newMaterialProvider: "",
+            newBrandName: "",
             providers: [],
             materials: [],
             brands: [],
@@ -319,6 +327,21 @@ export default {
                     // Ordenar la lista después de agregar
                     this.providers.sort((a, b) => a.id - b.id);
                     this.newProvider = ""; // Limpiar campo
+                } catch (error) {
+                    console.error("Error al agregar proveedor:", error);
+                }
+            }
+        },
+        async addBrand() {
+            if (this.newBrandName) {
+                try {
+                    const response = await axios.post(`${process.env.VUE_APP_API_URL}/api/add-brand`, {
+                        brand_name: this.newBrandName,
+                    });
+                    this.brands.push(response.data);
+                    // Ordenar la lista después de agregar
+                    this.brands.sort((a, b) => a.id - b.id);
+                    this.newBrandName = ""; // Limpiar campo
                 } catch (error) {
                     console.error("Error al agregar proveedor:", error);
                 }

@@ -213,11 +213,11 @@ export default {
       // Construir el objeto con los datos a enviar
       const payload = {
         date: this.currentDate, // Fecha actual
-        baler: this.form.empacadora, // Nombre de la empacadora
+        baler: this.form.empacadora.toUpperCase(), // Nombre de la empacadora
         net_weight: this.form.pesoNeto, // Peso neto
-        format: this.form.formato, // Formato
-        brand: this.form.marca, // Marca
-        lot: this.form.lote, // Lote
+        format: this.form.formato.toUpperCase(), // Formato
+        brand: this.form.marca.toUpperCase(), // Marca
+        lot: this.form.lote.toUpperCase(), // Lote
         ean13: this.form.ean13,
         manufacture_date: this.form.fechaFabricacion, // Fecha de fabricación
         expiry_date: this.form.fechaVencimiento, // Fecha de vencimiento
@@ -404,5 +404,7 @@ export default {
   gap: 10px;
   margin-left: auto; /* Empuja el grupo a la derecha */
 }
+
+
 
 </style>

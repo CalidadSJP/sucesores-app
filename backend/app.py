@@ -7,7 +7,7 @@ from flask_cors import CORS
 from io import BytesIO
 from openpyxl import Workbook
 from werkzeug.utils import secure_filename
-from datetime import datetime, date
+from datetime import datetime, date, time
 from flask import send_from_directory
 import numpy as np
 
@@ -996,6 +996,25 @@ def submit_release():
         return jsonify({"error": str(e)}), 500
 
 #Pagina "Añadir Proveedores o Material de Empaque"
+
+@app.route('/add-brand', methods=['POST']) # Añadir proveedores | Aditivos
+def add_brand():
+    data = request.get_json()
+    brand_name = data.get('brand_name').upper()  # Convertir a mayúsculas
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO brand (brand_name) VALUES (%s) RETURNING id", (brand_name,))
+        new_brand_id = cursor.fetchone()[0]
+        conn.commit()
+        return jsonify({'id': new_brand_id, 'provider_name': brand_name}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
 
 @app.route('/get-providers-material', methods=['GET']) # Listar proveedores | Material de empaque
 def get_providers_material_list():
@@ -2053,7 +2072,6 @@ def delete_weight_control(id):
 
     return jsonify({"message": "Registro de peso eliminado exitosamente."})
 
-
 @app.route('/download-weight-control', methods=['GET'])  # Descargar registro | Control de peso
 def download_weight_control_excel():
     try:
@@ -2120,6 +2138,207 @@ def download_weight_control_excel():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+#PAGINA PARA LISTAR ARTICULOS
+
+# Obtener todos los artículos
+@app.route('/articles', methods=['GET'])
+def get_articles():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM articles ORDER BY id;")
+    rows = cur.fetchall()
+    colnames = [desc[0] for desc in cur.description]
+    data = [dict(zip(colnames, row)) for row in rows]
+    cur.close()
+    conn.close()
+    return jsonify(data)
+
+# Insertar nuevo artículo
+@app.route('/articles', methods=['POST'])
+def add_article():
+    data = request.json
+    query = """
+        INSERT INTO articles (cod_article, article_name, format, brand_id, ean13, ean14, weight)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """
+    values = (
+        data['cod_article'], data['article_name'], data['format'],
+        data['brand_id'], data['ean13'], data['ean14'], data['weight']
+    )
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(query, values)
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'message': 'Artículo añadido correctamente'})
+
+# Actualizar artículo
+@app.route('/articles/<int:id>', methods=['PUT'])
+def update_article(id):
+    data = request.json
+    query = """
+        UPDATE articles SET cod_article=%s, article_name=%s, format=%s,
+        brand_id=%s, ean13=%s, ean14=%s, weight=%s WHERE id=%s
+    """
+    values = (
+        data['cod_article'], data['article_name'], data['format'],
+        data['brand_id'], data['ean13'], data['ean14'], data['weight'], id
+    )
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(query, values)
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'message': 'Artículo actualizado correctamente'})
+
+# Eliminar artículo
+@app.route('/articles/<int:id>', methods=['DELETE'])
+def delete_article(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM articles WHERE id = %s", (id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'message': 'Artículo eliminado correctamente'})
+
+
+@app.route('/brands', methods=['GET'])
+def get_brands():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id, brand_name FROM brand ORDER BY id")
+    rows = cur.fetchall()
+    brands = [{'id': row[0], 'name': row[1]} for row in rows]
+    cur.close()
+    return jsonify(brands)
+
+
+#CONTROL DE HUMEDADES
+
+@app.route('/submit-humidity-control', methods=['POST']) # Ingresar el control realizados
+def add_humidity():
+    data = request.get_json()
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO humidity_control (date, time, line, format, zone, humidity, responsible, observations, balance)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (
+        data['date'], data['time'], data['line'], data['format'],
+        data['zone'], data['humidity'], data['responsible'], data['observations'], data['balance']
+    ))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'message': 'Humedad registrada correctamente'}), 201
+
+@app.route('/humidity-records', methods=['GET']) # Obtener el registro de control de humeades para la tabla
+def get_humidity_records():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM humidity_control ORDER BY id DESC")
+        rows = cur.fetchall()
+        records = []
+
+        for row in rows:
+            record = {}
+            for i, value in enumerate(row):
+                column_name = cur.description[i][0]
+                # Convert date and time to string
+                if isinstance(value, (date, time)):
+                    record[column_name] = value.isoformat()
+                else:
+                    record[column_name] = value
+            records.append(record)
+
+        return jsonify(records)
+    except Exception as e:
+        print(f"❌ Error en get_humidity_records: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/get-lines', methods=['GET']) # Obtener los nombres de las lineas de producción | Control de Humedades
+def get_lines():
+    try:
+        # Conectar a la base de datos
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Consulta para obtener todas las empacadoras
+        query = "SELECT id, line_name FROM production_line"
+        cursor.execute(query)
+        lines = cursor.fetchall()
+
+        # Cerrar conexión
+        cursor.close()
+        conn.close()
+
+        return jsonify(lines), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/get-formats/<int:line_id>', methods=['GET'])# Obtener los formatos del producto por cada linea de produccións
+def get_formats_by_line(line_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id, format_name FROM pasta_format WHERE line_id = %s", (line_id,))
+    formats = cur.fetchall()
+    cur.close()
+    conn.close()
+    return jsonify([{"id": f[0], "format_name": f[1]} for f in formats])
+
+@app.route('/download-humidity', methods=['GET'])  # Endpoint para descarga de registro de humedades
+def download_humidity():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # Consulta de los datos de la tabla humidity_control
+        cur.execute('''
+            SELECT date, time, line, format, zone, humidity, responsible, observations
+            FROM humidity_control
+            ORDER BY date DESC, time DESC
+        ''')
+        data = cur.fetchall()
+
+        # Crear el archivo Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Control de Humedades"
+
+        # Encabezados
+        headers = [
+            "Fecha", "Hora", "Línea", "Formato", "Zona", "Humedad (%)", "Responsable", "Observaciones"
+        ]
+        ws.append(headers)
+
+        # Insertar los datos
+        for record in data:
+            ws.append(list(record))
+
+        cur.close()
+        conn.close()
+
+        # Guardar en memoria (BytesIO)
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name="registro-humedades.xlsx",
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))

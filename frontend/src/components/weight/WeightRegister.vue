@@ -3,7 +3,7 @@
         <h2 class="text-center">Registro de Pesos</h2><br>
 
         <!-- Tarjeta con tabla y mayor ancho -->
-        <div class="card shadow-lg mx-auto" style="max-width: 90%; width: 100%;">
+        <div class="card shadow-lg mx-auto" style="max-width: 90%; width: 100%;">  
             <!-- Header de la tarjeta con el filtro -->
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Filtrar Registro</h5>
@@ -169,12 +169,10 @@ export default {
                         const rowValue = row[key];
                         return !filterValue || String(rowValue).toLowerCase().includes(filterValue.toLowerCase());
                     });
-
                     return matchesDate && matchesFilters;
                 })
                 .sort((a, b) => b.id - a.id); // Ordenar por ID de forma ascendente
         },
-
         totalPages() {
             return Math.ceil(this.filteredData.length / this.itemsPerPage);
         },
@@ -287,8 +285,6 @@ export default {
                 alert("Ocurrió un error al eliminar el registro.");
             }
         },
-
-
     },
     mounted() {
         this.fetchData();

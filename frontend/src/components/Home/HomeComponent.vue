@@ -1,25 +1,38 @@
-<!-- src/components/HomeComponent.vue -->
 <template>
-  <div class="container mt-5">
-    <div class="card text-center shadow">
-      <div class="card-header">
-        <h2>Sucesores App - Calidad</h2>
-      </div>
-      <div class="card-body">
-        <p class="card-text">Seleccione una de las opciones:</p>
-        <div class="d-grid gap-2 col-6 mx-auto">
-          <router-link to="/control-home" class="btn btn-outline-primary">Personal</router-link>
-          <router-link to="/additive-home" class="btn btn-outline-success">Ingreso Materia Prima/Material de
-            Empaque/Aditivos</router-link>
-          <router-link to="/weight" class="btn btn-outline-secondary">Control de Pesos</router-link>
-          <!-- Se puede añadir más opciones aquí para futuras funcionalidades -->
-          <!--<router-link to="/otra-opcion" class="btn btn-secondary">Otra Opción</router-link>-->
+  <div class="home-wrapper">
+    <header class="hero">
+      <img src="@/assets/logo-sucesores-app.png" alt="Logo" class="logo" />
+      <h1>Bienvenido a Sucesores App - Calidad</h1>
+    </header>
+
+    <section class="menu-section">
+      <div class="menu-grid">
+        <div class="menu-card">
+          <i class="fas fa-users icon"></i>
+          <h3>Personal</h3>
+          <router-link to="/control-home" class="btn">▲</router-link>
+        </div>
+        <div class="menu-card">
+          <i class="fas fa-boxes icon"></i>
+          <h3>Material Empaque/Aditivos</h3>
+          <router-link to="/additive-home" class="btn">▲</router-link>
+        </div>
+        <div class="menu-card">
+          <i class="fas fa-balance-scale icon"></i>
+          <h3>Control de Pesos</h3>
+          <router-link to="/weight" class="btn">▲</router-link>
+        </div>
+        <div class="menu-card">
+          <i class="fas fa-tint icon"></i>
+          <h3>Control de Humedades</h3>
+          <router-link to="/humidity-control" class="btn">▲</router-link>
         </div>
       </div>
-      <div class="card-footer text-muted">
-        © 2024 Sucesores
-      </div>
-    </div>
+    </section>
+
+    <footer class="footer">
+      © 2024 Sucesores
+    </footer>
   </div>
 </template>
 
@@ -30,31 +43,106 @@ export default {
 </script>
 
 <style scoped>
-.container {
-  max-width: 600px;
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+.home-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.card-header {
+.hero {
+  text-align: center;
+  padding: 0.25rem 0.1rem;
+  background-image: url('https://wallpapers.com/images/hd/plain-dark-green-wallpaper-krt3ve53xrh5dy16.jpg'); /* Cambia la ruta si usas una URL externa */
+  background-size: cover;
+  background-position: center;
+  color: white;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.logo {
+  width: 120px;
+  margin-bottom: 1rem;
+}
+
+.hero h1 {
+  font-size: 2.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.hero p {
+  font-size: 1.2rem;
+}
+
+.menu-section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 1rem;
+  background: linear-gradient(to right, #e8f5e9, #f1f8e9);
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 2rem;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.menu-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.menu-card:hover {
+  transform: translateY(-5px);
+}
+
+.icon {
+  font-size: 2.5rem;
+  color: #019c54;
+  margin-bottom: 1rem;
+}
+
+.btn {
+  margin-top: 1rem;
+  display: inline-block;
+  padding: 0.5rem 1.2rem;
+  border-radius: 20px;
   background-color: #019c54;
   color: white;
+  text-decoration: none;
+  transition: background 0.3s;
 }
 
-.btn-outline-success {
-  border-color: #28a745;
-  color: #28a745;
+.btn:hover {
+  background-color: #01693a;
 }
 
-.btn-outline-primary {
-  border-color: #007bff;
-  color: #007bff;
-}
-
-.btn-outline-primary:hover,
-.btn-outline-success:hover {
-  color: white;
-}
-
-.card-footer {
-  background-color: #f8f9fa;
+.footer {
+  text-align: center;
+  padding: 1rem;
+  background-color: #f1f1f1;
+  color: #555;
 }
 </style>

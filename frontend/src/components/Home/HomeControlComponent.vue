@@ -1,31 +1,47 @@
 <template>
-  <div class="menu-container">
-    <div class="card mx-auto" style="max-width: 500px;">
-      <div class="card-header text-center">
-        <h3>Personal</h3>
-      </div>
-      <div class="card-body d-flex flex-column align-items-center">
-        <button @click="goHome" class="home-button">
-          <img :src="require('@/assets/home.png')" alt="Home Icon" />
-          <span class="card-text"> Inicio</span>
-        </button>
+  <div class="menu-personal">
+    <header class="menu-header">
+      <span class="header-title">Personal</span>
+    </header>
 
-        <button @click="$router.push('/form')" class="btn btn-success mb-3 w-100">
-          Formulario | Control de Practicas de Personal
-        </button>
-        <button @click="$router.push('/inspection-view')" class="btn btn-secondary mb-3 w-100">
-          Registro | Control de Prácticas de Personal
-        </button>
-        <button @click="showLoginModal = true" class="btn btn-secondary w-100">
-          Descargar Registro Control de Practicas de Personal
-        </button>
-        <button @click="$router.push('/personnel')" class="btn btn-warning mt-3 w-100">
-          Gestión de Personal
-        </button>
-      </div>
+    <div class="nav-buttons-centered">
+      <button @click="goHome" class="circle-btn">
+        <i class="fas fa-home"></i>
+      </button>
+      <button v-if="selectedSection" @click="selectedSection = null" class="circle-btn">
+        <i class="fas fa-arrow-left"></i>
+      </button>
     </div>
 
-    <!-- Modal para inicio de sesión -->
+
+    <main class="content-wrapper">
+
+      <section class="menu-options">
+        <div class="card-option" @click="$router.push('/form')">
+          <i class="fas fa-clipboard-check card-icon"></i>
+          <h3>Formulario de Control de Prácticas del Personal</h3>
+          <p>Registrar prácticas del personal de planta.</p>
+        </div>
+        <div class="card-option" @click="$router.push('/inspection-view')">
+          <i class="fas fa-eye card-icon"></i>
+          <h3>Registro de Prácticas del Personal</h3>
+          <p>Visualiza y consulta los registros anteriores.</p>
+        </div>
+        <div class="card-option" @click="showLoginModal = true">
+          <i class="fas fa-download card-icon"></i>
+          <h3>Descargar Registro</h3>
+          <p>Exporta la información en formato Excel.</p>
+        </div>
+        <div class="card-option" @click="$router.push('/personnel')">
+          <i class="fas fa-users-cog card-icon"></i>
+          <h3>Gestión de Personal</h3>
+          <p>Administra los datos del personal de planta.</p>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Modal -->
     <div v-if="showLoginModal" class="login-modal">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -36,29 +52,27 @@
           <div class="modal-body">
             <form @submit.prevent="authenticate">
               <div class="mb-3">
-                <label for="username" class="form-label">Usuario</label>
-                <input type="text" id="username" v-model="username" class="form-control" required
-                  placeholder="Ingresa tu usuario" />
+                <label for="username">Usuario</label>
+                <input type="text" id="username" v-model="username" class="form-control" required>
               </div>
               <div class="mb-3">
-                <label for="password" class="form-label">Contraseña</label>
-                <input type="password" id="password" v-model="password" class="form-control" required
-                  placeholder="Ingresa tu contraseña" />
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" v-model="password" class="form-control" required>
               </div>
               <div class="d-flex justify-content-between">
                 <button type="submit" class="btn btn-success w-45">Iniciar Sesión</button>
-                <button type="button" class="btn btn-secondary w-45" @click="showLoginModal = false">
-                  Cancelar
-                </button>
+                <button type="button" class="btn btn-secondary w-45" @click="showLoginModal = false">Cancelar</button>
               </div>
+              <p v-if="errorMessage" class="text-danger mt-3">{{ errorMessage }}</p>
             </form>
-            <p v-if="errorMessage" class="text-danger mt-3">{{ errorMessage }}</p>
           </div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+
 
 <script>
 import axios from "axios";
@@ -123,35 +137,89 @@ export default {
 </script>
 
 <style scoped>
-.menu-container {
+.menu-personal {
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #e5f5ee, #ffffff);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+}
+
+.menu-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  height: 95vh;
-  background-color: #f8f9fa;
-  padding-left: 20px;
-  /* Añadir espacio desde la izquierda */
-  padding-right: 20px;
-  /* Añadir espacio desde la derecha */
-}
-
-.card {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
-  background-color: white;
-  /* Fondo blanco de la tarjeta */
-  width: 425px;
-}
-
-.card-header {
   background-color: #019c54;
   color: white;
-  border-radius: 10px 10px 0 0;
+  padding: 20px 40px;
 }
 
+.header-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.back-button {
+  background: white;
+  border: none;
+  color: #019c54;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.back-button:hover {
+  background: #e0e0e0;
+}
+
+.content-wrapper {
+  padding: 40px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.intro-text {
+  text-align: center;
+  max-width: 700px;
+  margin-bottom: 40px;
+}
+
+.intro-text h2 {
+  font-size: 2rem;
+  color: #019c54;
+  margin-bottom: 10px;
+}
+
+.intro-text p {
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.menu-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.menu-button i {
+  font-size: 1.5rem;
+}
+
+/* Modal y helpers */
 .login-modal {
   position: fixed;
-  top: -75px;
   left: 0;
   width: 100%;
   height: 100%;
@@ -170,7 +238,6 @@ export default {
   border-radius: 10px;
   overflow: hidden;
   background-color: white;
-  /* Fondo blanco del modal */
 }
 
 .modal-header {
@@ -199,33 +266,76 @@ export default {
   width: 45%;
 }
 
-.home-button {
-  background: none;
-  border: none;
+.menu-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 30px;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.card-option {
+  background: white;
+  border-radius: 16px;
+  padding: 30px 20px;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
-  margin-bottom: 20px;
-  /* Espacio entre el botón y el título */
+}
+
+.card-option:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.card-option h3 {
+  margin-top: 12px;
+  margin-bottom: 8px;
+  font-size: 1.25rem;
+  color: #019c54;
+}
+
+.card-option p {
+  font-size: 1rem;
+  color: #555;
+}
+
+.card-icon {
+  font-size: 2.5rem;
+  color: #019c54;
+}
+
+.nav-buttons {
+  position: absolute;
   top: 20px;
-  /* Ajusta según sea necesario */
-  left: 20px;
-  /* Ajusta según sea necesario */
+  right: 20px;
   display: flex;
-  align-items: center;
+  gap: 10px;
 }
 
-.home-button img {
-  width: 25px;
-  /* Ajusta el ancho del ícono */
-  height: 25px;
-  /* Ajusta la altura del ícono */
-  margin-right: 8px;
+
+.nav-buttons-centered {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0 10px;
 }
 
-.card-text {
-  font-size: 23px;
-  /* Ajusta el tamaño de la palabra según sea necesario */
-  color: #000;
-  /* Ajusta el color de la palabra según sea necesario */
-
+.circle-btn {
+  background-color: #019c54;
+  border: none;
+  border-radius: 50%;
+  padding: 14px 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: 20px;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
+.circle-btn:hover {
+  transform: scale(1.1);
+}
+
+
 </style>

@@ -592,6 +592,11 @@ export default {
 </script>
 
 <style scoped>
+
+.form-control {
+  font-weight: 400 !important;
+}
+
 input[type="text"] {
   text-transform: uppercase;
 }

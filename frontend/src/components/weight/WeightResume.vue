@@ -319,6 +319,7 @@ export default {
 .form-control {
     background-color: #f8f9fa;
     font-weight: bold;
+    font-weight: 400 !important;
 }
 
 
