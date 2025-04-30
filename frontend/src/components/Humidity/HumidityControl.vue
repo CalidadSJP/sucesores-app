@@ -12,11 +12,11 @@
                     <div class="row">
                         <div class="form-group col-md-2">
                             <label for="date" class="form-label">Fecha</label>
-                            <input v-model="form.date" type="date" class="form-control" required />
+                            <input v-model="form.date" type="date" class="form-control" required disabled />
                         </div>
                         <div class="form-group col-md-2">
                             <label for="time" class="form-label">Hora</label>
-                            <input v-model="form.time" type="time" class="form-control" required />
+                            <input v-model="form.time" type="time" class="form-control" required disabled />
                         </div>
                         <br><br><br>
                         <div class="form-group col-md-2">
@@ -446,8 +446,6 @@ export default {
 .card-body textarea {
     text-transform: uppercase;
 }
-
-
 
 .login-modal {
     position: fixed;

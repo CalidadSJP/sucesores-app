@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 
 # Añade el directorio de tu aplicación al path
-sys.path.insert(0, "D:/Projects/control_personal/backend")
+sys.path.insert(0, "D:/Projects/sucesores-app/backend")
 
 # Cargar el archivo .env si existe
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')

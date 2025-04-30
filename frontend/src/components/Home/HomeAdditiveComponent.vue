@@ -10,7 +10,7 @@
       <button v-if="selectedSection" @click="selectedSection = null" class="circle-btn">
         <i class="fas fa-arrow-left"></i>
       </button>
-    </div>
+    </div><br>
 
     <div v-if="!selectedSection" class="section-grid">
       <div class="card-option" @click="selectedSection = 'additives'">
@@ -39,7 +39,7 @@
       </div>
       <div class="card-option" @click="$router.push('/additive-register')">
         <i class="fas fa-history card-icon"></i>
-        <h3>Historial de ingreso | Aditivos</h3>
+        <h3>Historial de ingreso | Liberación | Aditivos</h3>
         <p>Consulta registros anteriores.</p>
       </div>
       <div class="card-option" @click="$router.push('/add-product-provider')">

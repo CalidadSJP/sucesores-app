@@ -2340,5 +2340,54 @@ def download_humidity():
         return jsonify({"error": str(e)}), 500
 
 
+
+@app.route('/get-packaging-files', methods=['GET'])
+def get_packaging_files():
+    try:
+        base_path = 'D:/Projects/sucesores-app-data/Artes'  # Reemplaza con tu ruta real
+        categories = ['Rollos', 'Fundas', 'Cajas', 'Sacos']  # Nombres exactos de las carpetas
+
+        data = []
+
+        for category in categories:
+            category_path = os.path.join(base_path, category)
+            if not os.path.exists(category_path):
+                continue
+
+            category_data = {
+                'name': category.replace('-', ' ').title(),  # Ej: Planos-Mecanicos → Planos Mecanicos
+                'path': category,  # Para íconos o identificadores
+                'brands': []
+            }
+
+            for brand in os.listdir(category_path):
+                brand_path = os.path.join(category_path, brand)
+                if os.path.isdir(brand_path):
+                    files = [
+                        f for f in os.listdir(brand_path)
+                        if os.path.isfile(os.path.join(brand_path, f))
+                    ]
+                    category_data['brands'].append({
+                        'name': brand,
+                        'files': files
+                    })
+
+            data.append(category_data)
+
+        return jsonify(data), 200
+
+    except Exception as e:
+        print(f"Error inesperado: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@app.route('/files/<category>/<brand>/<filename>')
+def serve_packaging_file(category, brand, filename):
+    base_path = 'D:/Projects/sucesores-app-data/Artes'
+    full_path = os.path.join(base_path, category, brand)
+
+    return send_from_directory(full_path, filename)
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))

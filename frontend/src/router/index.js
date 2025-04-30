@@ -26,6 +26,7 @@ import WeightResume from '@/components/weight/WeightResume.vue';
 import WeightRegister from '@/components/weight/WeightRegister.vue';
 import ArticlesList from '@/components/Articles/ArticlesList.vue';
 import HumidityControl from '@/components/Humidity/HumidityControl.vue';
+import ArtFiles from '@/components/Art/ArtFiles.vue';
 
 const routes = [
   // Ruta para la página principal
@@ -151,6 +152,8 @@ const routes = [
   { path: '/articles-list', name: 'ArticlesList', component: ArticlesList},
 
   { path: '/humidity-control', name: 'HumidityControl', component: HumidityControl},
+
+  { path: '/art-files', name: 'ArtFiles', component: ArtFiles},
 
 ];
 

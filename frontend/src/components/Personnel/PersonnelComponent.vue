@@ -76,7 +76,6 @@
             </thead>
             <tbody>
               <tr v-for="(person, index) in paginatedPersonnelList" :key="person.id">
-
                 <td>{{ index + 1 }}</td>
                 <td>{{ person.name }}</td>
                 <td>{{ person.role }}</td>
@@ -101,7 +100,6 @@
                     </ul>
                   </div>
                 </td>
-
               </tr>
             </tbody>
           </table>
@@ -133,9 +131,6 @@
             </button>
           </div><br>
         </div>
-
-
-
       </div>
     </div>
   </div>
@@ -480,67 +475,66 @@ i {
 
 /* Estilos para la paginación */
 .pagination-container {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* Botones de Anterior y Siguiente */
 .pagination-btn {
-    background-color: #fff;
-    color: #198754;
-    border: 2px solid #198754;
-    padding: 6px 14px;
-    border-radius: 20px;
-    transition: all 0.3s ease;
-    font-weight: 600;
+  background-color: #fff;
+  color: #198754;
+  border: 2px solid #198754;
+  padding: 6px 14px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  font-weight: 600;
 }
 
 /* Hover en los botones */
 .pagination-btn:hover:not(:disabled) {
-    background-color: #198754;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+  background-color: #198754;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
 }
 
 /* Botones deshabilitados */
 .pagination-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Estilo de los elementos de las páginas */
 .page-item-custom {
-    list-style: none;
+  list-style: none;
 }
 
 /* Estilo de los botones de las páginas */
 .page-link-custom {
-    border: 2px solid #198754;
-    background-color: #f8f9fa;
-    color: #198754;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+  border: 2px solid #198754;
+  background-color: #f8f9fa;
+  color: #198754;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 /* Hover sobre los botones de las páginas */
 .page-link-custom:hover {
-    background-color: #d1e7dd;
-    color: #0f5132;
-    cursor: pointer;
+  background-color: #d1e7dd;
+  color: #0f5132;
+  cursor: pointer;
 }
 
 /* Página activa */
 .active-page {
-    background-color: #198754;
-    color: #fff;
-    font-weight: bold;
-    box-shadow: 0 0 8px rgba(25, 135, 84, 0.5);
+  background-color: #198754;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(25, 135, 84, 0.5);
 }
-
 </style>
