@@ -27,6 +27,10 @@ import WeightRegister from '@/components/weight/WeightRegister.vue';
 import ArticlesList from '@/components/Articles/ArticlesList.vue';
 import HumidityControl from '@/components/Humidity/HumidityControl.vue';
 import ArtFiles from '@/components/Art/ArtFiles.vue';
+import ProductMovement from '@/components/Cleaning/ProductMovement.vue';
+import ProductManagement from '@/components/Cleaning/ProductManagement.vue';
+import PersonnelPenalties from '@/components/Penalties/PersonnelPenalties.vue';
+import HomeCleaning from '@/components/Home/HomeCleaning.vue';
 
 const routes = [
   // Ruta para la página principal
@@ -154,6 +158,14 @@ const routes = [
   { path: '/humidity-control', name: 'HumidityControl', component: HumidityControl},
 
   { path: '/art-files', name: 'ArtFiles', component: ArtFiles},
+
+  { path: '/cleaning-home', name: 'HomeCleaning', component: HomeCleaning},
+
+  { path: '/cleaning-movements', name: 'ProductMovement', component: ProductMovement},
+
+  { path: '/cleaning-products-management', name: 'ProductManagement', component: ProductManagement},
+
+  { path: '/penalties', name: 'PersonnelPenalties', component: PersonnelPenalties}
 
 ];
 

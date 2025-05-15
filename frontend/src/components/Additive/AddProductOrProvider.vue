@@ -7,7 +7,9 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5>Agregar</h5>
                 <div>
-                    <button @click="logout" class="btn btn-danger">Cerrar sesión</button>
+                    <button @click="logout" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                    </button>
                 </div>
             </div>
             <div class="card-body">

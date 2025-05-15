@@ -10,28 +10,39 @@
         <div class="menu-card">
           <i class="fas fa-users icon"></i>
           <h3>Personal</h3>
-          <router-link to="/control-home" class="btn">▲</router-link>
+          <router-link to="/control-home" class="btn">➤</router-link>
         </div>
         <div class="menu-card">
           <i class="fas fa-boxes icon"></i>
           <h3>Material Empaque/Aditivos</h3>
-          <router-link to="/additive-home" class="btn">▲</router-link>
+          <router-link to="/additive-home" class="btn">➤</router-link>
         </div>
         <div class="menu-card">
           <i class="fas fa-balance-scale icon"></i>
           <h3>Control de Pesos</h3>
-          <router-link to="/weight" class="btn">▲</router-link>
+          <router-link to="/weight" class="btn">➤</router-link>
         </div>
         <div class="menu-card">
           <i class="fas fa-tint icon"></i>
           <h3>Control de Humedades</h3>
-          <router-link to="/humidity-control" class="btn">▲</router-link>
+          <router-link to="/humidity-control" class="btn">➤</router-link>
+        </div>
+        <div class="menu-card">
+          <i class="fas fa-triangle-exclamation icon"></i>
+          <h3>Faltas y Multas</h3>
+          <router-link to="/penalties" class="btn">➤</router-link>
+        </div>
+        <div class="menu-card">
+          <i class="fas fa-broom icon"></i>
+          <h3>Limpieza</h3>
+          <router-link to="/cleaning-home" class="btn">➤</router-link>
         </div>
       </div>
     </section>
 
     <footer class="footer">
-      © 2024 Sucesores
+      © 2024 Sucesores de Jacobo Paredes S.A
+      <br><br>
     </footer>
   </div>
 </template>
@@ -43,7 +54,6 @@ export default {
 </script>
 
 <style scoped>
-
 .home-wrapper {
   display: flex;
   flex-direction: column;
@@ -54,7 +64,8 @@ export default {
 .hero {
   text-align: center;
   padding: 0.25rem 0.1rem;
-  background-image: url('https://wallpapers.com/images/hd/plain-dark-green-wallpaper-krt3ve53xrh5dy16.jpg'); /* Cambia la ruta si usas una URL externa */
+  background-image: url('https://wallpapers.com/images/hd/plain-dark-green-wallpaper-krt3ve53xrh5dy16.jpg');
+  /* Cambia la ruta si usas una URL externa */
   background-size: cover;
   background-position: center;
   color: white;
@@ -68,7 +79,7 @@ export default {
   inset: 0;
 }
 
-.hero > * {
+.hero>* {
   position: relative;
   z-index: 1;
 }
@@ -141,7 +152,7 @@ export default {
 .footer {
   text-align: center;
   padding: 1rem;
-  background-color: #f1f1f1;
+  background: linear-gradient(to right, #e8f5e9, #f1f8e9);
   color: #555;
 }
 </style>

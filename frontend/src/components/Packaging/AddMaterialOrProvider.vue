@@ -7,7 +7,9 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5>Agregar</h5>
                 <div>
-                    <button @click="logout" class="btn btn-danger">Cerrar sesión</button>
+                    <button @click="logout" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión
+                    </button>
                 </div>
             </div>
             <div class="card-body">
@@ -87,15 +89,30 @@
                     <li v-for="provider in providers" :key="provider.id"
                         class="list-group-item d-flex justify-content-between align-items-center">
                         {{ provider.provider_name }}
-                        <div class="d-flex">
-                            <button class="btn btn-warning btn-sm" @click="editProvider(provider)">Editar</button>
-                            <button class="btn btn-danger btn-sm"
-                                @click="confirmDeleteProvider(provider.id)">Eliminar</button>
+                        <div class="dropdown">
+                            <button class="invisible-button" type="button" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="#" @click.prevent="editProvider(provider)">
+                                        <i class="fas fa-pen me-2 text-warning"></i> Editar
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#"
+                                        @click.prevent="confirmDeleteProvider(provider.id)">
+                                        <i class="fas fa-trash text-danger me-2"></i>Eliminar
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
                     </li>
                 </ul>
             </div>
         </div>
+
 
         <!-- Tarjeta para listar productos -->
         <div class="card mb-4">
@@ -114,8 +131,8 @@
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th scope="col">Codigo</th>
-                                <th scope="col">Code SAP</th>
+                                <th scope="col">Código</th>
+                                <th scope="col">Código SAP</th>
                                 <th scope="col">Nombre</th>
                                 <th scope="col">Proveedor</th>
                                 <th scope="col">Tipo de Producto</th>
@@ -131,18 +148,33 @@
                                 <td>{{ material.provider_name }}</td>
                                 <td>{{ material.material_type }}</td>
                                 <td>{{ material.brand_name }}</td>
-                                <td class="actions-column">
-                                    <div class="action-buttons">
-                                        <button class="btn btn-warning btn-sm"
-                                            @click="editProduct(material)">Editar</button>
-                                        <button class="btn btn-danger btn-sm ms-2"
-                                            @click="confirmDeleteProduct(material.id)">Eliminar</button>
+                                <td class="actions-column position-relative">
+                                    <div class="dropdown">
+                                        <button class="btn p-0 border-0 bg-transparent" type="button"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-ellipsis-v text-secondary"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <button class="dropdown-item d-flex align-items-center"
+                                                    @click="editProduct(material)">
+                                                    <i class="fas fa-pen me-2 text-warning"></i> Editar
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button class="dropdown-item d-flex align-items-center"
+                                                    @click="confirmDeleteProduct(material.id)">
+                                                    <i class="fas fa-trash-alt me-2 text-danger"></i> Eliminar
+                                                </button>
+                                            </li>
+                                        </ul>
                                     </div>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+
 
                 <!-- Paginación -->
                 <div class="pagination-container mt-3">
@@ -176,20 +208,22 @@
 
         <!-- Tarjeta para editar producto -->
         <div v-if="materialToEdit" class="card mt-4" ref="editProductCard">
-            <div class="card-header">
-                <h5>Editar Producto</h5>
+            <div class="card-header bg-warning text-white d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fas fa-pen-to-square"></i>
+                    <h5 class="m-0">Editar Producto</h5>
+                </div>
             </div>
             <div class="card-body">
                 <form @submit.prevent="saveProductEdits">
-
-
-                    <label for="new-code" class="form-label">Codigo</label>
+                    <label for="new-code" class="form-label">Código</label>
                     <input type="text" id="new-code" v-model="materialToEdit.code" class="form-control"
-                        style="text-transform: uppercase;" required placeholder="Ingrese el codigo del producto" />
+                        style="text-transform: uppercase;" required placeholder="Ingrese el código del producto" />
                     <br>
-                    <label for="new-code-sap" class="form-label">Codigo SAP</label>
+
+                    <label for="new-code-sap" class="form-label">Código SAP</label>
                     <input type="text" id="new-code-sap" v-model="materialToEdit.code_sap" class="form-control"
-                        style="text-transform: uppercase;" required placeholder="Ingrese el codigo SAP del producto" />
+                        style="text-transform: uppercase;" required placeholder="Ingrese el código SAP del producto" />
 
                     <div class="mb-3">
                         <label for="new-productName" class="form-label">Nombre del Producto</label>
@@ -201,7 +235,6 @@
                     <input type="text" id="new-product-type" v-model="materialToEdit.material_type" class="form-control"
                         style="text-transform: uppercase;" required placeholder="Ingrese el tipo del producto" />
 
-
                     <div class="mb-3">
                         <label for="new-provider" class="form-label">Proveedor</label>
                         <select id="new-provider" class="form-select" v-model="materialToEdit.provider_id" required>
@@ -210,7 +243,7 @@
                             </option>
                         </select>
                     </div>
-                    <!-- Marca -->
+
                     <div class="mb-3">
                         <label for="new-brand-id" class="form-label">Marca</label>
                         <select class="form-select" id="new-brand-id" v-model="materialToEdit.brand_id" required>
@@ -219,16 +252,20 @@
                                 {{ brand.brand_name }}
                             </option>
                         </select>
-                    </div><br>
-                    <div class="d-flex justify-content-between">
-                        <button type="submit" class="btn btn-success w-50 me-2">Guardar Cambios</button>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="submit" class="btn btn-success w-50 me-2">
+                            <i class="fas fa-save me-2"></i>Guardar Cambios
+                        </button>
                         <button type="button" class="btn btn-secondary w-50" @click="cancelEdit">
-                            Cancelar
+                            <i class="fas fa-times me-2"></i>Cancelar
                         </button>
                     </div>
                 </form>
             </div>
         </div>
+
 
     </div>
 </template>
@@ -604,5 +641,20 @@ export default {
 .table tbody tr {
     height: 50px;
     /* Ajusta según el diseño general */
+}
+
+.invisible-button {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    color: #333;
+    font-size: 18px;
+}
+
+.invisible-button:focus {
+    outline: none;
+    box-shadow: none;
 }
 </style>

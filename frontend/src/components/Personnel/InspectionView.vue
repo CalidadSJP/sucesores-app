@@ -5,7 +5,9 @@
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                 <h4>Tabla Editable</h4>
                 <div>
-                    <button @click="logout" class="btn btn-danger">Cerrar sesión</button>
+                    <button @click="logout" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                    </button>
                 </div>
             </div>
 
@@ -16,7 +18,9 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-bordered table-striped">
+                    <table class="table table-bordered table-striped"
+                        style="table-layout: auto; font-size: 0.8rem; border-collapse: collapse; width: 100%;">
+
                         <thead>
                             <tr>
                                 <th v-for="(header, index) in headers" :key="header"
@@ -79,10 +83,6 @@
                         </li>
                     </ul>
                 </nav>
-
-                <!--           <button class="btn btn-success mt-3" @click="downloadExcel">
-                    Descargar Registro
-                </button> -->
             </div>
         </div>
     </div>
@@ -138,7 +138,7 @@ export default {
             editableRow: null,
             searchQuery: "",      // Consulta de búsqueda
             currentPage: 1,       // Página actual
-            itemsPerPage: 10,     // Elementos por página
+            itemsPerPage: 5,     // Elementos por página
             pagesPerGroup: 5
         };
     },
@@ -361,11 +361,11 @@ export default {
 }
 
 .table th {
-    min-width: 150px;
+    min-width: 80px;
 }
 
 .table td {
-    min-width: 150px;
+    min-width: 90px;
 }
 
 .active-page {

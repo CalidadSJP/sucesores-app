@@ -5,8 +5,11 @@
         <!-- Tarjeta para ingreso -->
         <div class="card mb-4">
             <div class="card-header bg-success text-white">
-                <h3>Formulario de Registro</h3>
+                <h3 class="m-0 d-flex align-items-center">
+                    <i class="fas fa-pen-alt me-2"></i> Formulario de Registro
+                </h3>
             </div>
+
             <div class="card-body">
                 <form @submit.prevent="confirmAndSubmit">
                     <div class="row">
@@ -67,9 +70,14 @@
                         </div>
                     </div>
                     <div class="mt-3 d-flex gap-2">
-                        <button type="submit" class="btn btn-success">Guardar</button>
-                        <button type="button" @click="resetForm" class="btn btn-secondary">Limpiar</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i> Guardar
+                        </button>
+                        <button type="button" @click="resetForm" class="btn btn-secondary">
+                            <i class="fas fa-eraser me-2"></i> Limpiar
+                        </button>
                     </div>
+
 
                 </form>
             </div>
@@ -81,8 +89,9 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Registro</h5>
                     <button @click="showLoginModal = true" class="btn btn-primary">
-                        Descargar
+                        <i class="fas fa-download me-2"></i> Descargar
                     </button>
+
                 </div><br>
                 <!-- Contenedor desplazable -->
                 <div class="table-responsive">

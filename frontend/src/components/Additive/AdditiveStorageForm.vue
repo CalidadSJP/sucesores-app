@@ -6,12 +6,20 @@
       <!-- TRANSPORTE -->
       <div class="card mb-4">
         <div class="card-header custom-header bg-primary text-white">
-          <h3 class="m-0">Transporte</h3>
-          <button @click="$router.push('/additive-home')" class="btn btn-primary custom-back-button">
-            <img src="@/assets/back-arrow.png" alt="Regresar" class="button-icon" />
-            <span class="button-text">Regresar</span>
+          <div class="header-title">
+            <i class="fas fa-truck icon-header"></i>
+            <h3 class="m-0">Transporte</h3>
+          </div>
+          <button @click="$router.push('/additive-home')" class="custom-back-button">
+            <span class="icon-text">
+              <i class="fas fa-rotate-left"></i>
+              <span>Regresar</span>
+            </span>
           </button>
+
         </div>
+
+
         <div class="card-body">
           <!-- Fecha Actual -->
           <div class="mb-3">
@@ -201,16 +209,19 @@
             </div>
           </div>
 
-
-          <button type="button" class="btn btn-secondary mt-3" @click="clearTransportFields">Limpiar Transporte</button>
+          <button type="button" class="btn btn-secondary mt-3" @click="clearTransportFields">
+            <i class="fas fa-eraser me-2"></i> Limpiar Transporte
+          </button>
         </div>
       </div>
 
       <!-- PRODUCTO -->
       <div class="card mb-4">
-        <div class="card-header bg-success text-white">
+        <div class="card-header bg-success text-white d-flex align-items-center gap-2">
+          <i class="fas fa-box-open"></i>
           <h3 class="m-0">Producto</h3>
         </div>
+
         <div class="card-body">
 
           <!-- Producto -->
@@ -340,14 +351,28 @@
               v-model="form.received_by" required>
           </div>
 
-          <button type="button" class="btn btn-secondary mt-3" @click="clearProductFields">Limpiar Producto</button>
+          <!-- Botón de Limpiar -->
+          <button type="button" class="btn btn-secondary mt-3" @click="clearProductFields">
+            <i class="fas fa-eraser me-2"></i> Limpiar Producto
+          </button>
+
         </div>
         <div class="card-footer"><br>
           <div class="d-flex justify-content-end gap-2">
-            <button type="submit" class="btn btn-primary">Enviar Formulario</button>
-            <button type="button" class="btn btn-secondary" @click="submitFiles">Enviar Archivos</button>
+
+            <!-- Botón de Enviar Formulario -->
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-paper-plane me-2"></i> Enviar Formulario
+            </button>
+
+            <!-- Botón de Enviar Archivos -->
+            <button type="button" class="btn btn-secondary" @click="submitFiles">
+              <i class="fas fa-file-upload me-2"></i> Enviar Archivos
+            </button>
+
           </div><br>
         </div>
+
       </div>
 
 
@@ -592,7 +617,6 @@ export default {
 </script>
 
 <style scoped>
-
 .form-control {
   font-weight: 400 !important;
 }
@@ -605,62 +629,47 @@ textarea {
   text-transform: uppercase;
 }
 
-.custom-back-button {
-  display: flex;
-  /* Activa flexbox para alinear elementos */
-  align-items: center;
-  /* Alinea verticalmente ícono y texto */
-  justify-content: center;
-  /* Centra contenido horizontalmente dentro del botón */
-  background-color: #ffffff;
-  /* Cambia al color deseado */
-  color: rgb(0, 0, 0);
-  /* Texto negro */
-  border: none;
-  /* Elimina bordes */
-  border-radius: 8px;
-  /* Bordes redondeados */
-  padding: 10px 20px;
-  /* Añade espaciado interno */
-  font-size: 16px;
-  /* Tamaño del texto */
-  font-weight: bold;
-  /* Hace el texto más visible */
-  cursor: pointer;
-  /* Cambia el cursor al pasar sobre el botón */
-  gap: 10px;
-  /* Espaciado entre el ícono y el texto */
-  transition: background-color 0.3s;
-  /* Animación al cambiar color */
-}
-
-/* Cambia el color al pasar el mouse */
-.custom-back-button:hover {
-  background-color: #e3e6e9;
-  /* Cambia ligeramente el color */
-}
-
-/* Estilo para el ícono */
-.button-icon {
-  width: 22px;
-  /* Tamaño del ícono */
-  height: 22px;
-  /* Tamaño del ícono */
-}
-
-/* Header que se ajusta automáticamente */
 .custom-header {
   display: flex;
-  /* Usa flexbox para alinear los elementos */
   align-items: center;
-  /* Alinea verticalmente los elementos */
   justify-content: space-between;
-  /* Separa el título del botón */
-  flex-wrap: wrap;
-  /* Permite que el contenido haga wrap si no cabe */
-  padding: 10px;
-  /* Añade espacio dentro del header */
+  padding: 10px 20px;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
   gap: 10px;
-  /* Espaciado entre los elementos */
+}
+
+.icon-header {
+  font-size: 22px;
+  color: white;
+}
+
+.custom-back-button {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.custom-back-button:hover {
+  background: transparent;
+  color: white;
+}
+
+.icon-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.button-icon {
+  font-size: 18px;
+  vertical-align: middle;
 }
 </style>

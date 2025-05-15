@@ -5,13 +5,17 @@
 
             <!-- TRANSPORTE -->
             <div class="card mb-4">
-                <div class="card-header custom-header bg-primary text-white">
-                    <h3 class="m-0">Transporte</h3>
-                    <button @click="$router.push('/additive-home')" class="btn btn-primary custom-back-button">
-                        <img src="@/assets/back-arrow.png" alt="Regresar" class="button-icon" />
-                        <span class="button-text">Regresar</span>
+                <div
+                    class="card-header custom-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <div class="header-title">
+                        <i class="fas fa-truck icon-header"></i>
+                        <h3 class="m-0">Transporte</h3>
+                    </div>
+                    <button @click="$router.push('/additive-home')" class="btn custom-invisible-button text-white">
+                        <i class="fas fa-arrow-left me-2"></i> Regresar
                     </button>
                 </div>
+
                 <div class="card-body">
                     <!-- Fecha Actual -->
                     <div class="mb-3">
@@ -134,8 +138,9 @@
                     </div>
 
 
-                    <button type="button" class="btn btn-secondary mt-3" @click="clearTransportFields">Limpiar
-                        Transporte</button>
+                    <button type="button" class="btn btn-secondary mt-3" @click="clearTransportFields">
+                        <i class="fas fa-eraser me-2"></i>Limpiar Transporte
+                    </button>
                 </div>
             </div>
 
@@ -316,13 +321,23 @@
                         </select>
                     </div>
 
-                    <button type="button" class="btn btn-secondary mt-3" @click="clearProductFields">Limpiar
-                        Producto</button>
+                    <button type="button" class="btn btn-secondary mt-3" @click="clearProductFields">
+                        <i class="fas fa-eraser me-2"></i> Limpiar Producto
+                    </button>
                 </div>
                 <div class="card-footer"><br>
                     <div class="d-flex justify-content-end gap-2">
-                        <button type="submit" class="btn btn-primary">Enviar Formulario</button>
-                        <button type="button" class="btn btn-secondary" @click="submitFiles">Enviar Archivos</button>
+
+                        <!-- Botón de Enviar Formulario -->
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i> Enviar Formulario
+                        </button>
+
+                        <!-- Botón de Enviar Archivos -->
+                        <button type="button" class="btn btn-secondary" @click="submitFiles">
+                            <i class="fas fa-file-upload me-2"></i> Enviar Archivos
+                        </button>
+
                     </div><br>
                 </div>
             </div>
@@ -709,5 +724,34 @@ textarea {
     /* Añade espacio dentro del header */
     gap: 10px;
     /* Espaciado entre los elementos */
+}
+
+.custom-invisible-button {
+    background: transparent;
+    border: none;
+    font-weight: bold;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    transition: background-color 0.2s ease;
+}
+
+.custom-invisible-button:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.icon-header {
+    font-size: 22px;
+    color: white;
 }
 </style>

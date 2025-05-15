@@ -74,7 +74,7 @@ export default {
         },
         getIcon(categoryPath) {
             const icons = {
-                Sacos: "fas fa-sack",
+                Sacos: "fas fa-rectangle-xmark",
                 Rollos: "fas fa-scroll",
                 Fundas: "fas fa-shopping-bag",
                 Cajas: "fas fa-box"

@@ -3,20 +3,20 @@
     <!-- Primera Tarjeta: Datos del Producto -->
     <div class="card mb-4 card-large">
       <div class="card-header d-flex bg-success text-white custom-header align-items-center">
-        <h4>Datos</h4>
+        <h4 class="m-0 d-flex align-items-center">
+          <i class="fas fa-database me-2"></i> Datos
+        </h4>
 
-        <!-- Contenedor para los botones alineados a la derecha -->
         <div class="button-group">
-          <button @click="$router.push('/')" class="btn btn-primary custom-back-button">
-            <img src="@/assets/home.png" alt="Regresar" class="button-icon" />
-            <span class="button-text">Regresar</span>
+          <button @click="$router.push('/')" class="custom-flat-button text-white">
+            <i class="fas fa-home me-1"></i> Inicio
           </button>
-          <button @click="$router.push('/weight-register')" class="btn btn-primary custom-back-button">
-            <img src="@/assets/register.png" alt="Registro" class="button-icon" />
-            <span class="button-text">Registro</span>
+          <button @click="$router.push('/weight-register')" class="custom-flat-button text-white">
+            <i class="fas fa-clipboard-list me-1"></i> Registro
           </button>
         </div>
       </div>
+
       <div class="card-body">
         <!-- Fecha Actual -->
         <div class="mb-3">
@@ -89,8 +89,11 @@
     <!-- Segunda Tarjeta: Pesos del Producto -->
     <div class="card mb-4 card-large">
       <div class="card-header bg-success text-white">
-        <h4>Pesos del Producto</h4>
+        <h4 class="m-0 d-flex align-items-center">
+          <i class="fas fa-weight-hanging me-2"></i> Pesos del Producto
+        </h4>
       </div>
+
       <div class="card-body">
         <div class="row">
           <!-- Usamos una grilla de 5 columnas -->
@@ -108,7 +111,9 @@
 
     <!-- Botón para enviar toda la información -->
     <div class="d-flex justify-content-end m-0 p-0">
-      <button class="btn btn-primary" @click="submitForm">Enviar Datos</button>
+      <button class="btn btn-primary" @click="submitForm">
+        <i class="fas fa-save"></i>   Enviar datos
+      </button>
     </div>
     <br><br><br>
   </div>
@@ -160,10 +165,6 @@ export default {
       this.$router.push('/');
     },
     async fetchProductInfo() {
-      // Solo buscar si el EAN13 tiene exactamente 13 dígitos
-      if (this.form.ean13.length !== 13) {
-        return;
-      }
 
       // Limpiar el timeout previo para evitar llamadas innecesarias
       if (this.fetchTimeout) {
@@ -384,27 +385,39 @@ export default {
   /* Elimina el padding derecho */
 }
 
+.custom-flat-button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  box-shadow: none;
+  transition: none;
+}
+
+/* Elimina cualquier efecto hover */
+.custom-flat-button:hover {
+  background: transparent;
+  color: inherit;
+}
+
 .custom-header {
   display: flex;
-  /* Usa flexbox para alinear los elementos */
-  align-items: center;
-  /* Alinea verticalmente los elementos */
   justify-content: space-between;
-  /* Separa el título del botón */
+  align-items: center;
   flex-wrap: wrap;
-  /* Permite que el contenido haga wrap si no cabe */
   padding: 20px;
-  /* Añade espacio dentro del header */
-  gap: 10px;
-  /* Espaciado entre los elementos */
 }
 
 .button-group {
   display: flex;
-  gap: 10px;
-  margin-left: auto; /* Empuja el grupo a la derecha */
+  gap: 20px;
+  margin-left: auto;
+  /* Empuja el grupo a la derecha */
 }
-
-
-
 </style>

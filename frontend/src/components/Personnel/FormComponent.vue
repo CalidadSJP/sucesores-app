@@ -3,24 +3,24 @@
     <div class="row justify-content-center">
       <div class="col-md-6">
         <div class="card">
-          <div class="card-header d-flex align-items-center">
-            <!-- Logo al lado del título -->
-            <img src="@/assets/sucesores-logo-1.png" alt="Logo" class="logo"
-              style="width: 135px; height: 90px; margin-right: 0px;" />
-            <h1 class="mb-0">Control de Practicas del Personal</h1>
+          <div class="card-header d-flex align-items-center" style="background-color: #f1f1f1;">
+            <img src="@/assets/sucesores-logo-1.png" alt="Logo" class="me-3" style="width: 120px; height: auto;" />
+            <h4 class="mb-0" style="color: #006e3d;">Control de Prácticas del Personal</h4>
           </div>
+
+
           <div class="card-body">
             <form @submit.prevent="submitForm">
               <!-- Encabezado -->
-              <router-link to="/control-home" class="back-link">
-                <img src="@/assets/home.png" alt="Regresar" class="back-icon" />
-                <span class="card-text">Inicio</span>
-              </router-link><br><br>
-              <router-link to="/frecuency" class="frequency-link">
-                <img src="@/assets/frecuencia.png" alt="Regresar" class="back-icon" />
-                <span class="card-text">Frecuencia de inspección</span>
-              </router-link>
-              <br>
+              <div class="botones-invisibles">
+                <router-link to="/control-home" class="btn-invisible">
+                  <i class="fas fa-house me-2"></i> Inicio
+                </router-link>
+                <router-link to="/frecuency" class="btn-invisible">
+                  <i class="fas fa-calendar-check me-2"></i> Frecuencia
+                </router-link>
+              </div>
+
               <div class="form-group">
                 <label for="fecha">Fecha:</label>
                 <input type="date" id="fecha" class="form-control" v-model="form.fecha" required />
@@ -58,12 +58,12 @@
 
               <!-- Cuerpo del formulario -->
               <fieldset class="form-group">
-                <div class="d-flex align-items-center">
-                  <img src="@/assets/check.png" alt="Logo" class="logo"
-                    style="width: 65px; height: 65px; margin-right: 10px; padding: 15px; vertical-align: middle;" />
+                <div class="titulo-inspeccion">
+                  <i class="fas fa-clipboard-check icono-inspeccion"></i>
                   <h2 class="mb-0">Inspección</h2>
                 </div>
                 <br /><br />
+
 
                 <div v-for="item in items" :key="item.name" class="form-group">
                   <label :for="item.name">{{ item.label }}</label>
@@ -92,15 +92,14 @@
               <br />
               <div class="form-buttons">
                 <button type="submit" class="btn btn-success w-50" :disabled="isLoading">
-                  <!-- Mostrar spinner dentro del botón -->
-                  <span v-if="isLoading" class="spinner-border spinner-border-sm mr-2" role="status"
-                    aria-hidden="true"></span>
+                  <i class="fas fa-save me-2"></i>
                   {{ isLoading ? 'Guardando...' : 'Enviar' }}
                 </button>
-                <button @click.prevent="scrollToTop" class="btn btn-secondary scroll-to-top w-50">
-                  Regresar
+                <button @click.prevent="scrollToTop" class="btn btn-secondary w-50">
+                  <i class="fas fa-arrow-up me-2"></i> Regresar
                 </button>
               </div>
+
               <br>
             </form>
           </div>
@@ -259,7 +258,6 @@ export default {
         this.isLoading = false; // Detener la animación de carga
       }
     },
-
     resetForm() {
       this.form = {
         fecha: "",
@@ -307,10 +305,10 @@ export default {
 }
 
 .card-header {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
-  text-align: center;
+  border-bottom: 1px solid #ccc;
+  background-color: #f1f1f1 !important;
 }
+
 
 .form-group {
   margin-bottom: 1rem;
@@ -372,4 +370,77 @@ textarea {
   justify-content: flex-start;
   /* Alinea los botones a la izquierda */
 }
+
+.custom-nav-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #007940;
+  font-weight: 600;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.custom-nav-button:hover {
+  background-color: #f5f5f5;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+}
+
+.custom-nav-button i {
+  margin-bottom: 8px;
+}
+
+.botones-invisibles {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 25px;
+}
+
+.btn-invisible {
+  background: none;
+  border: none;
+  color: #007940;
+  font-weight: 600;
+  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  padding: 6px 12px;
+  transition: color 0.2s ease;
+}
+
+.btn-invisible i {
+  font-size: 25px;
+  margin-right: 6px;
+}
+
+.btn-invisible:hover {
+  color: #005c30;
+}
+
+.titulo-inspeccion {
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  gap: 12px;
+  margin-left: 10px;
+  color: #007940;
+}
+
+.icono-inspeccion {
+  font-size: 25px;
+}
+
+.titulo-inspeccion h2 {
+  font-size: 25px; /* reducido */
+  margin: 0;
+}
+
 </style>

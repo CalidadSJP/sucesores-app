@@ -284,15 +284,21 @@ def get_inspection_frequency():
 
 #PAGINA DE REVISION DE INSPECCION DEL PERSONAL
 
-@app.route('/inspection-register', methods=['GET']) # Listar registfDOWro de ingreso de material de empaque
-def inspetion_register():
-    connection = get_db_connection()
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
-    cursor.execute("SELECT * FROM inspection;")
-    products = cursor.fetchall()
-    cursor.close()
-    connection.close()
-    return jsonify(products)
+@app.route('/inspection-register', methods=['GET'])
+def inspection_register():
+    try:
+        print("🔍 Entrando al endpoint /inspection-register")
+        connection = get_db_connection()
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT * FROM inspection;")
+        products = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        print("✅ Consulta realizada correctamente")
+        return jsonify(products)
+    except Exception as e:
+        print(f"❌ Error en /inspection-register: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/inspection-register/<int:id>', methods=['PUT']) # Editar registro | Ingreso de material de empaque
 def update_inspection_register(id):
@@ -1707,8 +1713,7 @@ def download_material_table():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-#PÁGINA CONTROL DE PESOS (EN PROCESO/NO TERMINADO)
+#PÁGINA CONTROL DE PESOS
 
 @app.route('/get-product-info', methods=['GET']) # Obtener datos del producto producto | Control del pesos
 def get_product_info():
@@ -1727,7 +1732,6 @@ def get_product_info():
         query = """
         SELECT 
             a.ean13, 
-            a.ean14, 
             a.weight AS peso_neto, 
             a.format AS formato, 
             a.brand_id, 
@@ -1792,7 +1796,7 @@ def save_weight_control():
         pesos = [float(p) for p in data.get('weights', []) if p not in [None, ""]]
 
         # Cálculo de tolerancia basado en la fórmula proporcionada
-        if net_weight < 100:
+        if net_weight == 100:
             error_T1 = net_weight * 0.045  # 4.5% de net_weight
         elif net_weight >= 200 and net_weight < 300:
             error_T1 = 9
@@ -2206,7 +2210,6 @@ def delete_article(id):
     conn.close()
     return jsonify({'message': 'Artículo eliminado correctamente'})
 
-
 @app.route('/brands', methods=['GET'])
 def get_brands():
     conn = get_db_connection()
@@ -2340,11 +2343,12 @@ def download_humidity():
         return jsonify({"error": str(e)}), 500
 
 
+#PAGINA PARA ALMACENAMIENTO DE ARTES (EN PROCESO)
 
 @app.route('/get-packaging-files', methods=['GET'])
 def get_packaging_files():
     try:
-        base_path = 'D:/Projects/sucesores-app-data/Artes'  # Reemplaza con tu ruta real
+        base_path = 'D:/Projects/sucesores-app-data/Artes'  
         categories = ['Rollos', 'Fundas', 'Cajas', 'Sacos']  # Nombres exactos de las carpetas
 
         data = []
@@ -2380,13 +2384,373 @@ def get_packaging_files():
         print(f"Error inesperado: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-
 @app.route('/files/<category>/<brand>/<filename>')
 def serve_packaging_file(category, brand, filename):
     base_path = 'D:/Projects/sucesores-app-data/Artes'
     full_path = os.path.join(base_path, category, brand)
 
     return send_from_directory(full_path, filename)
+
+
+#PAGINA PARA CONTROL DE IMPLEMENTOS DE LIMPIEZA (EN PROCESO)
+
+@app.route('/register-movement', methods=['POST'])
+def register_movement():
+    data = request.json
+    product_id = data['product_id']
+    movement_date = data['date']
+    area = data['area']
+    income = float(data.get('income', 0))  # Por defecto es 0 si no se proporciona
+    outcome = float(data.get('outcome', 0))  # Por defecto es 0 si no se proporciona
+    responsible = data['responsible']
+    observations = data.get('observations', '')
+
+    # Verificamos que no se pueda tener tanto ingreso como egreso al mismo tiempo
+    if income > 0 and outcome > 0:
+        return jsonify({'error': 'No se puede tener ingreso y egreso al mismo tiempo'}), 400
+
+    # Obtenemos la cantidad actual del producto
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        # 1. Obtener el stock actual del producto
+        cur.execute("SELECT quantity FROM cleaning_products WHERE id = %s", (product_id,))
+        result = cur.fetchone()
+
+        if not result:
+            return jsonify({'error': 'Producto no encontrado'}), 404
+
+        current_quantity = float(result[0])
+
+        # 2. Calculamos el saldo basado en el tipo de movimiento
+        if income > 0:
+            new_balance = current_quantity + income
+        elif outcome > 0:
+            if outcome > current_quantity:
+                return jsonify({'error': 'No hay suficiente stock disponible para este egreso'}), 400
+            new_balance = current_quantity - outcome
+        else:
+            return jsonify({'error': 'Debe haber un ingreso o egreso mayor a 0'}), 400
+
+        # 3. Insertamos el movimiento con el nuevo saldo
+        cur.execute("""
+            INSERT INTO cleaning_movements (
+                product_id, date, area, income, outcome, balance, responsible, observations
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (product_id, movement_date, area, income, outcome, new_balance, responsible, observations))
+
+        # 4. Actualizamos el stock del producto
+        cur.execute("""
+            UPDATE cleaning_products
+            SET quantity = %s
+            WHERE id = %s
+        """, (new_balance, product_id))
+
+        conn.commit()
+        return jsonify({'message': 'Movimiento registrado correctamente', 'new_balance': new_balance})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+
+    finally:
+        cur.close()
+        conn.close()
+
+@app.route('/cleaning-products', methods=['GET'])
+def get_cleaning_products():
+    try:
+        product_type = request.args.get('type')
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        if product_type:
+            cur.execute('SELECT id, name FROM cleaning_products WHERE type = %s ORDER BY name ASC', (product_type,))
+        else:
+            cur.execute('SELECT id, name FROM cleaning_products ORDER BY name ASC')
+
+        products = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        product_list = [{"id": product[0], "name": product[1]} for product in products]
+        return jsonify(product_list), 200
+    except Exception as e:
+        return jsonify({"error": "Error al obtener productos", "message": str(e)}), 500
+
+@app.route('/product-balance/<int:product_id>', methods=['GET'])
+def get_product_balance(product_id):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT name, quantity FROM cleaning_products WHERE id = %s', (product_id,))
+        product = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if product:
+            return jsonify({"id": product_id, "name": product[0], "quantity": product[1]}), 200
+        else:
+            return jsonify({"error": "Producto no encontrado"}), 404
+    except Exception as e:
+        return jsonify({"error": "Error al obtener saldo", "message": str(e)}), 500
+
+@app.route('/cleaning-products-list', methods=['GET'])
+def get_cleaning_products_list():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT id, name, quantity, type FROM cleaning_products ORDER BY name ASC')
+        products = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        product_list = [{"id": p[0], "name": p[1], "quantity": p[2], "type": p[3]} for p in products]
+        return jsonify(product_list), 200
+    except Exception as e:
+        return jsonify({"error": "Error al obtener productos", "message": str(e)}), 500
+
+@app.route('/add-cleaning-product', methods=['POST'])
+def create_product():
+    data = request.get_json()
+    name = data.get('name')
+    quantity = data.get('quantity', 0)
+    type = data.get('type')
+
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("INSERT INTO cleaning_products (name, quantity, type) VALUES (%s, %s, %s)", (name, quantity, type))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"message": "Producto creado exitosamente"}), 201
+    except Exception as e:
+        return jsonify({"error": "Error al crear producto", "message": str(e)}), 500
+
+@app.route('/edit-cleaning-product/<int:product_id>', methods=['PUT'])
+def update_cleaning_product(product_id):
+    data = request.get_json()
+    name = data.get('name')
+    quantity = data.get('quantity')
+    type = data.get('type')
+
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("UPDATE cleaning_products SET name = %s, quantity = %s, type = %s WHERE id = %s", (name, quantity, type, product_id))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"message": "Producto actualizado exitosamente"}), 200
+    except Exception as e:
+        return jsonify({"error": "Error al actualizar producto", "message": str(e)}), 500
+
+@app.route('/delete-cleaning-product/<int:product_id>', methods=['DELETE'])
+def delete_cleaning_product(product_id):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('DELETE FROM cleaning_products WHERE id = %s', (product_id,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({'message': 'Producto eliminado correctamente'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/download-cleaning-movements', methods=['GET'])
+def download_cleaning_movements_excel():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute('''
+            SELECT cm.id, cp.name AS product_name, cm.date, cm.area,
+                   cm.income, cm.outcome, cm.balance, cm.observations
+            FROM cleaning_movements cm
+            JOIN cleaning_products cp ON cm.product_id = cp.id
+            ORDER BY cm.date DESC
+        ''')
+        data = cur.fetchall()
+
+        # Crear libro Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Movimientos Limpieza"
+
+        # Encabezados
+        headers = [
+            "ID", "Producto", "Fecha", "Área", 
+            "Ingreso", "Egreso", "Saldo", "Observaciones"
+        ]
+        ws.append(headers)
+
+        # Función para formatear fechas
+        def safe_str(value):
+            if isinstance(value, (datetime, date)):
+                return value.strftime('%d-%m-%Y')
+            return value
+
+        # Agregar filas
+        for row in data:
+            formatted_row = [safe_str(cell) for cell in row]
+            ws.append(formatted_row)
+
+        cur.close()
+        conn.close()
+
+        output = BytesIO()
+        wb.save(output)
+        wb.close()
+        output.seek(0)
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name="movimientos_limpieza.xlsx",
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+#PAGINA PARA LA GENERACION DE MULTAS
+
+@app.route('/faults', methods=['POST'])
+def add_fault():
+    data = request.get_json()
+    personnel_id = data['personnel_id']
+    description = data.get('description', '')
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # Insertar nueva falta
+    cur.execute(
+        "INSERT INTO faults (personnel_id, description) VALUES (%s, %s) RETURNING id",
+        (personnel_id, description)
+    )
+    new_fault_id = cur.fetchone()[0]
+
+    # Obtener nuevas faltas activas no penalizadas
+    cur.execute("""
+        SELECT COUNT(*) FROM faults f
+        LEFT JOIN penalties_faults pf ON f.id = pf.fault_id
+        WHERE f.personnel_id = %s AND pf.fault_id IS NULL
+    """, (personnel_id,))
+    active_faults = cur.fetchone()[0]
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({'status': 'success', 'fault_id': new_fault_id, 'active_faults': active_faults})
+
+@app.route('/generate-penalty', methods=['POST'])
+def generate_penalty():
+    data = request.get_json()
+    personnel_id = data['personnel_id']
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # Obtener 5 faltas no penalizadas
+    cur.execute("""
+        SELECT f.id FROM faults f
+        LEFT JOIN penalties_faults pf ON f.id = pf.fault_id
+        WHERE f.personnel_id = %s AND pf.fault_id IS NULL
+        ORDER BY f.date ASC LIMIT 5
+    """, (personnel_id,))
+    active_faults = cur.fetchall()
+
+    if len(active_faults) < 5:
+        cur.close()
+        conn.close()
+        return jsonify({'status': 'error', 'message': 'No hay 5 faltas acumuladas'})
+
+    # Crear multa
+    cur.execute(
+        "INSERT INTO penalties (personnel_id, penalty_description) VALUES (%s, %s) RETURNING id",
+        (personnel_id, 'Multa por acumulación de 5 faltas')
+    )
+    penalty_id = cur.fetchone()[0]
+
+    # Asociar faltas a la multa
+    for fault in active_faults:
+        cur.execute(
+            "INSERT INTO penalties_faults (penalty_id, fault_id) VALUES (%s, %s)",
+            (penalty_id, fault[0])
+        )
+
+    # Volver a contar las faltas activas después de la penalización
+    cur.execute("""
+        SELECT COUNT(*) FROM faults f
+        LEFT JOIN penalties_faults pf ON f.id = pf.fault_id
+        WHERE f.personnel_id = %s AND pf.fault_id IS NULL
+    """, (personnel_id,))
+    updated_active_faults = cur.fetchone()[0]
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({
+        'status': 'success',
+        'penalty_id': penalty_id,
+        'active_faults': updated_active_faults  # <- nuevo valor retornado
+    })
+
+@app.route('/faults/<int:personnel_id>', methods=['GET'])
+def get_faults(personnel_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # Obtener todas las faltas (para mostrar en tabla)
+    cur.execute("""
+        SELECT f.id, f.date, f.description
+        FROM faults f
+        WHERE f.personnel_id = %s
+        ORDER BY f.date DESC, f.id DESC
+    """, (personnel_id,))
+
+
+    rows = cur.fetchall()
+
+    # Obtener número de faltas activas no penalizadas (para muñeco y condición de multa)
+    cur.execute("""
+        SELECT COUNT(*) FROM faults f
+        LEFT JOIN penalties_faults pf ON f.id = pf.fault_id
+        WHERE f.personnel_id = %s AND pf.fault_id IS NULL
+    """, (personnel_id,))
+    active_faults = cur.fetchone()[0]
+
+    cur.close()
+    conn.close()
+
+    faults = [{'id': r[0], 'date': r[1], 'description': r[2]} for r in rows]
+    return jsonify({'faults': faults, 'active_faults': active_faults})
+
+@app.route('/get-personnel-list', methods=['GET'])
+def get_personnel_list():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT id, name FROM personnel ORDER by name ASC')  # Solo campos relevantes
+
+        rows = cur.fetchall()
+        personnel = [{"id": row[0], "name": row[1]} for row in rows]
+
+        cur.close()
+        conn.close()
+
+        return jsonify({"personnel": personnel}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 if __name__ == '__main__':

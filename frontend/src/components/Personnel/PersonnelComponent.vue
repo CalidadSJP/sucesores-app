@@ -486,7 +486,7 @@ i {
   padding: 6px 14px;
   border-radius: 20px;
   transition: all 0.3s ease;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 /* Hover en los botones */

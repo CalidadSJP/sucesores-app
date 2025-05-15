@@ -5,7 +5,9 @@
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                 <h4>Tabla Editable</h4>
                 <div>
-                    <button @click="logout" class="btn btn-danger">Cerrar sesión</button>
+                    <button @click="logout" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                    </button>
                 </div>
             </div>
 
