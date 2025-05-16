@@ -30,7 +30,7 @@
         <div class="menu-card">
           <i class="fas fa-triangle-exclamation icon"></i>
           <h3>Faltas y Multas</h3>
-          <router-link to="/penalties" class="btn">➤</router-link>
+          <router-link to="/home-penalties" class="btn">➤</router-link>
         </div>
         <div class="menu-card">
           <i class="fas fa-broom icon"></i>

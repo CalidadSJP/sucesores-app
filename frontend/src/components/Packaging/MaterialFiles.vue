@@ -87,7 +87,11 @@
                     <ul class="list-group">
                         <li v-for="file in paginatedTransporteFiles" :key="file"
                             class="list-group-item d-flex justify-content-between align-items-center">
-                            {{ file }}
+                            <span @click="showImagePreview(file, 'Transporte')" class="text-primary"
+                                style="cursor: pointer;">
+                                {{ file }}
+                            </span>
+
                             <div class="btn-group">
                                 <!-- Botón de descarga -->
                                 <a :href="generateDownloadUrl(file, 'Transporte')" class="btn btn-success btn-sm"
@@ -139,7 +143,11 @@
                     <ul class="list-group">
                         <li v-for="file in paginatedProductoFiles" :key="file"
                             class="list-group-item d-flex justify-content-between align-items-center">
-                            {{ file }}
+                            <span @click="showImagePreview(file, 'Producto')" class="text-primary"
+                                style="cursor: pointer;">
+                                {{ file }}
+                            </span>
+
                             <div class="btn-group">
                                 <!-- Botón de descarga -->
                                 <a :href="generateDownloadUrl(file, 'Producto')" class="btn btn-success btn-sm"
@@ -179,12 +187,35 @@
 
                 </div>
             </div>
+            <!-- Modal de vista previa de imagen -->
+            <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="imagePreviewLabel">Vista Previa de Imagen</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img :src="previewImageUrl" alt="Vista previa" v-if="previewImageUrl"
+                                :class="['img-fluid', zoomed ? 'zoomed-in' : '']" @click="toggleZoom"
+                                style="max-width: 100%; max-height: 480px; cursor: zoom-in;" />
+
+                            <p v-else>No es una imagen compatible para vista previa.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </template>
 
 <script>
 import axios from "axios";
+import * as bootstrap from 'bootstrap';
+
 export default {
     data() {
         return {
@@ -205,7 +236,9 @@ export default {
             // Paginación
             currentTransportePage: 1,   // Página actual para Transporte
             currentProductoPage: 1,   // Página actual
-            filesPerPage: 10
+            filesPerPage: 10,
+            previewImageUrl: null,
+            zoomed: false
         };
     },
     computed: {
@@ -262,6 +295,9 @@ export default {
         this.fetchBrands();
     },
     methods: {
+        toggleZoom() {
+            this.zoomed = !this.zoomed;
+        },
         async fetchFiles() {
             try {
                 const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-material-files`);
@@ -453,7 +489,20 @@ export default {
             } catch (error) {
                 console.error('Error al obtener marcas:', error);
             }
-        }
+        },
+        showImagePreview(file, folder) {
+            const extension = file.split('.').pop().toLowerCase();
+            const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+            if (validExtensions.includes(extension)) {
+                this.previewImageUrl = this.generateDownloadUrl(file, folder);
+                const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+                modal.show();
+            } else {
+                this.previewImageUrl = null;
+                alert('Este archivo no es una imagen compatible para vista previa.');
+            }
+        },
     }
 };
 </script>
@@ -576,5 +625,11 @@ export default {
     color: #fff;
     font-weight: bold;
     box-shadow: 0 0 8px rgba(25, 135, 84, 0.5);
+}
+
+.zoomed-in {
+  transform: scale(2);
+  transition: transform 0.3s ease;
+  cursor: zoom-out;
 }
 </style>

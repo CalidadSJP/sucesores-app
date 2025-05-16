@@ -261,18 +261,24 @@ def delete_personnel(id):
 
 #PAGINA FRECUENCIA DEL PERSONAL
 
-@app.route('/inspection-frequency', methods=['GET']) # Obtener la frecuencia con la que se insepcciona una persona 
+@app.route('/inspection-frequency', methods=['GET'])
 def get_inspection_frequency():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # Llamada a la función almacenada en PostgreSQL
         cur.execute('SELECT * FROM get_inspection_frequency()')
         data = cur.fetchall()
 
-        # Mapea los resultados a un diccionario con claves nombre_operario y frecuencia
-        results = [{'nombre_operario': row[0], 'frecuencia': row[1]} for row in data]
+        # Ahora se mapea con la nueva columna 'ultima_inspeccion'
+        results = [
+            {
+                'nombre_operario': row[0],
+                'frecuencia': row[1],
+                'ultima_inspeccion': row[2].strftime('%Y-%m-%d') if row[2] else None
+            }
+            for row in data
+        ]
 
         cur.close()
         conn.close()
@@ -281,6 +287,8 @@ def get_inspection_frequency():
 
     except Exception as e:
         return jsonify({'error': f"Error interno del servidor: {str(e)}"}), 500
+
+
 
 #PAGINA DE REVISION DE INSPECCION DEL PERSONAL
 
@@ -961,6 +969,7 @@ def submit_release():
         product_id = data.get('product_id')
         analysis_match = data.get('analysis_match')
         release_criteria = data.get('release_criteria')
+        releaser = data.get('releaser')
 
         if product_id is None or analysis_match is None or release_criteria is None:
             return jsonify({"error": "Faltan datos obligatorios"}), 400
@@ -977,9 +986,9 @@ def submit_release():
 
         # Insertar las respuestas en la tabla de liberaciones
         cur.execute('''
-            INSERT INTO additive_release (product_id, analysis_match, release_criteria, release_status)
-            VALUES (%s, %s, %s, %s)
-        ''', (product_id, analysis_match, release_criteria, release_status))
+            INSERT INTO additive_release (product_id, analysis_match, release_criteria, release_status, releaser)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (product_id, analysis_match, release_criteria, release_status, releaser))
 
         # Actualizar el estado de liberación en la tabla product_entry
         cur.execute('''
@@ -1000,6 +1009,42 @@ def submit_release():
     except Exception as e:
         print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/get-additive-releases', methods=['GET'])
+def get_additive_releases():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT ar.id,
+               p.product_name AS name_product,
+               ar.release_date,
+               ar.releaser,
+               ar.release_criteria,
+               ar.analysis_match,
+               ar.release_status
+        FROM additive_release ar
+        JOIN product_entry pe ON ar.product_id = pe.id
+        JOIN products p ON pe.product = p.product_name
+        ORDER BY ar.release_date DESC
+    """)
+    rows = cur.fetchall()
+    releases = [
+        {
+            "id": r[0],
+            "product_name": r[1],
+            "release_date": r[2],
+            "releaser": r[3],
+            "release_criteria": r[4],
+            "analysis_match": r[5],
+            "release_status": r[6],
+        }
+        for r in rows
+    ]
+    cur.close()
+    conn.close()
+    return jsonify(releases)
+
+
 
 #Pagina "Añadir Proveedores o Material de Empaque"
 
@@ -1326,7 +1371,7 @@ def submit_material_files():
 
     # Guardar los archivos y asignarles un extra en su nombre
     if 'invoice_file' in request.files:
-        uploaded_files['invoice_file'] = save_file(request.files['invoice_file'], producto_folder, 'factura_guia')
+        uploaded_files['invoice_file'] = save_file(request.files['invoice_file'], transporte_folder, 'factura_guia')
 
     if 'truck_condition_image' in request.files:
         uploaded_files['truck_condition_image'] = save_file(request.files['truck_condition_image'], transporte_folder, 'estado_camion')
@@ -1524,9 +1569,9 @@ def submit_just_one_file_material():
         return jsonify({"error": "El formato de la fecha es inválido. Usa 'dd-mm-yyyy'."}), 400
 
     # Determinar la ruta de la carpeta donde se guardará el archivo
-    if file_type in ['estado_camion', 'placa_camion']:
+    if file_type in ['estado_camion', 'placa_camion', 'factura_guia']:
         folder_path = os.path.join(app.config['UPLOAD_MATERIAL_FOLDER'], 'Transporte')
-    elif file_type in ['factura_guia', 'ficha_certificado']:
+    elif file_type in ['ficha_certificado']:
         folder_path = os.path.join(app.config['UPLOAD_MATERIAL_FOLDER'], 'Producto')
     else:
         return jsonify({"error": "Tipo de archivo no válido."}), 400
@@ -2751,7 +2796,57 @@ def get_personnel_list():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/download-faults-penalties', methods=['GET'])
+def download_faults_and_penalties():
+    connection = get_db_connection()
+    cursor = connection.cursor()
 
+    # Consultar las faltas con nombres
+    cursor.execute("""
+        SELECT p.name AS employee_name, f.date, f.description
+        FROM faults f
+        JOIN personnel p ON f.personnel_id = p.id
+        ORDER BY f.date DESC;
+    """)
+    faults = cursor.fetchall()
+
+    # Consultar las multas con nombres
+    cursor.execute("""
+        SELECT p.name AS employee_name, m.date, m.penalty_description
+        FROM penalties m
+        JOIN personnel p ON m.personnel_id = p.id
+        ORDER BY m.date DESC;
+    """)
+    penalties = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    # Crear archivo Excel en memoria
+    workbook = Workbook()
+    faults_sheet = workbook.active
+    faults_sheet.title = "Faltas"
+
+    penalties_sheet = workbook.create_sheet("Multas")
+
+    # Escribir cabeceras
+    faults_sheet.append(["Empleado", "Fecha", "Descripción"])
+    for row in faults:
+        faults_sheet.append(row)
+
+    penalties_sheet.append(["Empleado", "Fecha", "Descripción de la Multa"])
+    for row in penalties:
+        penalties_sheet.append(row)
+
+    # Guardar en memoria
+    output = BytesIO()
+    workbook.save(output)
+    output.seek(0)
+
+    return send_file(output,
+                     download_name="faltas_y_multas.xlsx",
+                     as_attachment=True,
+                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))

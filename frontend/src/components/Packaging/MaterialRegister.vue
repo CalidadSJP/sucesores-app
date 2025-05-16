@@ -1,6 +1,6 @@
 <template>
-    <div class="container-fluid p-4">
-        <h1 class="text-center mb-4">Registro - Material de Empaque</h1>
+    <h1 class="text-center mb-4">Registro - Material de Empaque</h1>
+    <div class="container-fluid p-4 d-flex justify-content-center">
         <div class="card">
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                 <h4>Tabla Editable</h4>
@@ -22,7 +22,7 @@
                         <thead>
                             <tr>
                                 <th v-for="(header, index) in headers" :key="header"
-                                    :class="{ 'sticky-col': index === 0 }">
+                                    :class="['text-nowrap', stickyClass(index)]">
                                     {{ header }}
                                 </th>
                                 <th>Acciones</th>
@@ -30,8 +30,8 @@
                         </thead>
                         <tbody>
                             <tr v-for="(row, index) in paginatedData" :key="row.id">
-                                <td v-for="(key, colIndex) in keys" :key="key"
-                                    :class="{ 'sticky-col': colIndex === 0 }">
+                                <td v-for="(key, index) in keys" :key="key"
+                                    :class="['text-nowrap', stickyClass(index)]">
                                     <input v-if="editableRow === index" :value="row[key]"
                                         @input="row[key] = $event.target.value.toUpperCase()" class="form-control"
                                         type="text" />
@@ -103,9 +103,9 @@ export default {
             headers: [
                 "ID",
                 "Fecha de Entrada",
+                "Codigo",
                 "Proveedor",
                 "Marca",
-                "Codigo",
                 "Nombre del Conductor",
                 "ID del Conductor",
                 "Número Factura",
@@ -133,9 +133,9 @@ export default {
             keys: [
                 "id",
                 "entry_date",
+                "product",
                 "supplier",
                 "brand",
-                "product",
                 "driver_name",
                 "driver_id",
                 "invoice_number",
@@ -326,6 +326,12 @@ export default {
             if (this.currentPage < this.totalPages) {
                 this.currentPage++;
             }
+        },
+        stickyClass(index) {
+            if (index === 0) return 'sticky-col-0';
+            if (index === 1) return 'sticky-col-1';
+            if (index === 2) return 'sticky-col-2';
+            return '';
         }
     }
     ,
@@ -346,8 +352,7 @@ export default {
 }
 
 .card {
-    margin: 5px;
-    /* Espacio alrededor de la tarjeta */
+
     padding: 5px;
     /* Relleno dentro de la tarjeta */
     max-width: 1440px;
@@ -421,5 +426,41 @@ export default {
     /* Borde verde claro */
     font-weight: bold;
     /* Resalta un poco más el texto */
+}
+
+/* Sticky columns */
+.sticky-col-0 {
+  position: sticky;
+  left: 0;
+  background-color: white;
+  z-index: 3;
+  min-width: 70px;
+  padding: 4px 6px;
+}
+
+.sticky-col-1 {
+  position: sticky;
+  left: 150px;
+  background-color: white;
+  z-index: 3;
+  min-width: 70px;
+  padding: 4px 6px;
+}
+
+.sticky-col-2 {
+  position: sticky;
+  left: 300px;
+  background-color: white;
+  z-index: 3;
+  min-width: 70px;
+  padding: 4px 6px;
+}
+
+.table th,
+.table td {
+  font-size: 0.8rem;
+  /* de 1rem a 0.8rem */
+  padding: 4px 6px;
+  /* reduce el padding vertical y horizontal */
 }
 </style>

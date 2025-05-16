@@ -31,6 +31,7 @@ import ProductMovement from '@/components/Cleaning/ProductMovement.vue';
 import ProductManagement from '@/components/Cleaning/ProductManagement.vue';
 import PersonnelPenalties from '@/components/Penalties/PersonnelPenalties.vue';
 import HomeCleaning from '@/components/Home/HomeCleaning.vue';
+import HomePenalties from '@/components/Home/HomePenalties.vue';
 
 const routes = [
   // Ruta para la página principal
@@ -165,7 +166,11 @@ const routes = [
 
   { path: '/cleaning-products-management', name: 'ProductManagement', component: ProductManagement},
 
-  { path: '/penalties', name: 'PersonnelPenalties', component: PersonnelPenalties}
+  { path: '/home-penalties', name: 'HomePenalties', component: HomePenalties},
+
+  { path: '/penalties', name: 'PersonnelPenalties', component: PersonnelPenalties},
+
+  
 
 ];
 

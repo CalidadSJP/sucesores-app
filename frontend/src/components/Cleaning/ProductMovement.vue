@@ -176,7 +176,6 @@ export default {
             const url = `${process.env.VUE_APP_API_URL}/api/download-cleaning-movements`;
             window.open(url, '_blank');
         },
-
         resetForm() {
             this.selectedType = '';
             this.selectedProduct = '';

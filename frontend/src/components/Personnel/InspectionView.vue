@@ -1,6 +1,7 @@
 <template>
-    <div class="container-fluid p-4">
-        <h1 class="text-center mb-4">Registro - Control de Prácticas de Personal</h1>
+    <br>
+    <h1 class="text-center mb-4">Registro - Control de Prácticas de Personal</h1>
+    <div class="container-fluid p-4 d-flex justify-content-center">
         <div class="card">
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                 <h4>Tabla Editable</h4>
@@ -24,7 +25,7 @@
                         <thead>
                             <tr>
                                 <th v-for="(header, index) in headers" :key="header"
-                                    :class="{ 'sticky-col': index === 0 }">
+                                    :class="['text-nowrap', stickyClass(index)]">
                                     {{ header }}
                                 </th>
                                 <th>Acciones</th>
@@ -33,12 +34,13 @@
                         <tbody>
                             <tr v-for="(row, index) in paginatedData" :key="row.id">
                                 <td v-for="(key, colIndex) in keys" :key="key"
-                                    :class="{ 'sticky-col': colIndex === 0 }">
+                                    :class="['text-nowrap', stickyClass(colIndex)]">
                                     <input v-if="editableRow === index" :value="row[key]"
                                         @input="row[key] = $event.target.value.toUpperCase()" class="form-control"
                                         type="text" />
                                     <span v-else>{{ row[key] }}</span>
                                 </td>
+
                                 <td>
                                     <button v-if="editableRow === index" class="btn btn-success btn-sm ms-1"
                                         @click="saveRow(index)">
@@ -55,18 +57,22 @@
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Paginación -->
-                <nav aria-label="Paginación" class="d-flex justify-content-center mt-4">
+                <div class="d-flex justify-content-center mt-3">
                     <ul class="pagination">
+                        <!-- Botón -10 -->
+                        <li class="page-item" :class="{ disabled: currentPage <= 10 }">
+                            <button class="page-link ten-ten text-white" @click="goBackTenPages">
+                                « 10
+                            </button>
+                        </li>
                         <!-- Botón Anterior -->
                         <li class="page-item" :class="{ disabled: currentPage === 1 }">
                             <button class="page-link bg-success text-white border-success" @click="previousPage">
-                                Anterior
+                                ←
                             </button>
                         </li>
 
-                        <!-- Botones de Páginas -->
+                        <!-- Botones de páginas visibles -->
                         <li class="page-item" v-for="page in visiblePages" :key="page"
                             :class="{ active: currentPage === page }">
                             <button class="page-link" @click="currentPage = page"
@@ -78,11 +84,18 @@
                         <!-- Botón Siguiente -->
                         <li class="page-item" :class="{ disabled: currentPage === totalPages }">
                             <button class="page-link bg-success text-white border-success" @click="nextPage">
-                                Siguiente
+                                →
+                            </button>
+                        </li>
+
+                        <!-- Botón +10 -->
+                        <li class="page-item" :class="{ disabled: currentPage > totalPages - 10 }">
+                            <button class="page-link ten-ten text-white" @click="goForwardTenPages">
+                                10 »
                             </button>
                         </li>
                     </ul>
-                </nav>
+                </div>
             </div>
         </div>
     </div>
@@ -97,8 +110,8 @@ export default {
             headers: [
                 "Fecha",
                 "Turno",
-                "Área",
                 "Nombre del operario",
+                "Área",
                 "Manos limpias",
                 "Uniforme limpio",
                 "No objetos personales",
@@ -117,8 +130,8 @@ export default {
             keys: [
                 "fecha",
                 "turno",
-                "area",
                 "nombre_operario",
+                "area",
                 "manos_limpias",
                 "uniforme_limpio",
                 "no_objetos_personales",
@@ -138,8 +151,8 @@ export default {
             editableRow: null,
             searchQuery: "",      // Consulta de búsqueda
             currentPage: 1,       // Página actual
-            itemsPerPage: 5,     // Elementos por página
-            pagesPerGroup: 5
+            itemsPerPage: 10,     // Elementos por página
+            pagesPerGroup: 3
         };
     },
     computed: {
@@ -282,7 +295,21 @@ export default {
             if (this.currentPage < this.totalPages) {
                 this.currentPage++;
             }
+        },
+        goBackTenPages() {
+            this.currentPage = Math.max(1, this.currentPage - 10);
+        },
+        goForwardTenPages() {
+            this.currentPage = Math.min(this.totalPages, this.currentPage + 10);
+        },
+        stickyClass(index) {
+            if (index === 0) return 'sticky-col-0';
+            if (index === 1) return 'sticky-col-1';
+            if (index === 2) return 'sticky-col-2';
+            return '';
         }
+
+
     }
     ,
     mounted() {
@@ -312,70 +339,62 @@ export default {
 .table {
     width: 100%;
     table-layout: auto;
-    /* Permite que las celdas se ajusten automáticamente al contenido */
     margin-top: 20px;
     overflow-x: auto;
-    /* Permite desplazamiento horizontal si es necesario */
+    font-size: 0.75rem;
 }
 
 .table th,
 .table td {
-    padding: 8px;
-    /* Asegura un espacio adecuado dentro de las celdas, sin afectar el tamaño */
-    word-wrap: break-word;
-    /* Permite que el texto largo se ajuste dentro de las celdas */
-}
-
-.table th {
-    min-width: 150px;
-    /* Establece un ancho mínimo para las cabeceras */
-}
-
-.table td {
-    min-width: 150px;
-    /* Establece un ancho mínimo para las celdas */
-}
-
-.card-header {
-    padding: 10px 20px;
-    background-color: #f7f7f7;
-}
-
-.card-body {
-    padding: 20px;
-    /* Relleno dentro de la tarjeta */
-}
-
-.sticky-col {
-    position: sticky;
-    left: 0;
-    background-color: white;
-    z-index: 2;
-    /* Asegura que la columna se superponga sobre otras celdas */
-}
-
-.table th,
-.table td {
-    padding: 8px;
+    padding: 4px 6px;
+    min-width: 70px;
+    white-space: nowrap;
     word-wrap: break-word;
 }
 
 .table th {
-    min-width: 80px;
-}
-
-.table td {
-    min-width: 90px;
+    background-color: #f1f1f1;
+    font-weight: 600;
 }
 
 .active-page {
     background-color: #41b341;
-    /* Verde más claro */
     color: white;
-    /* Texto blanco */
     border-color: #41b341;
-    /* Borde verde claro */
     font-weight: bold;
-    /* Resalta un poco más el texto */
 }
+
+.ten-ten {
+    background-color: #41b341;
+    border-color: #41b341;
+}
+
+/* Sticky columns */
+.sticky-col-0 {
+    position: sticky;
+    left: 0;
+    background-color: white;
+    z-index: 3;
+    min-width: 70px;
+    padding: 4px 6px;
+}
+
+.sticky-col-1 {
+    position: sticky;
+    left: 75px;
+    background-color: white;
+    z-index: 3;
+    min-width: 70px;
+    padding: 4px 6px;
+}
+
+.sticky-col-2 {
+    position: sticky;
+    left: 140px;
+    background-color: white;
+    z-index: 3;
+    min-width: 70px;
+    padding: 4px 6px;
+}
+
 </style>
