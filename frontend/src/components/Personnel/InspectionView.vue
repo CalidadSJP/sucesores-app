@@ -109,6 +109,7 @@ export default {
         return {
             headers: [
                 "Fecha",
+                "Hora",
                 "Turno",
                 "Nombre del operario",
                 "Área",
@@ -129,6 +130,7 @@ export default {
             ],
             keys: [
                 "fecha",
+                "hora",
                 "turno",
                 "nombre_operario",
                 "area",
@@ -306,6 +308,7 @@ export default {
             if (index === 0) return 'sticky-col-0';
             if (index === 1) return 'sticky-col-1';
             if (index === 2) return 'sticky-col-2';
+            if (index === 3) return 'sticky-col-3';
             return '';
         }
 
@@ -379,9 +382,18 @@ export default {
     padding: 4px 6px;
 }
 
+.sticky-col-3 {
+    position: sticky;
+    left: 205px;
+    background-color: white;
+    z-index: 3;
+    min-width: 70px;
+    padding: 4px 6px;
+}
+
 .sticky-col-1 {
     position: sticky;
-    left: 75px;
+    left: 78px;
     background-color: white;
     z-index: 3;
     min-width: 70px;
@@ -390,11 +402,12 @@ export default {
 
 .sticky-col-2 {
     position: sticky;
-    left: 140px;
+    left: 149px;
     background-color: white;
     z-index: 3;
     min-width: 70px;
     padding: 4px 6px;
 }
+
 
 </style>

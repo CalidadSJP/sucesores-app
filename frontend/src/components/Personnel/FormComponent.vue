@@ -8,7 +8,6 @@
             <h4 class="mb-0" style="color: #006e3d;">Control de Prácticas del Personal</h4>
           </div>
 
-
           <div class="card-body">
             <form @submit.prevent="submitForm">
               <!-- Encabezado -->
@@ -24,6 +23,11 @@
               <div class="form-group">
                 <label for="fecha">Fecha:</label>
                 <input type="date" id="fecha" class="form-control" v-model="form.fecha" required />
+              </div>
+
+              <div class="form-group">
+                <label for="hora" class="form-label">Hora</label>
+                <input v-model="form.hora" id="hora" type="time" class="form-control" required disabled />
               </div>
 
               <div class="form-group">
@@ -119,6 +123,7 @@ export default {
       isLoading: false,
       form: {
         fecha: "",
+        hora: '',
         turno: "",
         area: "",
         nombre_operario: "",
@@ -158,11 +163,21 @@ export default {
       filteredOperarios: [], // Variable para filtrar operarios según el área seleccionada
     };
   },
-  async created() {
-    await this.loadPersonnel();
-    await this.loadAreas();
+  created() {
+    this.updateTime(); // Establece hora inicial
+    setInterval(this.updateTime, 30000); // Actualiza cada 30 segundos
+    this.loadPersonnel();
+    this.loadAreas();
   },
+
   methods: {
+
+    updateTime() {
+      const now = new Date();
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      this.form.hora = `${hours}:${minutes}`;
+    },
     async loadPersonnel() {
       this.isLoading = true;
       try {
@@ -219,6 +234,13 @@ export default {
     async submitForm() {
       this.isLoading = true;
       try {
+
+        // Validación para evitar que operario y supervisor sean iguales
+        if (this.form.nombre_operario === this.form.supervisor) {
+          alert("El nombre del operario no puede ser igual al del supervisor.");
+          this.isLoading = false;
+          return;
+        }
         // Copia el formulario actual
         const formToSubmit = { ...this.form };
 
@@ -259,8 +281,10 @@ export default {
       }
     },
     resetForm() {
+      const now = new Date()
       this.form = {
         fecha: "",
+        hora: now.toTimeString().substr(0, 5),
         turno: "",
         area: "",
         nombre_operario: "",
@@ -284,6 +308,9 @@ export default {
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
   },
+  mounted() {
+    this.resetForm() // Setear valores por defecto al cargar
+  }
 };
 </script>
 
@@ -439,8 +466,8 @@ textarea {
 }
 
 .titulo-inspeccion h2 {
-  font-size: 25px; /* reducido */
+  font-size: 25px;
+  /* reducido */
   margin: 0;
 }
-
 </style>

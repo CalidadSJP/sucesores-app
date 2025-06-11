@@ -45,42 +45,70 @@ def index():
 
 #PAGINA FORMULARIO DEL PERSONAL
 
-@app.route('/submit-form', methods=['POST']) #Método para subir el formulario
+@app.route('/submit-form', methods=['POST'])
 def submit_form():
     try:
         data = request.json
-        print(f"Datos recibidos: {data}")  # Log para ver los datos recibidos
+        print(f"Datos recibidos: {data}")
 
-        # Establecer conexión con la base de datos
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # Reemplazar valores nulos en los datos si es necesario (por ejemplo, si 'observaciones' puede ser nulo)
         observaciones = data.get('observaciones', None)
 
-        # Ejecutar consulta SQL para insertar datos
+
+        # Insertar la revisión
         cur.execute(''' 
             INSERT INTO inspection 
             (fecha, turno, area, nombre_operario, manos_limpias, uniforme_limpio, no_objetos_personales, 
              heridas_protegidas, cofia_bien_puesta, mascarilla_bien_colocada, protector_auditivo, 
-             unas_cortas, guantes_limpios, pestanas, barba_bigote, medicamento_autorizado, supervisor, observaciones)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+             unas_cortas, guantes_limpios, pestanas, barba_bigote, medicamento_autorizado, supervisor, observaciones, hora)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (
             data['fecha'], data['turno'], data['area'], data['nombre_operario'], data['manos_limpias'], 
             data['uniforme_limpio'], data['no_objetos_personales'], data['heridas_protegidas'], 
             data['cofia_bien_puesta'], data['mascarilla_bien_colocada'], data['protector_auditivo'], 
             data['unas_cortas'], data['guantes_limpios'], data['pestanas'], data['barba_bigote'], 
-            data['medicamento_autorizado'], data['supervisor'], observaciones  # Observaciones se maneja para ser None si está vacío
+            data['medicamento_autorizado'], data['supervisor'], observaciones, data['hora']
         ))
 
-        # Confirmar los cambios en la base de datos
-        conn.commit()
+        # Obtener el ID del operario
+        cur.execute("SELECT id FROM personnel WHERE name = %s", (data['nombre_operario'],))
+        result = cur.fetchone()
+        if not result:
+            raise Exception(f"No se encontró el personal con nombre: {data['nombre_operario']}")
+        personnel_id = result[0]
 
-        # Cerrar cursor y conexión
+        # Campos a verificar
+        campos_a_verificar = {
+            'manos_limpias': 'Manos limpias',
+            'uniforme_limpio': 'Uniforme limpio',
+            'no_objetos_personales': 'Objetos personales en el area',
+            'heridas_protegidas': 'Heridas protegidas',
+            'cofia_bien_puesta': 'Cofia bien puesta',
+            'mascarilla_bien_colocada': 'Mascarilla bien colocada',
+            'protector_auditivo': 'Protector auditivo',
+            'unas_cortas': 'Uñas cortas, limpiar y sin esmalte',
+            'guantes_limpios': 'Guantes limpios',
+            'pestanas': 'Pestañas sin rimel o extensiones',
+            'barba_bigote': 'Barba o bigote',
+            'medicamento_autorizado': 'Medicamento autorizado'
+        }
+
+        # Registrar faltas por cada NO CUMPLE
+        for campo, descripcion in campos_a_verificar.items():
+            if data.get(campo) == 'NO CUMPLE':
+                falta = f"{descripcion}: NO CUMPLE - BPM"
+                cur.execute(
+                    "INSERT INTO faults (personnel_id, description) VALUES (%s, %s)",
+                    (personnel_id, falta)
+                )
+
+        conn.commit()
         cur.close()
         conn.close()
 
-        return jsonify({"message": "Formulario guardado en la base de datos."}), 200
+        return jsonify({"message": "Formulario registrado correctamente."}), 200
 
     except Exception as e:
         print(f"Error general: {str(e)}")
@@ -145,7 +173,7 @@ def get_personnel():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute('SELECT * FROM personnel')
+        cur.execute('SELECT * FROM personnel ORDER BY name ASC')
         data = cur.fetchall()
 
         cur.close()
@@ -288,8 +316,6 @@ def get_inspection_frequency():
     except Exception as e:
         return jsonify({'error': f"Error interno del servidor: {str(e)}"}), 500
 
-
-
 #PAGINA DE REVISION DE INSPECCION DEL PERSONAL
 
 @app.route('/inspection-register', methods=['GET'])
@@ -302,6 +328,13 @@ def inspection_register():
         products = cursor.fetchall()
         cursor.close()
         connection.close()
+
+        # Convertir campos de tipo 'time' a string
+        for row in products:
+            for key, value in row.items():
+                if isinstance(value, time):
+                    row[key] = value.strftime('%H:%M')
+
         print("✅ Consulta realizada correctamente")
         return jsonify(products)
     except Exception as e:
@@ -1043,8 +1076,6 @@ def get_additive_releases():
     cur.close()
     conn.close()
     return jsonify(releases)
-
-
 
 #Pagina "Añadir Proveedores o Material de Empaque"
 
@@ -2259,7 +2290,7 @@ def delete_article(id):
 def get_brands():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, brand_name FROM brand ORDER BY id")
+    cur.execute("SELECT id, brand_name FROM brand ORDER BY brand_name ASC")
     rows = cur.fetchall()
     brands = [{'id': row[0], 'name': row[1]} for row in rows]
     cur.close()
@@ -2268,22 +2299,76 @@ def get_brands():
 
 #CONTROL DE HUMEDADES
 
-@app.route('/submit-humidity-control', methods=['POST']) # Ingresar el control realizados
+@app.route('/submit-humidity-control', methods=['POST'])
 def add_humidity():
+    try:
+        data = request.get_json()
+
+        # Reemplazar campos vacíos con "0" o " " según corresponda
+        cleaned_data = {
+            'date': data.get('date') or '0',
+            'time': data.get('time') or '0',
+            'line': data.get('line') or '0',
+            'format': data.get('format') or '0',
+            'zone': data.get('zone') or '0',
+            'humidity': data.get('humidity') or '0',
+            'responsible': data.get('responsible') if data.get('responsible') not in [None, ''] else '',
+            'observations': data.get('observations') if data.get('observations') not in [None, ''] else '',
+            'balance': data.get('balance') if data.get('balance') not in [None, ''] else '0'
+        }
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute("""
+            INSERT INTO humidity_control (
+                date, time, line, format, zone,
+                humidity, responsible, observations, balance
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            cleaned_data['date'],
+            cleaned_data['time'],
+            cleaned_data['line'],
+            cleaned_data['format'],
+            cleaned_data['zone'],
+            cleaned_data['humidity'],
+            cleaned_data['responsible'],
+            cleaned_data['observations'],
+            cleaned_data['balance']
+        ))
+
+        conn.commit()
+        return jsonify({'message': 'Registro guardado correctamente'}), 201
+
+    except Exception as e:
+        if 'conn' in locals():
+            conn.rollback()
+        return jsonify({'error': 'Error al guardar el registro', 'details': str(e)}), 500
+
+    finally:
+        if 'cur' in locals():
+            cur.close()
+        if 'conn' in locals():
+            conn.close()
+
+@app.route('/humidity-control/<int:id>', methods=['PUT'])
+def update_humidity_record(id):
     data = request.get_json()
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-        INSERT INTO humidity_control (date, time, line, format, zone, humidity, responsible, observations, balance)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        UPDATE humidity_control
+        SET balance=%s, date=%s, time=%s, line=%s, format=%s, zone=%s,
+            humidity=%s, responsible=%s, observations=%s
+        WHERE id=%s
     """, (
-        data['date'], data['time'], data['line'], data['format'],
-        data['zone'], data['humidity'], data['responsible'], data['observations'], data['balance']
+        data['balance'], data['date'], data['time'], data['line'], data['format'],
+        data['zone'], data['humidity'], data['responsible'], data['observations'], id
     ))
     conn.commit()
     cur.close()
     conn.close()
-    return jsonify({'message': 'Humedad registrada correctamente'}), 201
+    return jsonify({'message': 'Registro actualizado'})
 
 @app.route('/humidity-records', methods=['GET']) # Obtener el registro de control de humeades para la tabla
 def get_humidity_records():
@@ -2669,14 +2754,15 @@ def add_fault():
     data = request.get_json()
     personnel_id = data['personnel_id']
     description = data.get('description', '')
+    responsible = data.get('responsible')
 
     conn = get_db_connection()
     cur = conn.cursor()
 
     # Insertar nueva falta
     cur.execute(
-        "INSERT INTO faults (personnel_id, description) VALUES (%s, %s) RETURNING id",
-        (personnel_id, description)
+        "INSERT INTO faults (personnel_id, description, responsible) VALUES (%s, %s, %s) RETURNING id",
+        (personnel_id, description, responsible)
     )
     new_fault_id = cur.fetchone()[0]
 
@@ -2847,6 +2933,92 @@ def download_faults_and_penalties():
                      download_name="faltas_y_multas.xlsx",
                      as_attachment=True,
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+@app.route('/get-faults', methods=['GET'])
+def get_faults_list():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            f.id,
+            f.date,
+            f.description,
+            f.responsible,
+            p.name
+        FROM faults f
+        JOIN personnel p ON f.personnel_id = p.id
+        ORDER BY f.date DESC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    faults = [
+        {
+            'id': row[0],
+            'date': row[1],
+            'full_name': row[4],
+            'description': row[2],
+            'responsible': row[3]
+        } for row in rows
+    ]
+    return jsonify(faults)
+
+@app.route('/get-penalties', methods=['GET'])
+def get_penalties():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            pen.id,
+            pen.date,
+            pen.penalty_description,
+            pen.responsible,
+            p.name
+        FROM penalties pen
+        JOIN personnel p ON pen.personnel_id = p.id
+        ORDER BY pen.date DESC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    penalties = [
+        {
+            'id': row[0],
+            'date': row[1],
+            'full_name': row[4],
+            'description': row[2],
+            'responsible': row[3]
+        } for row in rows
+    ]
+    return jsonify(penalties)
+
+@app.route('/generate-direct-penalty', methods=['POST'])
+def generate_direct_penalty():
+    data = request.get_json()
+    personnel_id = data.get('personnel_id')
+    description = data.get('description', '').strip()
+    responsible = data.get('responsible')
+
+    if not personnel_id or not description:
+        return jsonify({'status': 'error', 'message': 'Datos incompletos'}), 400
+
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # Insertar la multa directamente
+        cur.execute("""
+            INSERT INTO penalties (personnel_id, date, penalty_description, responsible)
+            VALUES (%s, CURRENT_DATE, %s, %s)
+        """, (personnel_id, description, responsible))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({'status': 'success', 'message': 'Multa registrada correctamente'})
+    except Exception as e:
+        print("Error al registrar multa manual:", e)
+        return jsonify({'status': 'error', 'message': 'Error interno del servidor'}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))

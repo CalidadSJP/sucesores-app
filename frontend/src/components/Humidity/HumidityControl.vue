@@ -15,11 +15,11 @@
                     <div class="row">
                         <div class="form-group col-md-2">
                             <label for="date" class="form-label">Fecha</label>
-                            <input v-model="form.date" type="date" class="form-control" required disabled />
+                            <input v-model="form.date" type="date" class="form-control"  disabled />
                         </div>
                         <div class="form-group col-md-2">
                             <label for="time" class="form-label">Hora</label>
-                            <input v-model="form.time" type="time" class="form-control" required disabled />
+                            <input v-model="form.time" type="time" class="form-control"  disabled />
                         </div>
                         <br><br><br>
                         <div class="form-group col-md-2">
@@ -40,7 +40,7 @@
                         </div>
                         <div class="form-group col-md-2">
                             <label for="zone" class="form-label">Zona</label>
-                            <select v-model="form.zone" class="form-control" required>
+                            <select v-model="form.zone" class="form-control">
                                 <option>SALIDA</option>
                                 <option>PRESECADO</option>
                                 <option>CINTA/PISO 1</option>
@@ -51,18 +51,18 @@
                         <!-- Termobalanza -->
                         <div class="form-group col-md-2">
                             <label for="balance" class="form-label">Termobalanza</label>
-                            <select v-model="form.balance" class="form-control" required>
-                                <option>TB-03</option>
-                                <option>TB-04</option>
+                            <select v-model="form.balance" class="form-control" >
+                                <option>TB-01</option>
+                                <option>TB-02</option>
                             </select>
                         </div>
                         <div class="form-group col-md-2">
                             <label for="humidity" class="form-label">Humedad (%)</label>
-                            <input v-model="form.humidity" type="number" step="0.01" class="form-control" required />
+                            <input v-model="form.humidity" type="number" step="0.01" class="form-control"  />
                         </div>
                         <div class="form-group col-md-8">
                             <label for="responsible" class="form-label">Responsable</label>
-                            <input v-model="form.responsible" type="text" class="form-control" required />
+                            <input v-model="form.responsible" type="text" class="form-control"  />
                         </div><br><br><br><br>
                         <div class="form-group col-md-12">
                             <label for="observations" class="form-label">Observaciones</label>
@@ -108,6 +108,8 @@
                                 <th>% Humedad</th>
                                 <th>Responsable</th>
                                 <th>Observaciones</th>
+                                <th>Acciones</th>
+
                             </tr>
                         </thead>
                         <tbody>
@@ -115,14 +117,47 @@
                                 <td>{{ record.id }}</td>
                                 <td>{{ record.balance }}</td>
                                 <td>{{ record.date }}</td>
-                                <td>{{ record.time }}</td>
+                                <td>{{ record.time.slice(0, 5) }}</td>
                                 <td>{{ record.line }}</td>
                                 <td>{{ record.format }}</td>
                                 <td>{{ record.zone }}</td>
                                 <td>{{ record.humidity }}</td>
                                 <td>{{ record.responsible }}</td>
-                                <td>{{ record.observations }}</td>
+
+
+                                <!-- Solo se muestra si hay observaciones -->
+                                <td class="text-center">
+                                    <template v-if="record.observations">
+                                        <button class="btn btn-sm btn-outline-info" @click="record.showObs = true">
+                                            <i class="fas fa-comment-dots"></i>
+                                        </button>
+
+                                        <!-- Modal individual de observación -->
+                                        <div v-if="record.showObs" class="modal fade show d-block" tabindex="-1">
+                                            <div class="modal-dialog modal-sm">
+                                                <div class="modal-content">
+                                                    <div class="modal-header py-2">
+                                                        <h6 class="modal-title">Observación</h6>
+                                                        <button type="button" class="btn-close"
+                                                            @click="record.showObs = false"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p class="mb-0">{{ record.observations }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="transparent-backdrop" @click="record.showObs = false"></div>
+                                        </div>
+                                    </template>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-warning" @click="editRecord(record)">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+
                             </tr>
+
                         </tbody>
                     </table>
                 </div>
@@ -185,6 +220,7 @@ export default {
     data() {
         return {
             form: {
+                id: null, // ID para edición
                 balance: '',
                 date: '',
                 time: '',
@@ -194,8 +230,8 @@ export default {
                 responsible: '',
                 observations: '',
                 line: '',
-
             },
+
             lines: [],
             recordsAll: [],
             formats: [],
@@ -207,6 +243,10 @@ export default {
             errorMessage: "",
 
         }
+    },
+    created() {
+        this.updateTime(); // Establece hora inicial
+        setInterval(this.updateTime, 15000); // Actualiza cada 30 segundos
     },
     watch: {
         'form.line': function (newLineName) {
@@ -243,15 +283,29 @@ export default {
         }
     },
     methods: {
+
+        updateTime() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            this.form.time = `${hours}:${minutes}`;
+        },
         async confirmAndSubmit() {
             if (confirm('¿Estás seguro de guardar este registro?')) {
                 try {
-                    // Convertir los campos deseados a mayúsculas
                     this.form.responsible = this.form.responsible.toUpperCase()
                     this.form.observations = this.form.observations.toUpperCase()
 
-                    await axios.post(`${process.env.VUE_APP_API_URL}/api/submit-humidity-control`, this.form)
-                    alert('Registro guardado exitosamente.')
+                    if (this.form.id) {
+                        // Si hay ID, actualiza
+                        await axios.put(`${process.env.VUE_APP_API_URL}/api/humidity-control/${this.form.id}`, this.form)
+                        alert('Registro actualizado exitosamente.')
+                    } else {
+                        // Si no hay ID, crea nuevo
+                        await axios.post(`${process.env.VUE_APP_API_URL}/api/submit-humidity-control`, this.form)
+                        alert('Registro guardado exitosamente.')
+                    }
+
                     this.loadRecords()
                     this.resetForm()
                 } catch (error) {
@@ -259,15 +313,19 @@ export default {
                 }
             }
         },
+
         async loadRecords() {
             try {
                 const res = await axios.get(`${process.env.VUE_APP_API_URL}/api/humidity-records`)
-                this.recordsAll = res.data  // ya que es un array plano
+                this.recordsAll = res.data.map(record => ({
+                    ...record,
+                    showObs: false  // Agregar propiedad reactiva para el modal
+                }))
+                // ya que es un array plano
             } catch (error) {
                 console.error("Error al cargar los registros:", error)
             }
-        }
-        ,
+        },
         async fetchLines() {
             try {
                 const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-lines`);
@@ -291,35 +349,33 @@ export default {
         goToPage(page) {
             this.currentPage = page;
             this.loadRecords();  // Al cambiar de página, recargar los registros
-        }
-        ,
+        },
         previousPage() {
             if (this.currentPage > 1) {
                 this.currentPage--;
                 this.loadRecords();  // Recargar los registros para la nueva página
             }
         },
-
         nextPage() {
             if (this.currentPage < this.totalPages) {
                 this.currentPage++;
                 this.loadRecords();  // Recargar los registros para la nueva página
             }
-        }
-        ,
+        },
         resetForm() {
-            const now = new Date()
             this.form = {
+                id: null,
                 balance: '',
-                date: now.toISOString().substr(0, 10),
-                time: now.toTimeString().substr(0, 5),
-                line: '',
+                date: new Date().toISOString().split('T')[0],
+                time: '',
                 format: '',
                 zone: '',
                 humidity: '',
                 responsible: '',
-                observations: ''
-            }
+                observations: '',
+                line: '',
+            };
+            this.updateTime();
         },
         async authenticate() {
             try {
@@ -344,7 +400,6 @@ export default {
                 console.error("Error en autenticación:", error);
             }
         },
-
         async downloadHumidityExcel() {
             try {
                 const response = await axios.get(
@@ -363,6 +418,22 @@ export default {
                 alert("Error al descargar el archivo Excel.");
             }
         },
+        editRecord(record) {
+            this.form = {
+                id: record.id,
+                balance: record.balance,
+                date: record.date,
+                time: record.time.slice(0, 5), // recorta segundos
+                format: record.format,
+                zone: record.zone,
+                humidity: record.humidity,
+                responsible: record.responsible,
+                observations: record.observations || '',
+                line: record.line
+            };
+            window.scrollTo({ top: 0, behavior: 'smooth' }) // Opcional: sube al formulario
+        },
+
     },
     mounted() {
         this.loadRecords()
@@ -483,5 +554,17 @@ export default {
 
 .lowercase-input {
     text-transform: lowercase;
+}
+
+.transparent-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1040;
+    /* debajo del modal */
+    background-color: transparent !important;
+    /* sin color */
 }
 </style>

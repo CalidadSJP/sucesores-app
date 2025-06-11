@@ -82,8 +82,7 @@
                 <td>{{ getAreaName(person.id_area) }}</td>
                 <td class="text-center">
                   <div class="dropdown">
-                    <button class="btn btn-sm border-0 bg-transparent p-0" type="button" data-bs-toggle="dropdown"
-                      aria-expanded="false">
+                    <button class="btn btn-sm border-0 bg-transparent p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                       <i class="fas fa-ellipsis-v"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
@@ -302,19 +301,16 @@ export default {
         this.updatePageGroup();
       }
     },
-    // Función para ir a la siguiente página
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
         this.updatePageGroup();
       }
     },
-    // Función para cambiar de página
     setPage(page) {
       this.currentPage = page;
       this.updatePageGroup();
     },
-    // Función para actualizar el grupo de páginas visibles
     updatePageGroup() {
       if (this.currentPage <= this.groupStartPage) {
         this.groupStartPage = Math.max(1, this.currentPage - 1); // Asegura que no baje de 1

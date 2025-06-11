@@ -2,6 +2,8 @@
   <div class="container mt-5">
     <h2 class="mb-4">Frecuencia de Inspección por Persona</h2>
     <div class="table-responsive">
+      <input type="text" class="form-control mb-3" placeholder="Buscar por nombre o fecha..."
+        v-model="searchQuery" />
       <table class="table">
         <thead>
           <tr>
@@ -14,7 +16,7 @@
           <tr v-if="frequencies.length === 0">
             <td colspan="3">No hay datos disponibles.</td>
           </tr>
-          <tr v-for="frequency in frequencies" :key="frequency.nombre_operario">
+          <tr v-for="frequency in filteredFrequencies" :key="frequency.nombre_operario">
             <td>{{ frequency.nombre_operario }}</td>
             <td>{{ frequency.frecuencia }}</td>
             <td>{{ frequency.ultima_inspeccion || 'N/A' }}</td>
@@ -32,6 +34,7 @@ export default {
   data() {
     return {
       frequencies: [],
+      searchQuery: ''
     };
   },
   async created() {
@@ -52,5 +55,16 @@ export default {
       }
     },
   },
+  computed: {
+    filteredFrequencies() {
+      const query = this.searchQuery.toLowerCase();
+      return this.frequencies.filter(f =>
+        f.nombre_operario.toLowerCase().includes(query) ||
+        (f.ultima_inspeccion && f.ultima_inspeccion.toLowerCase().includes(query))
+      );
+    }
+  },
+
+
 };
 </script>

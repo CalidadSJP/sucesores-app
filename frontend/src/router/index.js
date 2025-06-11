@@ -16,7 +16,7 @@ import AdditiveRelease from '@/components/Additive/AdditiveRelease.vue';
 import AddMaterialOrProvider from '@/components/Packaging/AddMaterialOrProvider.vue';
 import MaterialFiles from '@/components/Packaging/MaterialFiles.vue';
 import PackagingStorageForm from '@/components/Packaging/PackagingStorageForm.vue';
-import MaterialRegister from '@/components/Packaging/MaterialRegister.vue';
+import MaterialRecord from '@/components/Packaging/MaterialRecord.vue';
 import LoginMaterialComponent from '@/components/Login/LoginMaterialComponent.vue';
 import LoginAddAdditives from '@/components/Login/LoginAddAdditives.vue';
 import LoginAddMaterials from '@/components/Login/LoginAddMaterials.vue';
@@ -32,6 +32,7 @@ import ProductManagement from '@/components/Cleaning/ProductManagement.vue';
 import PersonnelPenalties from '@/components/Penalties/PersonnelPenalties.vue';
 import HomeCleaning from '@/components/Home/HomeCleaning.vue';
 import HomePenalties from '@/components/Home/HomePenalties.vue';
+import FaultsPenaltiesView from '@/components/Penalties/FaultsPenaltiesView.vue';
 
 const routes = [
   // Ruta para la página principal
@@ -122,7 +123,7 @@ const routes = [
 
   { path: '/material-storage-form', name: 'PackagingStorageForm', component: PackagingStorageForm },
 
-  { path: '/material-register', component: MaterialRegister,
+  { path: '/material-register', component: MaterialRecord,
     beforeEnter: (to, from, next) => {
       const token = localStorage.getItem('authToken');
       const userArea = localStorage.getItem('user_area');
@@ -169,6 +170,8 @@ const routes = [
   { path: '/home-penalties', name: 'HomePenalties', component: HomePenalties},
 
   { path: '/penalties', name: 'PersonnelPenalties', component: PersonnelPenalties},
+  
+  { path: '/faults-penalties-view', name: 'FaultsPenaltiesView', component: FaultsPenaltiesView}
 
   
 

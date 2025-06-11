@@ -11,12 +11,12 @@
                         <div class="form-group col-md-6">
                             <label for="cod_article">Código</label>
                             <input v-model="article.cod_article" type="text" @input="toUpper('article', 'cod_article')"
-                                class="form-control" id="cod_article" required />
+                                class="form-control" id="cod_article" />
                         </div>
                         <div class="form-group col-md-6">
                             <label for="article_name">Nombre</label>
                             <input v-model="article.article_name" @input="toUpper('article', 'article_name')"
-                                type="text" class="form-control" id="article_name" required />
+                                type="text" class="form-control" id="article_name" />
                         </div>
                         <div class="form-group col-md-6">
                             <label for="format">Formato</label>
@@ -25,7 +25,7 @@
                         </div>
                         <div class="form-group col-md-6">
                             <label for="brand_id">Marca</label>
-                            <select v-model="article.brand_id" class="form-control" id="brand_id" required>
+                            <select v-model="article.brand_id" class="form-control" id="brand_id">
                                 <option v-for="brand in brands" :key="brand.id" :value="brand.id">{{ brand.name }}
                                 </option>
                             </select>
@@ -44,7 +44,7 @@
                         </div>
                     </div><br>
                     <button type="submit" class="btn btn-success me-2">{{ isEditing ? 'Actualizar' : 'Agregar'
-                    }}</button>
+                        }}</button>
                     <button type="button" class="btn btn-secondary" @click="cancelEdit">Cancelar</button>
                 </form>
             </div>
@@ -56,7 +56,7 @@
             <div class="card-body">
                 <h5 class="card-title">Lista de Prodcutos</h5>
                 <input v-model="searchQuery" type="text" class="form-control mb-3"
-                    placeholder="Buscar por nombre o marca" />
+                    placeholder="Buscar..." />
                 <div class="table-responsive">
                     <table class="table table-striped table-bordered">
                         <thead>
@@ -132,10 +132,13 @@ export default {
             const query = this.searchQuery.toLowerCase();
             return this.articles.filter(item =>
                 item.article_name.toLowerCase().includes(query) ||
-                this.getBrandName(item.brand_id).toLowerCase().includes(query)
+                this.getBrandName(item.brand_id).toLowerCase().includes(query) ||
+                (item.ean13 && item.ean13.toLowerCase().includes(query)) ||
+                (item.ean14 && item.ean14.toLowerCase().includes(query))
             );
         }
-    },
+    }
+    ,
     methods: {
         async fetchArticles() {
             const res = await axios.get(`${process.env.VUE_APP_API_URL}/api/articles`);
@@ -189,7 +192,6 @@ export default {
         toUpper(model, field) {
             this[model][field] = this[model][field].toUpperCase();
         }
-
     },
     mounted() {
         this.fetchArticles();

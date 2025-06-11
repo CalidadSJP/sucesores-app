@@ -3,9 +3,15 @@
 
     <h2 class="text-center mb-4">Control de Faltas del Personal</h2>
     <div class="card">
-      <div class="card-header text-white d-flex align-items-center justify-content-center header-custom">
-        <i class="fas fa-user-check me-2"></i> Panel de Control
+      <div class="card-header text-white d-flex justify-content-between align-items-center header-custom">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-user-check me-2"></i> Panel de Control
+        </div>
+        <button class="btn btn-outline-light btn-lg" @click="goHome">
+          <i class="fas fa-arrow-left me-1"></i> Regresar
+        </button>
       </div>
+
 
       <div class="card-body">
         <!-- Selector de empleado -->
@@ -71,6 +77,19 @@
             <button @click="addFault" class="btn btn-danger">Registrar Falta</button>
           </div>
 
+          <!-- Generar multa directamente sin contar faltas -->
+          <div class="input-group mb-3 w-100 mx-auto">
+            <input v-model="directPenaltyDescription" type="text" class="form-control text-uppercase"
+              placeholder="Descripción de la multa directa">
+            <button @click="addDirectPenalty" class="btn btn-success">Registrar Multa</button>
+          </div>
+
+          <div class="mb-3 w-100 mx-auto">
+            <label for="responsibleSelect" class="form-label">Responsable que aplica:</label>
+            <input v-model="responsible" type="text" class="form-control text-uppercase" required>
+          </div>
+
+
           <!-- Tabla de faltas dentro de una tarjeta scrolleable -->
           <div v-if="faults.length > 0" class="mt-4 w-100 mx-auto">
             <div class="card shadow-sm">
@@ -112,6 +131,8 @@ export default {
       faults: [],
       penaltyCreated: false,
       faultCountUnpenalized: 0,
+      directPenaltyDescription: '',
+      responsible: ''
 
     };
   },
@@ -153,13 +174,16 @@ export default {
         .catch(err => console.error('Error al obtener faltas:', err));
     },
     addFault() {
-      if (!this.description.trim() || !this.selectedPersonnel) {
-        alert("Completa la descripción y selecciona un empleado.");
+      if (!this.description.trim() || !this.selectedPersonnel || !this.responsible.trim()) {
+        alert("Completa la descripción, selecciona un empleado y especifica el responsable.");
         return;
       }
 
       const faultDescription = this.description.toUpperCase();
       this.description = '';
+
+      const responsibleName = this.responsible.toUpperCase();
+      this.responsible = '';
 
       this.$nextTick(() => {
         setTimeout(() => {
@@ -168,18 +192,18 @@ export default {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               personnel_id: this.selectedPersonnel.id,
-              description: faultDescription
+              description: faultDescription,
+              responsible: responsibleName
             })
           })
             .then(res => res.json())
             .then((result) => {
-              this.faultCountUnpenalized = result.active_faults; // ← nuevo valor
+              this.faultCountUnpenalized = result.active_faults;
               this.fetchFaults();
               if (this.faultCountUnpenalized >= 5) {
                 this.penaltyCreated = false;
               }
             })
-
             .catch(err => console.error('Error al registrar la falta:', err));
         }, 500);
       });
@@ -209,7 +233,45 @@ export default {
           }
         })
         .catch(err => console.error('Error al generar multa:', err));
+    },
+    addDirectPenalty() {
+      if (!this.directPenaltyDescription.trim() || !this.selectedPersonnel || !this.responsible.trim()) {
+        alert("Completa la descripción, selecciona un empleado y especifica el responsable.");
+        return;
+      }
+
+      const penaltyDescription = this.directPenaltyDescription.toUpperCase();
+      this.directPenaltyDescription = '';
+
+      const responsibleName = this.responsible.toUpperCase();
+      this.responsible = '';
+
+      fetch(`${process.env.VUE_APP_API_URL}/api/generate-direct-penalty`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          personnel_id: this.selectedPersonnel.id,
+          description: penaltyDescription,
+          responsible: responsibleName
+        })
+      })
+        .then(res => res.json())
+        .then(result => {
+          if (result.status === 'success') {
+            alert('✅ Multa directa registrada exitosamente.');
+            this.fetchFaults();
+          } else {
+            alert('⚠️ No se pudo registrar la multa directa.');
+          }
+        })
+        .catch(err => console.error('Error al registrar multa directa:', err));
+    },
+    goHome() {
+      this.$router.push('/home-penalties'); // Asegúrate de que la ruta '/' sea tu página de inicio
     }
+
+
+
   },
   mounted() {
     this.loadPersonnel();

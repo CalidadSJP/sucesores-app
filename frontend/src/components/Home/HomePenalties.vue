@@ -22,6 +22,11 @@
           <h3>Formulario | Faltas y multas del Personal</h3>
           <p>Registrar las faltas cometidas por el personal de planta.</p>
         </div>
+        <div class="card-option" @click="$router.push('/faults-penalties-view')">
+          <i class="fas fa-table card-icon"></i>
+          <h3>Registro de Faltas y Multas</h3>
+          <p>Revisa la información de las faltas y multas registradas.</p>
+        </div>
         <div class="card-option" @click="showLoginModal = true">
           <i class="fas fa-download card-icon"></i>
           <h3>Descargar Registro</h3>
@@ -323,9 +328,8 @@ export default {
   cursor: pointer;
   transition: transform 0.2s;
 }
+
 .circle-btn:hover {
   transform: scale(1.1);
 }
-
-
 </style>

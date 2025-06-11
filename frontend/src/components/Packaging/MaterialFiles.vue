@@ -187,22 +187,31 @@
 
                 </div>
             </div>
-            <!-- Modal de vista previa de imagen -->
+            <!-- Modal de vista previa de imagen o PDF -->
             <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewLabel"
                 aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="imagePreviewLabel">Vista Previa de Imagen</h5>
+                            <h5 class="modal-title" id="imagePreviewLabel">Vista Previa</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                 aria-label="Cerrar"></button>
                         </div>
                         <div class="modal-body text-center">
-                            <img :src="previewImageUrl" alt="Vista previa" v-if="previewImageUrl"
+
+                            <!-- Si es PDF, usar iframe -->
+                            <iframe v-if="isPdfPreview" :src="previewImageUrl" width="100%" height="480px"
+                                style="border: none;">
+                            </iframe>
+
+                            <!-- Si es imagen, usar img con zoom -->
+                            <img v-else-if="previewImageUrl" :src="previewImageUrl" alt="Vista previa"
                                 :class="['img-fluid', zoomed ? 'zoomed-in' : '']" @click="toggleZoom"
                                 style="max-width: 100%; max-height: 480px; cursor: zoom-in;" />
 
+                            <!-- Si no es compatible -->
                             <p v-else>No es una imagen compatible para vista previa.</p>
+
                         </div>
                     </div>
                 </div>
@@ -238,7 +247,8 @@ export default {
             currentProductoPage: 1,   // Página actual
             filesPerPage: 10,
             previewImageUrl: null,
-            zoomed: false
+            zoomed: false,
+            isPdfPreview: false,
         };
     },
     computed: {
@@ -490,19 +500,39 @@ export default {
                 console.error('Error al obtener marcas:', error);
             }
         },
-        showImagePreview(file, folder) {
+        async showImagePreview(file, folder) {
             const extension = file.split('.').pop().toLowerCase();
-            const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'];
 
-            if (validExtensions.includes(extension)) {
-                this.previewImageUrl = this.generateDownloadUrl(file, folder);
-                const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
-                modal.show();
-            } else {
+            if (!validExtensions.includes(extension)) {
                 this.previewImageUrl = null;
-                alert('Este archivo no es una imagen compatible para vista previa.');
+                this.isPdfPreview = false;
+                alert('Este archivo no es compatible para vista previa.');
+                return;
             }
-        },
+
+            const url = this.generateDownloadUrl(file, folder);
+            this.isPdfPreview = extension === 'pdf';
+
+            if (this.isPdfPreview) {
+                // Descargar el PDF como Blob
+                try {
+                    const response = await fetch(url);
+                    const blob = await response.blob();
+                    this.previewImageUrl = URL.createObjectURL(blob); // ← crea URL temporal
+                } catch (error) {
+                    console.error('Error al cargar PDF:', error);
+                    alert('No se pudo cargar el PDF para vista previa.');
+                    return;
+                }
+            } else {
+                this.previewImageUrl = url;
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+            modal.show();
+        }
+
     }
 };
 </script>
@@ -628,8 +658,8 @@ export default {
 }
 
 .zoomed-in {
-  transform: scale(2);
-  transition: transform 0.3s ease;
-  cursor: zoom-out;
+    transform: scale(2);
+    transition: transform 0.3s ease;
+    cursor: zoom-out;
 }
 </style>

@@ -39,13 +39,14 @@
         <!-- Empacadora -->
         <div class="mb-3">
           <label for="empacadora" class="form-label">Empacadora</label>
-          <select id="empacadora" class="form-control" v-model="form.empacadora">
+          <select id="empacadora" class="form-control" v-model="form.empacadora" required>
             <option value="">Seleccione una empacadora</option>
             <option v-for="baler in empacadoras" :key="baler.id" :value="baler.baler_name">
               {{ baler.baler_name }}
             </option>
           </select>
         </div>
+
 
         <!-- Peso Neto -->
         <div class="mb-3">
@@ -112,7 +113,7 @@
     <!-- Botón para enviar toda la información -->
     <div class="d-flex justify-content-end m-0 p-0">
       <button class="btn btn-primary" @click="submitForm">
-        <i class="fas fa-save"></i>   Enviar datos
+        <i class="fas fa-save"></i> Enviar datos
       </button>
     </div>
     <br><br><br>

@@ -30,30 +30,60 @@
                         </thead>
                         <tbody>
                             <tr v-for="(row, index) in paginatedData" :key="row.id">
-                                <td v-for="(key, index) in keys" :key="key"
-                                    :class="['text-nowrap', stickyClass(index)]">
-                                    <input v-if="editableRow === index" :value="row[key]"
-                                        @input="row[key] = $event.target.value.toUpperCase()" class="form-control"
+                                <td v-for="(key, i) in keys" :key="key" :class="['text-nowrap', stickyClass(i)]">
+                                    <input v-if="editableRow === index" v-model="row[key]" class="form-control"
                                         type="text" />
                                     <span v-else>{{ row[key] }}</span>
                                 </td>
-                                <td>
-                                    <button v-if="editableRow === index" class="btn btn-success btn-sm ms-1"
-                                        @click="saveRow(index)">
-                                        Guardar
-                                    </button>
-                                    <button v-else class="btn btn-info btn-sm mb-1 mt-1 ms-1" @click="editRow(index)">
-                                        Editar
-                                    </button>
-                                    <button class="btn btn-danger btn-sm mt-1 mb-1 ms-1" @click="deleteRow(row.id)">
-                                        Eliminar
-                                    </button>
-                                    <a v-if="shouldShowRedirectButton(row)"
-                                        class="btn btn-warning btn-sm ms-1 mt-1 mb-1" :href="'/material-files'">
-                                        Subir Archivo
-                                    </a>
+
+                                <!-- Columna de acciones -->
+                                <td class="text-nowrap">
+                                    <div class="d-flex align-items-center">
+                                        <!-- Ícono de advertencia -->
+                                        <i v-if="shouldShowRedirectButton(row)"
+                                            class="fas fa-exclamation-triangle text-warning me-2"
+                                            title="Falta cargar uno o más archivos"></i>
+
+                                        <!-- Botones aceptar / cancelar en modo edición -->
+                                        <template v-if="editableRow === index">
+                                            <button class="btn btn-success btn-sm me-1" @click="saveRow(index)">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-secondary btn-sm me-2" @click="cancelEdit">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </template>
+
+                                        <!-- Menú desplegable en modo normal -->
+                                        <div class="dropdown d-inline-block" v-else>
+                                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button"
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <button class="dropdown-item" @click="editRow(index)">
+                                                        <i class="fas fa-edit me-2"></i>Editar
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button class="dropdown-item text-danger"
+                                                        @click="deleteRow(row.id)">
+                                                        <i class="fas fa-trash-alt me-2"></i>Eliminar
+                                                    </button>
+                                                </li>
+                                                <li v-if="shouldShowRedirectButton(row)">
+                                                    <a class="dropdown-item text-warning" :href="'/material-files'">
+                                                        <i class="fas fa-upload me-2"></i>Subir Archivo
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
+
                         </tbody>
                     </table>
                 </div>
@@ -262,6 +292,10 @@ export default {
                     console.error("Error al actualizar el registro:", error);
                 });
         },
+        cancelEdit() {
+            this.editableRow = null;
+            this.fetchTableData(); // Restaurar datos originales
+        },
         deleteRow(id) {
             // Mostrar el mensaje de confirmación
             const confirmDelete = window.confirm("¿Estás seguro de que deseas eliminar este registro?");
@@ -333,8 +367,7 @@ export default {
             if (index === 2) return 'sticky-col-2';
             return '';
         }
-    }
-    ,
+    },
     mounted() {
         this.fetchTableData();
     }
@@ -430,37 +463,37 @@ export default {
 
 /* Sticky columns */
 .sticky-col-0 {
-  position: sticky;
-  left: 0;
-  background-color: white;
-  z-index: 3;
-  min-width: 70px;
-  padding: 4px 6px;
+    position: sticky;
+    left: 0;
+    background-color: white;
+    z-index: 3;
+    min-width: 70px;
+    padding: 4px 6px;
 }
 
 .sticky-col-1 {
-  position: sticky;
-  left: 150px;
-  background-color: white;
-  z-index: 3;
-  min-width: 70px;
-  padding: 4px 6px;
+    position: sticky;
+    left: 150px;
+    background-color: white;
+    z-index: 3;
+    min-width: 70px;
+    padding: 4px 6px;
 }
 
 .sticky-col-2 {
-  position: sticky;
-  left: 300px;
-  background-color: white;
-  z-index: 3;
-  min-width: 70px;
-  padding: 4px 6px;
+    position: sticky;
+    left: 300px;
+    background-color: white;
+    z-index: 3;
+    min-width: 70px;
+    padding: 4px 6px;
 }
 
 .table th,
 .table td {
-  font-size: 0.8rem;
-  /* de 1rem a 0.8rem */
-  padding: 4px 6px;
-  /* reduce el padding vertical y horizontal */
+    font-size: 0.8rem;
+    /* de 1rem a 0.8rem */
+    padding: 4px 6px;
+    /* reduce el padding vertical y horizontal */
 }
 </style>
