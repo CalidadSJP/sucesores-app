@@ -2,6 +2,10 @@
   <div class="menu-personal">
     <header class="menu-header">
       <span class="header-title">Faltas y Multas</span>
+
+      <button @click="logout" class="btn btn-danger">
+        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+      </button>
     </header>
 
     <div class="nav-buttons-centered">
@@ -92,7 +96,7 @@ export default {
           {
             username: this.username,
             password: this.password,
-            area: "Calidad", // Área fija asignada a esta página
+            area: "Multas", // Área fija asignada a esta página
           }
         );
 
@@ -112,7 +116,7 @@ export default {
     async downloadExcel() {
       try {
         const response = await axios.get(
-          `${process.env.VUE_APP_API_URL}/api//download-faults-penalties`,
+          `${process.env.VUE_APP_API_URL}/api/download-faults-penalties`,
           { responseType: "blob" }
         );
         const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -126,6 +130,13 @@ export default {
         console.error("Error al descargar el archivo Excel:", error);
         alert("Error al descargar el archivo Excel.");
       }
+    },
+    logout() {
+      // Limpia el almacenamiento local y redirige al usuario
+      localStorage.removeItem('authToken'); // Elimina el token
+      localStorage.removeItem('user_area'); // Elimina el área
+      localStorage.removeItem('user_id'); // Elimina el ID del usuario
+      this.$router.push('/'); // Redirige al login
     },
   },
 };

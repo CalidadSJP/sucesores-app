@@ -2,10 +2,30 @@
   <div class="container mt-5">
     <!-- Tarjeta de formulario -->
     <div class="card mb-4">
-      <div class="card-header bg-success text-white">
-        <h5>Liberación de Aditivos</h5>
+      <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Liberación de Aditivos</h5>
+        <div>
+          <!-- Botón para desplegar carpeta -->
+          <button class="btn btn-outline-light btn-sm" @click="toggleDocuments">
+            <i class="fas fa-folder"></i> Fichas Técnicas
+          </button>
+        </div>
       </div>
       <div class="card-body">
+        <!-- Lista desplegable de PDFs -->
+        <div v-if="showDocuments" class="mb-3">
+          <label class="form-label">Fichas Técnicas disponibles:</label>
+          <ul class="list-group">
+            <li v-for="doc in technicalSheets" :key="doc" class="list-group-item d-flex justify-content-between align-items-center">
+              {{ doc }}
+              <button class="btn btn-sm btn-primary" @click="openModal(getPdfUrl(doc))">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </li>
+          </ul>
+          <br>
+        </div>
+
         <form @submit.prevent="submitForm">
           <div class="mb-3">
             <label for="product" class="form-label">Lista de Productos (EN ESPERA)</label>
@@ -17,12 +37,10 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label">1) ¿Certificado de Análisis cumple con especificaciones? / ¿Concuerda con análisis
-              internos?</label>
+            <label class="form-label">1) ¿Certificado de Análisis cumple con especificaciones? / ¿Concuerda con análisis internos?</label>
             <div>
               <div class="form-check form-check-inline" v-for="option in ['SI', 'NO', 'NO APLICA']" :key="option">
-                <input class="form-check-input" type="radio" :id="'analysis' + option" :value="option"
-                  v-model="analysisMatch" required />
+                <input class="form-check-input" type="radio" :id="'analysis' + option" :value="option" v-model="analysisMatch" required />
                 <label class="form-check-label" :for="'analysis' + option">{{ option }}</label>
               </div>
             </div>
@@ -32,8 +50,7 @@
             <label class="form-label">2) ¿Cumple con los criterios de liberación?</label>
             <div>
               <div class="form-check form-check-inline" v-for="option in ['SI', 'NO']" :key="option">
-                <input class="form-check-input" type="radio" :id="'criteria' + option" :value="option"
-                  v-model="releaseCriteria" required />
+                <input class="form-check-input" type="radio" :id="'criteria' + option" :value="option" v-model="releaseCriteria" required />
                 <label class="form-check-label" :for="'criteria' + option">{{ option }}</label>
               </div>
             </div>
@@ -41,12 +58,26 @@
 
           <div class="mb-3">
             <label for="releaser" class="form-label">Liberado por:</label>
-            <input type="text" id="releaser" v-model="releaser" @input="releaser = releaser.toUpperCase()"
-              class="form-control text-uppercase" required />
+            <input type="text" id="releaser" v-model="releaser" @input="releaser = releaser.toUpperCase()" class="form-control text-uppercase" required />
           </div>
 
           <button type="submit" class="btn btn-success">Registrar Liberación</button>
         </form>
+      </div>
+    </div>
+
+    <!-- Modal para visualizar PDF -->
+    <div class="modal fade show" v-if="pdfModal" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Ficha Técnica</h5>
+            <button type="button" class="btn-close" @click="pdfModal = false"></button>
+          </div>
+          <div class="modal-body">
+            <iframe :src="pdfToShow" style="width:100%; height:80vh; border:none;" allowfullscreen></iframe>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -99,10 +130,23 @@ export default {
       selectedProduct: null,
       analysisMatch: "",
       releaseCriteria: "",
-      releaser: ""
+      releaser: "",
+      showDocuments: false,
+      technicalSheets: [],
+      pdfModal: false,
+      pdfToShow: ""
     };
   },
   methods: {
+    toggleDocuments() {
+      this.showDocuments = !this.showDocuments;
+      if (this.showDocuments && this.technicalSheets.length === 0) {
+        this.fetchTechnicalSheets();
+      }
+    },
+    getPdfUrl(filename) {
+      return `${process.env.VUE_APP_API_URL}/api/static/Fichas_Tecnicas/Aditivos/${filename}`;
+    },
     async fetchProducts() {
       try {
         const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-pending-products`);
@@ -122,6 +166,14 @@ export default {
         console.error("Error fetching releases:", error);
       }
     },
+    async fetchTechnicalSheets() {
+      try {
+        const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-technical-sheets`);
+        this.technicalSheets = response.data.files;
+      } catch (error) {
+        console.error("Error fetching technical sheets:", error);
+      }
+    },
     async submitForm() {
       try {
         const status = this.analysisMatch === "SI" && this.releaseCriteria === "SI" ? "SI" : "NO";
@@ -134,8 +186,8 @@ export default {
         });
         alert("Liberación registrada exitosamente.");
         this.resetForm();
-        this.fetchProducts();  // Actualiza lista de productos
-        this.fetchReleases();  // Actualiza tabla de historial
+        this.fetchProducts();
+        this.fetchReleases();
       } catch (error) {
         console.error("Error submitting release:", error);
         alert("Ocurrió un error al registrar la liberación.");
@@ -150,15 +202,18 @@ export default {
     formatDate(dateString) {
       const date = new Date(dateString);
       return date.toLocaleString("es-EC", {
-        timeZone: "UTC", // <--- Clave aquí
+        timeZone: "UTC",
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit"
       });
+    },
+    openModal(pdfUrl) {
+      this.pdfToShow = pdfUrl;
+      this.pdfModal = true;
     }
-
   },
   mounted() {
     this.fetchProducts();
@@ -180,7 +235,6 @@ export default {
 
 .scrollable-table {
   max-height: 300px;
-  /* Puedes ajustar esta altura */
   overflow-y: auto;
 }
 
@@ -188,7 +242,6 @@ export default {
   position: sticky;
   top: 0;
   background-color: #d1e7dd;
-  /* mismo color que .table-success */
   z-index: 1;
 }
 </style>

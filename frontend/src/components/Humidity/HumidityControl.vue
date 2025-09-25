@@ -15,11 +15,11 @@
                     <div class="row">
                         <div class="form-group col-md-2">
                             <label for="date" class="form-label">Fecha</label>
-                            <input v-model="form.date" type="date" class="form-control"  disabled />
+                            <input v-model="form.date" type="date" class="form-control" disabled />
                         </div>
                         <div class="form-group col-md-2">
                             <label for="time" class="form-label">Hora</label>
-                            <input v-model="form.time" type="time" class="form-control"  disabled />
+                            <input v-model="form.time" type="time" class="form-control" disabled />
                         </div>
                         <br><br><br>
                         <div class="form-group col-md-2">
@@ -51,18 +51,18 @@
                         <!-- Termobalanza -->
                         <div class="form-group col-md-2">
                             <label for="balance" class="form-label">Termobalanza</label>
-                            <select v-model="form.balance" class="form-control" >
+                            <select v-model="form.balance" class="form-control">
                                 <option>TB-01</option>
                                 <option>TB-02</option>
                             </select>
                         </div>
                         <div class="form-group col-md-2">
                             <label for="humidity" class="form-label">Humedad (%)</label>
-                            <input v-model="form.humidity" type="number" step="0.01" class="form-control"  />
+                            <input v-model="form.humidity" type="number" step="0.01" class="form-control" />
                         </div>
                         <div class="form-group col-md-8">
                             <label for="responsible" class="form-label">Responsable</label>
-                            <input v-model="form.responsible" type="text" class="form-control"  />
+                            <input v-model="form.responsible" type="text" class="form-control" />
                         </div><br><br><br><br>
                         <div class="form-group col-md-12">
                             <label for="observations" class="form-label">Observaciones</label>
@@ -98,7 +98,6 @@
                     <table class="table table-bordered table-striped">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Termobalanza</th>
                                 <th>Fecha</th>
                                 <th>Hora</th>
@@ -114,7 +113,6 @@
                         </thead>
                         <tbody>
                             <tr v-for="record in records" :key="record.id">
-                                <td>{{ record.id }}</td>
                                 <td>{{ record.balance }}</td>
                                 <td>{{ record.date }}</td>
                                 <td>{{ record.time.slice(0, 5) }}</td>

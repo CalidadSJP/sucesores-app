@@ -286,7 +286,7 @@ export default {
             localStorage.removeItem('authToken'); // Elimina el token
             localStorage.removeItem('user_area'); // Elimina el área
             localStorage.removeItem('user_id'); // Elimina el ID del usuario
-            this.$router.push('/login-inspection-view'); // Redirige al login
+            this.$router.push('/control-home'); // Redirige al login
         },
         previousPage() {
             if (this.currentPage > 1) {
@@ -311,8 +311,6 @@ export default {
             if (index === 3) return 'sticky-col-3';
             return '';
         }
-
-
     }
     ,
     mounted() {
@@ -408,6 +406,4 @@ export default {
     min-width: 70px;
     padding: 4px 6px;
 }
-
-
 </style>

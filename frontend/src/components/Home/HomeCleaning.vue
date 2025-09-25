@@ -25,8 +25,19 @@
         <div class="card-option" @click="$router.push('/cleaning-products-management')">
           <i class="fas fa-lines-leaning card-icon"></i>
           <h3>Listado | Limpieza</h3>
-          <p>Visualiza y edita el listado de prodcutos e implementos de limpieza.</p>
+          <p>Visualiza y edita el listado de productos e implementos de limpieza.</p>
         </div>
+        <div class="card-option" @click="$router.push('/cleaning-product-record')">
+          <i class="fas fa-list-check card-icon"></i>
+          <h3>Visualización - Registros | Kardex de Limpieza</h3>
+          <p>Visualiza los cambios en el inventario de limpieza.</p>
+        </div>
+        <div class="card-option" @click="downloadExcel">
+          <i class="fas fa-download card-icon"></i>
+          <h3>Descargar Registro</h3>
+          <p>Descarga los movimientos del inventario de limpieza.</p>
+        </div>
+
       </section>
 
     </main>
@@ -46,6 +57,11 @@ export default {
   methods: {
     goHome() {
       this.$router.push('/');
+    },
+
+    downloadExcel() {
+      const url = `${process.env.VUE_APP_API_URL}/api/download-cleaning-movements`;
+      window.open(url, '_blank');
     },
   },
 };
@@ -208,9 +224,8 @@ export default {
   cursor: pointer;
   transition: transform 0.2s;
 }
+
 .circle-btn:hover {
   transform: scale(1.1);
 }
-
-
 </style>

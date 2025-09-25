@@ -308,7 +308,7 @@ export default {
             localStorage.removeItem('authToken'); // Elimina el token
             localStorage.removeItem('user_area'); // Elimina el área
             localStorage.removeItem('user_id'); // Elimina el ID del usuario
-            this.$router.push('/add-additives-login'); // Redirige al login
+            this.$router.push('/additive-home'); // Redirige al login
         }
     },
     mounted() {

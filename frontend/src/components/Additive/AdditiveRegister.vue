@@ -124,7 +124,9 @@ export default {
         "Imagen de condición del camión",
         "Imagen de la Placa del Camión",
         "Ficha Técnica/Certificado de Calidad",
-        "Liberacion"
+        "Liberacion",
+        "Observaciones",
+        
       ],
       keys: [
         "id",
@@ -161,7 +163,8 @@ export default {
         "truck_condition_image_confirmation",
         "truck_plate_image_confirmation",
         "technical_file_confirmation",
-        "liberation"
+        "liberation",
+        "observations"
       ],
       tableData: [],
       editableRow: null,
@@ -315,7 +318,7 @@ export default {
       localStorage.removeItem('authToken'); // Elimina el token
       localStorage.removeItem('user_area'); // Elimina el área
       localStorage.removeItem('user_id'); // Elimina el ID del usuario
-      this.$router.push('/additive-login'); // Redirige al login
+      this.$router.push('/additive-home'); // Redirige al login
     },
     stickyClass(index) {
       if (index === 0) return 'sticky-col-0';

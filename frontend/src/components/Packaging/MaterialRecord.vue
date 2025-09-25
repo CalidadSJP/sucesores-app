@@ -349,7 +349,7 @@ export default {
             localStorage.removeItem('authToken'); // Elimina el token
             localStorage.removeItem('user_area'); // Elimina el área
             localStorage.removeItem('user_id'); // Elimina el ID del usuario
-            this.$router.push('/material-login'); // Redirige al login
+            this.$router.push('/additive-home'); // Redirige al login
         },
         previousPage() {
             if (this.currentPage > 1) {

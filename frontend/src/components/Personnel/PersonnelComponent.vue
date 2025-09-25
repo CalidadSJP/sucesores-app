@@ -1,134 +1,64 @@
 <template>
   <div>
-    <div v-if="!isAuthenticated" class="text-center mt-5">
-      <div class="alert alert-danger" role="alert">
-        No estás autenticado. Por favor, inicia sesión.
-      </div>
-    </div>
-
-    <div v-else class="container py-4">
-      <h1 class="text-center mb-4 page-title">Gestión de Personal</h1>
-
-      <!-- Formulario para agregar o editar personal -->
-      <div v-if="isEditing || !person.id" class="card mb-5 shadow-sm">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h5 class="mb-0">{{ isEditing ? 'Editar Personal' : 'Agregar Personal' }}</h5>
-          <button @click="logout" class="btn btn-danger">
-            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
-          </button>
-        </div>
-
-        <div class="card-body">
-          <form @submit.prevent="isEditing ? updatePersonnel() : addPersonnel()">
-            <div class="form-group mb-3">
-              <label for="name">Nombre</label>
-              <input v-model="person.name" type="text" class="form-control" id="name" required
-                @input="convertToUppercase('name')" />
+    <div v-if="isAuthenticated" class="container-fluid py-4">
+      <h3 class="text-center mb-1 page-title">Gestión de Personal</h3>
+      <div class="row d-flex align-items-stretch"> <!-- Columna izquierda: Formulario -->
+        <div class="col-md-5">
+          <div class="card shadow-sm card-form">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">{{ isEditing ? 'Editar Personal' : 'Agregar Personal' }}</h5> <button @click="logout"
+                class="btn btn-danger btn-sm"> <i class="fas fa-sign-out-alt"></i> Salir </button>
             </div>
-
-            <div class="form-group mb-3">
-              <label for="role">Cargo</label>
-              <input v-model="person.role" type="text" class="form-control" id="role" required
-                @input="convertToUppercase('role')" />
+            <div class="card-body">
+              <form @submit.prevent="isEditing ? updatePersonnel() : addPersonnel()">
+                <div class="form-group mb-3"> <label for="last_name">Apellidos</label> <input v-model="person.last_name"
+                    type="text" class="form-control" id="last_name" required @input="updateFullName" /> </div>
+                <div class="form-group mb-3"> <label for="first_name">Nombres</label> <input v-model="person.first_name"
+                    type="text" class="form-control" id="first_name" required @input="updateFullName" /> </div>
+                <div class="form-group mb-3"> <label for="identifier">Cédula</label> <input v-model="person.identifier"
+                    type="text" class="form-control" id="identifier" required maxlength="10" /> </div>
+                <div class="form-group mb-3"> <label for="role">Cargo</label> <input v-model="person.role" type="text"
+                    class="form-control" id="role" required @input="convertToUppercase('role')" /> </div>
+                <div class="form-group mb-4"> <label for="id_area">Área</label> <select v-model="person.id_area"
+                    class="form-control" id="id_area" required>
+                    <option v-for="area in areas" :key="area.id_area" :value="area.id_area"> {{ area.name_area }}
+                    </option>
+                  </select> </div>
+                <div class="d-flex justify-content-end"> <button type="submit" class="btn btn-success me-2"> <i
+                      class="fas fa-save"></i> {{ isEditing ? 'Actualizar' : 'Agregar' }} </button> <button
+                    type="button" class="btn btn-secondary" @click="cancelEdit"> <i class="fas fa-times"></i> Cancelar
+                  </button> </div>
+              </form>
             </div>
-
-
-            <div class="form-group mb-4">
-              <label for="id_area">Área</label>
-              <select v-model="person.id_area" class="form-control" id="id_area" required>
-                <option v-for="area in areas" :key="area.id_area" :value="area.id_area">
-                  {{ area.name_area }}
-                </option>
-              </select>
-            </div>
-
-            <div class="d-flex justify-content-end">
-              <button type="submit" class="btn btn-success me-2">
-                <i class="fas fa-save"></i> {{ isEditing ? 'Actualizar' : 'Agregar' }}
-              </button>
-              <button type="button" class="btn btn-secondary" @click="cancelEdit">
-                <i class="fas fa-times"></i> Cancelar
-              </button>
-            </div>
-          </form>
+          </div>
+        </div> <!-- Columna derecha: Lista de nombres -->
+        <div class="col-md-5">
+          <div class="card shadow-sm card-list">
+            <div class="card-header"> <input v-model="searchQuery" type="text" class="form-control"
+                placeholder="Buscar por nombre, cédula, cargo o área..." @input="filterPersonnel" /> </div>
+            <div class="card-body list-group" style="max-height: 600px; overflow-y: auto;"> <button
+                v-for="person in filteredPersonnel" :key="person.id" class="list-group-item list-group-item-action"
+                @click="selectPerson(person)"> {{ person.name }} </button> </div>
+          </div>
         </div>
-      </div>
-
-      <!-- Lista de Personal -->
-      <h2 class="text-center mb-3 personnel-list-title">Lista de Personal</h2>
-
-      <div class="card shadow-sm">
-        <div class="card-header">
-          <input v-model="searchQuery" type="text" class="form-control" placeholder="Buscar por nombre, cargo o área"
-            @input="filterPersonnel" />
-        </div>
-
-        <div class="card-body table-responsive">
-          <table class="table table-hover align-middle">
-            <thead class="table-secondary">
-              <tr>
-                <th>#</th>
-                <th>Nombre</th>
-                <th>Cargo</th>
-                <th>Área</th>
-                <th class="text-center">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(person, index) in paginatedPersonnelList" :key="person.id">
-                <td>{{ index + 1 }}</td>
-                <td>{{ person.name }}</td>
-                <td>{{ person.role }}</td>
-                <td>{{ getAreaName(person.id_area) }}</td>
-                <td class="text-center">
-                  <div class="dropdown">
-                    <button class="btn btn-sm border-0 bg-transparent p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      <i class="fas fa-ellipsis-v"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                      <li>
-                        <button class="dropdown-item" @click="editPersonnel(person)">
-                          <i class="fas fa-edit me-2"></i> Editar
-                        </button>
-                      </li>
-                      <li>
-                        <button class="dropdown-item" @click="deletePersonnel(person.id)">
-                          <i class="fas fa-trash-alt me-2"></i> Eliminar
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Paginación -->
-        <div class="card-footer text-center">
-          <div class="pagination-container mt-4 d-flex justify-content-center align-items-center gap-2">
-
-            <!-- Botón Anterior -->
-            <button @click="prevPage" class="pagination-btn" :disabled="currentPage === 1">
-              Anterior
+      </div> <!-- Tarjeta flotante (modal overlay) -->
+      <div v-if="selectedPerson" class="overlay">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h5>{{ selectedPerson.name }}</h5> <button class="btn-close" @click="selectedPerson = null"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Cédula:</strong> {{ selectedPerson.identifier }}</p>
+            <p><strong>Cargo:</strong> {{ selectedPerson.role }}</p>
+            <p><strong>Área:</strong> {{ getAreaName(selectedPerson.id_area) }}</p>
+          </div>
+          <div class="modal-footer d-flex justify-content-between">
+            <div> <button class="btn btn-primary me-2" @click="editPersonnel(selectedPerson)"> <i
+                  class="fas fa-edit"></i> Editar </button> <button class="btn btn-danger"
+                @click="deletePersonnel(selectedPerson.id)"> <i class="fas fa-trash"></i> Eliminar </button> </div>
+            <button class="btn btn-secondary" @click="selectedPerson = null"> <i class="fas fa-times"></i> Cerrar
             </button>
-
-            <ul class="pagination mb-0 d-flex gap-1">
-              <!-- Páginas visibles -->
-              <li v-for="page in visiblePages" :key="page" class="page-item-custom"
-                :class="{ active: page === currentPage }">
-                <button @click="setPage(page)" class="page-link-custom"
-                  :class="{ 'active-page': page === currentPage }">
-                  {{ page }}
-                </button>
-              </li>
-            </ul>
-
-            <!-- Botón Siguiente -->
-            <button @click="nextPage" class="pagination-btn" :disabled="currentPage === totalPages">
-              Siguiente
-            </button>
-          </div><br>
+          </div>
         </div>
       </div>
     </div>
@@ -142,82 +72,80 @@ import { useRouter } from 'vue-router';
 
 export default {
   setup() {
-    const router = useRouter(); // Obtenemos el enrutador en el contexto de `setup`
-
-    return {
-      router
-    };
+    const router = useRouter(); // Obtenemos el enrutador en setup
+    return { router };
   },
+
   data() {
     return {
       isAuthenticated: false,
       personnelList: [],
-      person: { id: '', name: '', role: '', id_area: '' },
+      person: {
+        id: '',
+        last_name: '',
+        first_name: '',
+        identifier: '',
+        role: '',
+        id_area: '',
+        name: '' // se llena automáticamente
+      },
       roles: [],
       areas: [],
       isEditing: false,
       searchQuery: '',
-      pageGroupSize: 3, // Tamaño del grupo de páginas
-      currentPage: 1, // Página actual
-      pagesPerPage: 10, // Elementos por página
-      groupStartPage: 1, // Página de inicio del grupo de páginas visibles
+      pageGroupSize: 3,
+      currentPage: 1,
+      pagesPerPage: 10,
+      groupStartPage: 1,
+      selectedPerson: null
     };
   },
+
   computed: {
-    // Número total de páginas
-    totalPages() {
-      if (!Array.isArray(this.personnelList)) return 0;
-      return Math.ceil(this.personnelList.length / this.pagesPerPage);
-    },
-    // Páginas visibles agrupadas de 3 en 3
-    visiblePages() {
-      const pages = [];
-      let groupEndPage = this.groupStartPage + 2; // Solo mostrar 3 páginas
-
-      // Asegura que no sobrepasemos el total de páginas
-      if (groupEndPage > this.totalPages) {
-        groupEndPage = this.totalPages;
-      }
-
-      for (let i = this.groupStartPage; i <= groupEndPage; i++) {
-        pages.push(i);
-      }
-      return pages;
-    },
-    // Elementos por página
-    paginatedPersonnelList() {
-      const start = (this.currentPage - 1) * this.pagesPerPage;
-      const end = this.currentPage * this.pagesPerPage;
-      return this.filteredPersonnel.slice(start, end);
-    },
-
     filteredPersonnel() {
+      const query = this.searchQuery.toLowerCase();
       return this.personnelList
         .filter(person => {
-          const name = person.name.toLowerCase();
-          const role = person.role.toLowerCase();
+          const name = person.name?.toLowerCase() || '';
+          const role = person.role?.toLowerCase() || '';
           const area = this.getAreaName(person.id_area).toLowerCase();
-          const query = this.searchQuery.toLowerCase();
-          return name.includes(query) || role.includes(query) || area.includes(query);
+          const identifier = person.identifier ? String(person.identifier).toLowerCase() : '';
+          return name.includes(query) || identifier.includes(query) || role.includes(query) || area.includes(query);
         })
-        .sort((a, b) => a.name.localeCompare(b.name)); // Orden alfabético por nombre
+        .sort((a, b) => a.name.localeCompare(b.name));
     }
   },
+
   methods: {
+    // Selección de persona
+    selectPerson(person) {
+      this.selectedPerson = person;
+    },
+
+    // Actualizar nombre completo
+    updateFullName() {
+      const last = this.person.last_name?.toUpperCase().trim() || '';
+      const first = this.person.first_name?.toUpperCase().trim() || '';
+      this.person.name = `${last} ${first}`.trim();
+    },
+
+    // Fetch data
     async fetchPersonnel() {
       try {
         const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-personnel`);
         const personnelData = response.data.personnel || [];
-        this.personnelList = personnelData.map(person => ({
-          id: person[0],
-          name: person[1],
-          role: person[2],
-          id_area: person[3]
+        this.personnelList = personnelData.map(p => ({
+          id: p[0],
+          name: p[1],
+          role: p[2],
+          id_area: p[3],
+          identifier: p[4]
         }));
       } catch (error) {
         console.error('Error al obtener el personal:', error);
       }
     },
+
     async fetchRoles() {
       try {
         const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-roles`);
@@ -226,6 +154,7 @@ export default {
         console.error('Error al obtener los roles:', error);
       }
     },
+
     async fetchAreas() {
       try {
         const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/get-areas`);
@@ -238,26 +167,37 @@ export default {
         console.error('Error al obtener áreas:', error);
       }
     },
+
     getAreaName(areaId) {
-      const area = this.areas.find(area => area.id_area === areaId);
+      const area = this.areas.find(a => a.id_area === areaId);
       return area ? area.name_area : 'Área desconocida';
     },
+
+    // CRUD
     async addPersonnel() {
       try {
-        console.log('Datos a enviar:', this.person);  // Verifica los datos antes de enviarlos
+        console.log('Datos a enviar:', this.person);
         await axios.post(`${process.env.VUE_APP_API_URL}/api/add-personnel`, this.person);
         alert('Usuario añadido exitosamente.');
-        this.fetchPersonnel();  // Refresca la lista de personal
-        this.resetForm();  // Resetea el formulario
+        this.fetchPersonnel();
+        this.resetForm();
       } catch (error) {
         console.error('Error al añadir personal:', error);
       }
     },
+
     editPersonnel(person) {
       this.person = { ...person };
+      if (this.person.name) {
+        const parts = this.person.name.trim().split(' ');
+        this.person.last_name = parts.slice(0, 2).join(' ') || '';
+        this.person.first_name = parts.slice(2).join(' ') || '';
+      }
       this.isEditing = true;
-      window.scrollTo({ top: 0, behavior: 'smooth' }); // Desplazamiento al tope
+      this.selectedPerson = null;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     },
+
     async updatePersonnel() {
       try {
         await axios.put(`${process.env.VUE_APP_API_URL}/api/update-personnel/${this.person.id}`, this.person);
@@ -268,77 +208,60 @@ export default {
         console.error('Error al actualizar personal:', error);
       }
     },
-    async deletePersonnel(id) {
-      // Solicitar confirmación antes de eliminar
-      const confirmation = window.confirm('¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.');
 
-      // Proceder solo si el usuario confirma
-      if (confirmation) {
-        try {
-          await axios.delete(`${process.env.VUE_APP_API_URL}/api/delete-personnel/${id}`);
-          alert('Usuario eliminado exitosamente.');
-          this.fetchPersonnel(); // Refrescar la lista de personal después de eliminar
-        } catch (error) {
-          console.error('Error al eliminar personal:', error);
-        }
-      } else {
-        alert('Eliminación cancelada.');
+    async deletePersonnel(id) {
+      const confirmation = window.confirm('¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.');
+      if (!confirmation) return alert('Eliminación cancelada.');
+
+      try {
+        await axios.delete(`${process.env.VUE_APP_API_URL}/api/delete-personnel/${id}`);
+        alert('Usuario eliminado exitosamente.');
+        this.fetchPersonnel();
+        this.selectedPerson = null;
+        this.searchQuery = '';
+      } catch (error) {
+        console.error('Error al eliminar personal:', error);
       }
     },
+
     cancelEdit() {
       this.resetForm();
     },
+
     resetForm() {
-      this.person = { id: '', name: '', role: '', id_area: '' };
+      this.person = {
+        id: '',
+        last_name: '',
+        first_name: '',
+        identifier: '',
+        role: '',
+        id_area: '',
+        name: ''
+      };
       this.isEditing = false;
     },
+
     filterPersonnel() {
       this.currentPage = 1;
     },
-    prevPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-        this.updatePageGroup();
-      }
-    },
-    nextPage() {
-      if (this.currentPage < this.totalPages) {
-        this.currentPage++;
-        this.updatePageGroup();
-      }
-    },
-    setPage(page) {
-      this.currentPage = page;
-      this.updatePageGroup();
-    },
-    updatePageGroup() {
-      if (this.currentPage <= this.groupStartPage) {
-        this.groupStartPage = Math.max(1, this.currentPage - 1); // Asegura que no baje de 1
-      } else if (this.currentPage > this.groupStartPage + 2) {
-        this.groupStartPage = this.currentPage - 2;
-      }
-    },
+
     convertToUppercase(field) {
-      this.person[field] = this.person[field].toUpperCase();
+      this.person[field] = this.person[field]?.toUpperCase();
     },
+
     logout() {
-      // Eliminamos el token de autenticación
       localStorage.removeItem('authToken');
       this.isAuthenticated = false;
-
-      // Redirigimos a la página de inicio de sesión
-      this.router.push('/login'); // Cambia '/login' por la ruta que uses para el inicio de sesión
+      this.router.push('/control-home');
     },
+
     checkAuthentication() {
       const token = localStorage.getItem('authToken');
-      if (token) {
-        this.isAuthenticated = true;
-      } else {
-        // Redirigimos a la página de inicio de sesión si no está autenticado
-        this.router.push('/login');
-      }
+      if (token) this.isAuthenticated = true;
+      else this.router.push('/login/Talento Humano');
     }
   },
+
   mounted() {
     this.checkAuthentication();
     if (this.isAuthenticated) {
@@ -350,22 +273,9 @@ export default {
 };
 </script>
 
+
+
 <style scoped>
-.dropdown-menu {
-  min-width: 8rem;
-  /* Opcional, tamaño mínimo del menú */
-}
-
-.dropdown-item {
-  font-size: 0.9rem;
-}
-
-.dropdown-item i {
-  width: 18px;
-  /* Hace que todos los iconos tengan el mismo espacio reservado */
-  text-align: center;
-}
-
 .container {
   max-width: 1400px;
   margin: 0 auto;
@@ -374,7 +284,6 @@ export default {
 
 .page-title {
   text-align: center;
-  margin-top: 20px;
   font-size: 2rem;
   font-weight: bold;
   color: #019c54;
@@ -396,9 +305,7 @@ export default {
 
 /* Tarjeta de la lista de personal */
 .card {
-  max-width: 1200px;
   margin-top: 20px;
-
 }
 
 .my-container {
@@ -406,7 +313,6 @@ export default {
   margin: 0 auto;
   padding: 20px;
 }
-
 
 /* Botón de cerrar sesión */
 .logout-button {
@@ -446,9 +352,6 @@ export default {
   border-color: #bd2130;
 }
 
-/* Barra de paginación */
-
-
 /* Inputs */
 .form-control {
   font-weight: 400 !important;
@@ -469,68 +372,74 @@ i {
   margin-right: 5px;
 }
 
-/* Estilos para la paginación */
-.pagination-container {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* Botones de Anterior y Siguiente */
-.pagination-btn {
-  background-color: #fff;
-  color: #198754;
-  border: 2px solid #198754;
-  padding: 6px 14px;
-  border-radius: 20px;
-  transition: all 0.3s ease;
-  font-weight: 400;
-}
-
-/* Hover en los botones */
-.pagination-btn:hover:not(:disabled) {
-  background-color: #198754;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
-}
-
-/* Botones deshabilitados */
-.pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Estilo de los elementos de las páginas */
-.page-item-custom {
-  list-style: none;
-}
-
-/* Estilo de los botones de las páginas */
-.page-link-custom {
-  border: 2px solid #198754;
-  background-color: #f8f9fa;
-  color: #198754;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  font-weight: 500;
-  transition: all 0.3s ease;
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
   justify-content: center;
-  text-align: center;
+  align-items: center;
+  z-index: 1050;
 }
 
-/* Hover sobre los botones de las páginas */
-.page-link-custom:hover {
-  background-color: #d1e7dd;
-  color: #0f5132;
-  cursor: pointer;
+.modal-card {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Página activa */
-.active-page {
-  background-color: #198754;
-  color: #fff;
-  font-weight: bold;
-  box-shadow: 0 0 8px rgba(25, 135, 84, 0.5);
+.modal-header,
+.modal-footer {
+  padding: 15px;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+}
+
+.modal-body {
+  padding: 15px;
+}
+
+.btn-close {
+  border: none;
+  background: transparent;
+  font-size: 1.2rem;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  /* separación entre tarjetas */
+}
+
+.col-lg-5 {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tarjeta de formulario */
+.card-form {
+  max-height: 515px;
+  /* Ajusta según lo que se vea bien */
+}
+
+/* Tarjeta de lista */
+.card-list {
+  max-height: 515px;
+  /* Igual que la de formulario */
+  overflow-y: auto;
+  /* Mantiene el scroll interno */
 }
 </style>

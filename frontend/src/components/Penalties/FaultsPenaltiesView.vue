@@ -46,6 +46,24 @@
                     <th>Empleado</th>
                     <th>Descripción</th>
                     <th>Responsable</th>
+                    <th>Tipo</th>
+                    <th>Gravedad</th>
+                  </tr>
+                  <!-- fila de filtros FALTAS -->
+                  <tr class="bg-light">
+                    <th><input v-model="filtersFaults.date" class="form-control form-control-sm"></th>
+                    <th><input v-model="filtersFaults.employee" class="form-control form-control-sm"></th>
+                    <th><input v-model="filtersFaults.description" class="form-control form-control-sm"></th>
+                    <th><input v-model="filtersFaults.responsible" class="form-control form-control-sm"></th>
+                    <th><input v-model="filtersFaults.type" class="form-control form-control-sm"></th>
+                    <th>
+                      <select v-model="filtersFaults.severity" class="form-select form-select-sm">
+                        <option value=""></option>
+                        <option value="LEVE">LEVE</option>
+                        <option value="GRAVE">GRAVE</option>
+                        <option value="MUY GRAVE">MUY GRAVE</option>
+                      </select>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -54,6 +72,8 @@
                     <td>{{ fault.full_name }}</td>
                     <td>{{ fault.description }}</td>
                     <td>{{ fault.responsible }}</td>
+                    <td>{{ fault.type }}</td>
+                    <td>{{ fault.severity }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -78,16 +98,34 @@
                   <tr>
                     <th>Fecha</th>
                     <th>Empleado</th>
-                    <th>Descripción</th>
+                    <th>Descripción de la falta</th>
+                    <th>Descripción de la multa</th>
                     <th>Responsable</th>
+                    <th>Tipo</th>
+                    <th>N° Amonestación</th>
+                  </tr>
+
+                  <!-- fila de filtros FALTAS -->
+                  <tr class="bg-light">
+                    <th><input v-model="filtersPenalties.date" class="form-control form-control-sm"></th>
+                    <th><input v-model="filtersPenalties.employee" class="form-control form-control-sm"></th>
+                    <th><input v-model="filtersPenalties.fault_description" class="form-control form-control-sm"></th>
+                    <th><input v-model="filtersPenalties.description" class="form-control form-control-sm"></th>
+                    <th><input v-model="filtersPenalties.responsible" class="form-control form-control-sm"></th>
+                    <th><input v-model="filtersPenalties.type" class="form-control form-control-sm"></th>
+                    <th><input v-model="filtersPenalties.numeration" class="form-control form-control-sm" type="number"
+                        min="1"></th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="penalty in paginatedPenalties" :key="penalty.id">
                     <td>{{ penalty.date }}</td>
                     <td>{{ penalty.full_name }}</td>
+                    <td>{{ penalty.fault_description }}</td>
                     <td>{{ penalty.description }}</td>
                     <td>{{ penalty.responsible }}</td>
+                    <th>{{ penalty.type }}</th>
+                    <th>{{ penalty.numeration }}</th>
                   </tr>
                 </tbody>
               </table>
@@ -122,26 +160,21 @@ export default {
     return {
       faults: [],
       penalties: [],
+      filtersFaults: {
+        date: '', employee: '', description: '',
+        responsible: '', type: '', severity: '', 
+      },
+      filtersPenalties: {
+        date: '', employee: '', description: '',
+        responsible: '', type: '', numeration: '', fault_description: ''
+      },
       faultPage: 1,
       penaltyPage: 1,
       perPage: 10
     };
   },
   computed: {
-    totalFaultPages() {
-      return Math.ceil(this.faults.length / this.perPage);
-    },
-    totalPenaltyPages() {
-      return Math.ceil(this.penalties.length / this.perPage);
-    },
-    paginatedFaults() {
-      const start = (this.faultPage - 1) * this.perPage;
-      return this.faults.slice(start, start + this.perPage);
-    },
-    paginatedPenalties() {
-      const start = (this.penaltyPage - 1) * this.perPage;
-      return this.penalties.slice(start, start + this.perPage);
-    },
+
     faultPageNumbers() {
       const groupSize = 5;
       const start = Math.floor((this.faultPage - 1) / groupSize) * groupSize + 1;
@@ -151,7 +184,45 @@ export default {
       const groupSize = 5;
       const start = Math.floor((this.penaltyPage - 1) / groupSize) * groupSize + 1;
       return Array.from({ length: Math.min(groupSize, this.totalPenaltyPages - start + 1) }, (_, i) => start + i);
-    }
+    },
+    /* --- FILTRO y PAGINACIÓN FALTAS --- */
+    filteredFaults() {
+      const f = this.filtersFaults;
+      return this.faults.filter(r =>
+        String(r.date).toLowerCase().includes(f.date.toLowerCase()) &&
+        String(r.full_name).toLowerCase().includes(f.employee.toLowerCase()) &&
+        String(r.description).toLowerCase().includes(f.description.toLowerCase()) &&
+        String(r.responsible).toLowerCase().includes(f.responsible.toLowerCase()) &&
+        String(r.type).toLowerCase().includes(f.type.toLowerCase()) &&
+        (f.severity ? String(r.severity).toLowerCase() === f.severity.toLowerCase() : true)
+      );
+    },
+
+    filteredPenalties() {
+      const f = this.filtersPenalties;
+      return this.penalties.filter(r =>
+        String(r.date).toLowerCase().includes(f.date.toLowerCase()) &&
+        String(r.full_name).toLowerCase().includes(f.employee.toLowerCase()) &&
+        String(r.fault_description).toLowerCase().includes(f.fault_description.toLowerCase()) &&
+        String(r.description).toLowerCase().includes(f.description.toLowerCase()) &&
+        String(r.responsible).toLowerCase().includes(f.responsible.toLowerCase()) &&
+        String(r.type).toLowerCase().includes(f.type.toLowerCase()) &&
+        (f.numeration ? String(r.numeration).includes(f.numeration) : true)
+      );
+    },
+    totalFaultPages() { return Math.ceil(this.filteredFaults.length / this.perPage); },
+    paginatedFaults() {
+      const start = (this.faultPage - 1) * this.perPage;
+      return this.filteredFaults.slice(start, start + this.perPage);
+    },
+
+    /* --- FILTRO y PAGINACIÓN MULTAS --- */
+    totalPenaltyPages() { return Math.ceil(this.filteredPenalties.length / this.perPage); },
+    paginatedPenalties() {
+      const start = (this.penaltyPage - 1) * this.perPage;
+      return this.filteredPenalties.slice(start, start + this.perPage);
+    },
+
 
   },
   mounted() {
@@ -160,10 +231,14 @@ export default {
   },
   methods: {
     formatDate(dateStr) {
-      const date = new Date(dateStr);
-      if (isNaN(date)) return 'Fecha inválida';
-      return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
-    },
+      if (!dateStr || typeof dateStr !== 'string') return 'N/A';
+
+      const [year, month, day] = dateStr.split('T')[0].split('-'); // Extrae solo la parte de la fecha
+      if (!year || !month || !day) return 'Fecha inválida';
+
+      return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+    }
+    ,
     fetchFaults() {
       axios.get(`${process.env.VUE_APP_API_URL}/api/get-faults`)
         .then(response => {

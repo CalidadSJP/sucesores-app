@@ -77,12 +77,9 @@
                     <textarea id="observations" class="form-control" v-model="observations" rows="3"></textarea>
                 </div><br>
 
-                <div class="d-flex flex-wrap">
-                    <button type="submit" class="btn btn-primary mb-2 me-2">
+                <div class="d-flex flex-wrap justify-content-center">
+                    <button type="submit" class="btn btn-primary mb-2 me-2 center w-50">
                         <i class="fas fa-save"></i> Registrar
-                    </button>
-                    <button class="btn btn-success mb-2" @click="downloadExcel">
-                        <i class="fas fa-file-excel"></i> Descargar Registro
                     </button>
                 </div>
 
@@ -171,10 +168,6 @@ export default {
                 }
                 console.error('Error al registrar el movimiento:', error);
             }
-        },
-        downloadExcel() {
-            const url = `${process.env.VUE_APP_API_URL}/api/download-cleaning-movements`;
-            window.open(url, '_blank');
         },
         resetForm() {
             this.selectedType = '';

@@ -279,6 +279,7 @@
               <label for="technicalFile" class="form-label">Ficha Técnica/Certificado de Calidad</label>
               <input type="file" class="form-control" ref="technicalFile" id="technicalFile"
                 @change="handleFileUpload('technical_file', $event)">
+
             </div>
           </div>
 
@@ -342,6 +343,13 @@
               por las que no se recibió el producto </label>
             <textarea class="form-control" id="rejectionReasons" @input="convertToUppercase('rejection_reasons')"
               v-model="form.rejection_reasons"></textarea>
+          </div>
+
+          <!-- Razones de rechazo -->
+          <div class="mb-3">
+            <label for="observations" class="form-label">Observaciones</label>
+            <textarea class="form-control" id="observations" @input="convertToUppercase('observations')"
+              v-model="form.observations"></textarea>
           </div>
 
           <!-- Recibido por -->
@@ -423,7 +431,7 @@ export default {
         truck_condition_image_confirmation: '',
         truck_plate_image_confirmation: '',
         technical_file_confirmation: '',
-      },
+        observations: ''      },
       suppliers: [], // Aquí se almacenarán los proveedores
       products: [] // Aquí se almacenarán los productos
     };
@@ -469,6 +477,7 @@ export default {
       this.form.product_accepted = '';
       this.form.rejection_reasons = '';
       this.form.received_by = '';
+      this.form.observations = '';
 
       if (this.$refs.technicalFile) this.$refs.technicalFile.value = null;
 
@@ -479,6 +488,7 @@ export default {
         this.form[field] = file;
       }
     },
+
     clearFileInputs() {
       // Reiniciar valores del formulario
       this.form.invoice_file = null;
@@ -544,6 +554,7 @@ export default {
         );
       }
     },
+
     async submitForm() {
       try {
         // Copiar el formulario actual y convertir los valores de texto a mayúsculas
@@ -591,6 +602,7 @@ export default {
       this.form.graphic_system = '';
       this.form.product_accepted = '';
       this.form.rejection_reasons = '';
+      this.form.observations = '';
 
     },
     convertToUppercase(field) {

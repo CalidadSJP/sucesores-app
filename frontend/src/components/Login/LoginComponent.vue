@@ -1,7 +1,7 @@
 <template>
   <div class="login-container">
     <h2>Iniciar sesión</h2>
-    <button @click="$router.push('/control-home')" class="home-button">
+    <button @click="$router.push('/')" class="home-button">
       <img :src="require('@/assets/home.png')" alt="Home Icon" />
     </button>
     <form @submit.prevent="handleLogin"><br>
@@ -25,44 +25,52 @@
 import axios from 'axios';
 
 export default {
+  props: ['area'],  // recibimos el área directamente desde la URL
   data() {
     return {
       username: '',
       password: '',
-      errorMessage: '',
-      area: 'Talento Humano' // Para mostrar mensajes de error
+      errorMessage: ''
     };
   },
   methods: {
     async handleLogin() {
       try {
-        // Envía la solicitud con el área ya seteada
         const response = await axios.post(`${process.env.VUE_APP_API_URL}/api/login-supervisor`, {
           username: this.username,
           password: this.password,
-          area: this.area,  // No es necesario que el usuario la elija, ya está definida
+          area: this.area  // <-- usamos el área que vino desde la URL
         });
 
-        // Verifica si la respuesta fue exitosa
         if (response.data.success) {
-          // Si el login es correcto, guarda el ID del usuario, el token y el área en localStorage
           localStorage.setItem('user_id', response.data.user_id);
-          localStorage.setItem('authToken', response.data.authToken);  // Aquí añadimos el token para autenticación
-          localStorage.setItem('user_area', "Talento Humano");  // Guardamos el área del usuario
+          localStorage.setItem('authToken', response.data.authToken);
+          localStorage.setItem('user_area', this.area);
 
-          // Redirige a la página de registro de aditivos
-          this.$router.push('/personnel');
-        } else {
-          // Si el login falla, muestra un mensaje de error
+          // Redirigir a la ruta original si existe, o a una por defecto
+          const redirectPath = this.$route.query.redirect || this.defaultRedirect(this.area);
+          this.$router.push(redirectPath);
+        }
+        else {
           this.errorMessage = response.data.message || 'Usuario o contraseña incorrectos';
         }
       } catch (error) {
-        // En caso de error, muestra un mensaje genérico
-        this.errorMessage = 'Usuario o contraseña incorrectos';
+        this.errorMessage = 'Error al iniciar sesión.';
       }
     },
-  },
+    defaultRedirect(area) {
+      if (area === 'Talento Humano') return '/personnel';
+      if (area === 'Multas') return '/additive-home';
+      if (area === 'Empaque') return '/'
+      if (area === 'Laboratorio') return '/additive-register';
+      if (area === 'Limpieza') return '/cleaning-home'
+      return '/'; // fallback
+    }
+
+  }
 };
+
+
 </script>
 
 <style scoped>
