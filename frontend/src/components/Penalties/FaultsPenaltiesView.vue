@@ -1,6 +1,7 @@
 <template>
   <div class="container mt-4">
-    <div class="header-box d-flex justify-content-between align-items-center p-3 mb-4  rounded bg-success text-white">
+    <div
+      class="header-box d-flex flex-wrap justify-content-between align-items-center p-3 mb-4 rounded bg-success text-white">
       <div class="d-flex align-items-center">
         <i class="fas fa-user-times fa-2x me-3"></i>
         <div>
@@ -103,7 +104,9 @@
                     <th>Responsable</th>
                     <th>Tipo</th>
                     <th>N° Amonestación</th>
+                    <!--<th>PDF</th>-->
                   </tr>
+
 
                   <!-- fila de filtros FALTAS -->
                   <tr class="bg-light">
@@ -124,9 +127,17 @@
                     <td>{{ penalty.fault_description }}</td>
                     <td>{{ penalty.description }}</td>
                     <td>{{ penalty.responsible }}</td>
-                    <th>{{ penalty.type }}</th>
-                    <th>{{ penalty.numeration }}</th>
+                    <td>{{ penalty.type }}</td>
+                    <td>{{ penalty.numeration }}</td>
+
+                    <!-- Botón para generar PDF 
+                    <td class="text-center">
+                      <button class="btn btn-sm btn-danger" @click="downloadPenaltyPDF(penalty.id)">
+                        <i class="fas fa-file-pdf"></i>
+                      </button>
+                    </td>-->
                   </tr>
+
                 </tbody>
               </table>
             </div>
@@ -162,7 +173,7 @@ export default {
       penalties: [],
       filtersFaults: {
         date: '', employee: '', description: '',
-        responsible: '', type: '', severity: '', 
+        responsible: '', type: '', severity: '',
       },
       filtersPenalties: {
         date: '', employee: '', description: '',
@@ -230,6 +241,12 @@ export default {
     this.fetchPenalties();
   },
   methods: {
+
+    downloadPenaltyPDF(id) {
+      const url = `${process.env.VUE_APP_API_URL}/api/generate-penalty-pdf/${id}`;
+      window.open(url, "_blank");
+    },
+
     formatDate(dateStr) {
       if (!dateStr || typeof dateStr !== 'string') return 'N/A';
 
@@ -367,4 +384,56 @@ export default {
   background-color: #218838;
   color: white;
 }
+
+@media (max-width: 768px) {
+  .header-box h2 {
+    font-size: 1.3rem;
+  }
+  .header-box small {
+    font-size: 0.8rem;
+  }
+  .header-box button {
+    width: 100%;
+    margin-top: 10px;
+  }
+}
+
+/* Header responsive */
+@media (max-width: 768px) {
+  .header-box h2 {
+    font-size: 1.3rem;
+  }
+  .header-box small {
+    font-size: 0.8rem;
+  }
+  .header-box button {
+    width: 100%;
+    margin-top: 10px;
+  }
+}
+
+/* Card responsive */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 0.5rem !important;
+  }
+}
+
+/* Filtros de tabla responsive */
+table input.form-control-sm,
+table select.form-select-sm {
+  min-width: 100px;
+}
+
+@media (max-width: 768px) {
+  table input.form-control-sm,
+  table select.form-select-sm {
+    min-width: 80px;
+    font-size: 0.75rem;
+    padding: 2px 4px;
+  }
+}
+
+
+
 </style>

@@ -7,16 +7,19 @@
 
     <section class="menu-section">
       <div class="menu-grid">
-        <div class="menu-card" v-for="option in menuOptions" :key="option.label">
+        <router-link
+          v-for="option in menuOptions"
+          :key="option.label"
+          :to="option.link"
+          class="menu-card clickable"
+        >
           <div class="d-flex align-items-center icon-container">
             <i :class="option.icon" class="icon"></i>
             <h2>{{ option.label }}</h2>
           </div>
-          <router-link :to="option.link" class="btn">➤</router-link>
-        </div>
-        <div class="footer-text">
-          © 2024 Sucesores de Jacobo Paredes S.A
-        </div>
+        </router-link>
+
+        <div class="footer-text">© 2024 Sucesores de Jacobo Paredes S.A</div>
       </div>
     </section>
   </div>
@@ -42,13 +45,14 @@ export default {
 
 <style scoped>
 @keyframes fadeSlideUp {
-  0% { opacity: 0; transform: translateY(30px); }
+  0% { opacity: 1; transform: translateY(30px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes bounceIcon {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.2); }
+@keyframes highlightCard {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
 }
 
 .home-wrapper {
@@ -108,52 +112,37 @@ export default {
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   background: white;
-  padding: 0.6rem 1rem;
+  padding: 1rem 1.2rem;
   border-radius: 0.8rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-  animation: fadeSlideUp 0.6s ease forwards;
-  opacity: 0;
+  opacity: 1; /* Asegura que no desaparezca */
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
 }
 
 .menu-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-2px); /* movimiento MUY leve */
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+  background: #f6fff9;
 }
+
 
 .icon {
   font-size: 1.6rem;
   color: #019c54;
   margin-right: 0.8rem;
-  transition: transform 0.3s ease;
-}
-
-.menu-card:hover .icon {
-  animation: bounceIcon 0.6s ease-in-out;
 }
 
 .menu-card h2 {
-  font-size: 1rem;
+  font-size: 1.1rem;
   margin: 0;
-}
-
-.btn {
-  padding: 0.4rem 1rem;
-  font-size: 1rem;
-  border-radius: 1.2rem;
-  background-color: #019c54;
-  color: white;
-  text-decoration: none;
-  font-weight: bold;
-  transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
-}
-
-.btn:hover {
-  background-color: #01693a;
-  transform: scale(1.05);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  font-weight: 500;
 }
 
 .footer-text {

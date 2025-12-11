@@ -1,5 +1,4 @@
 import psycopg2
-import os
 from config import Config
 
 
@@ -9,6 +8,5 @@ def get_db_connection():
         database=Config.DB_NAME,
         user=Config.DB_USER,
         password=Config.DB_PASSWORD,
-
     )
     return conn

@@ -1,185 +1,334 @@
 <template>
     <div class="container mt-5">
-        <h2 class="my-4 text-center">Registro de Ingreso / Egreso de Producto</h2>
+        <h2 class="my-4 text-center">Kardex de Limpieza</h2>
 
-        <div class="card p-4">
-            <form @submit.prevent="submitForm">
+        <!-- FORMULARIO DE EGRESOS -->
+        <div class="card p-4 mb-5">
+            <h4 class="text-center mb-4 text-danger">
+                <i class="fas fa-arrow-down"></i> Registro de Egresos
+            </h4>
+
+            <form @submit.prevent="submitEgress">
                 <div class="row">
-                    <!-- Tipo de producto -->
                     <div class="form-group col-md-6">
-                        <label for="productType">Tipo de Producto</label>
-                        <select id="productType" class="form-control" v-model="selectedType" @change="fetchProducts">
+                        <label for="productTypeEgress">Tipo de Producto</label>
+                        <select id="productTypeEgress" class="form-control" v-model="egress.selectedType"
+                            @change="fetchProducts('egress')">
                             <option value="">Seleccione un tipo</option>
                             <option value="PAPEL">PAPEL</option>
                             <option value="INSECTICIDAS">INSECTICIDAS</option>
                             <option value="JABONES Y DESINFECTANTES">JABONES Y DESINFECTANTES</option>
                             <option value="ESCOBAS Y TRAPEADORES">ESCOBAS Y TRAPEADORES</option>
+                            <option value="CEPILLOS ESPECIALES">CEPILLOS ESPECIALES</option>
                         </select>
-                    </div><br><br><br>
-                    <!-- Producto -->
+                    </div>
+
                     <div class="form-group col-md-6">
-                        <label for="productSelect">Seleccionar Producto</label>
-                        <select id="productSelect" class="form-control" v-model="selectedProduct" required>
+                        <label for="productSelectEgress">Seleccionar Producto</label>
+                        <select id="productSelectEgress" class="form-control" v-model="egress.selectedProduct" required>
                             <option disabled value="">Seleccione un producto</option>
-                            <option v-for="product in products" :key="product.id" :value="product.id">
+                            <option v-for="product in egress.products" :key="product.id" :value="product.id">
                                 {{ product.name }}
                             </option>
                         </select>
-                    </div><br><br><br>
+                    </div>
                 </div>
 
-                <div class="row">
-                    <!-- Saldo actual -->
+                <div class="row mt-3">
                     <div class="form-group col-md-6">
-                        <label for="currentBalance">Saldo Actual</label>
-                        <input type="text" id="currentBalance" class="form-control" v-model="currentBalance" readonly />
-                    </div><br><br><br>
-                    <!-- Fecha -->
+                        <label for="balanceEgress">Saldo Actual</label>
+                        <input type="text" id="balanceEgress" class="form-control" v-model="egress.currentBalance"
+                            readonly />
+                    </div>
+
                     <div class="form-group col-md-6">
-                        <label for="movementDate">Fecha</label>
-                        <input type="date" id="movementDate" class="form-control" v-model="movementDate" required />
-                    </div><br><br><br>
+                        <label for="dateEgress">Fecha</label>
+                        <input type="date" id="dateEgress" class="form-control" v-model="egress.movementDate"
+                            required />
+                    </div>
                 </div>
 
-                <div class="row">
-                    <!-- Tipo -->
+                <div class="row mt-3">
                     <div class="form-group col-md-6">
-                        <label for="movementType">Tipo de Movimiento</label>
-                        <select id="movementType" class="form-control" v-model="movementType" required>
-                            <option value="Ingreso">Ingreso</option>
-                            <option value="Egreso">Egreso</option>
-                        </select>
-                    </div><br><br><br>
-                    <!-- Cantidad -->
+                        <label for="quantityEgress">Cantidad</label>
+                        <input type="number" id="quantityEgress" class="form-control" v-model="egress.quantity" required
+                            min="1" />
+                    </div>
+
                     <div class="form-group col-md-6">
-                        <label for="quantity">Cantidad</label>
-                        <input type="number" id="quantity" class="form-control" v-model="quantity" required min="1" />
-                    </div><br><br><br>
+                        <label for="areaEgress">Área</label>
+                        <input type="text" id="areaEgress" class="form-control" v-model="egress.area" required />
+                    </div>
                 </div>
 
-                <div class="row">
-                    <!-- Área -->
+                <div class="row mt-3">
                     <div class="form-group col-md-6">
-                        <label for="area">Área</label>
-                        <input type="text" id="area" class="form-control" v-model="area" required />
-                    </div><br><br><br>
-
-                    <!-- Área -->
-                    <div class="form-group col-md-6">
-                        <label for="reponsible">Responsable</label>
-                        <input type="text" id="reponsible" class="form-control" v-model="responsible" required />
-                    </div><br><br><br>
+                        <label for="responsibleEgress">Responsable</label>
+                        <input type="text" id="responsibleEgress" class="form-control" v-model="egress.responsible"
+                            required />
+                    </div>
                 </div>
 
-                <!-- Observaciones -->
-                <div class="form-group">
-                    <label for="observations">Observaciones</label>
-                    <textarea id="observations" class="form-control" v-model="observations" rows="3"></textarea>
-                </div><br>
-
-                <div class="d-flex flex-wrap justify-content-center">
-                    <button type="submit" class="btn btn-primary mb-2 me-2 center w-50">
-                        <i class="fas fa-save"></i> Registrar
-                    </button>
+                <div class="form-group mt-3">
+                    <label for="observationsEgress">Observaciones</label>
+                    <textarea id="observationsEgress" class="form-control" v-model="egress.observations"
+                        rows="3"></textarea>
                 </div>
 
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="flex-grow-1 d-flex justify-content-center">
+                        <button type="submit" class="btn btn-danger w-50">
+                            <i class="fas fa-save"></i> Registrar
+                        </button>
+                    </div>
+                    <div>
+                        <button class="btn btn-secondary" @click="showLoginModal = true">
+                            <i class="fas fa-user-lock"></i> 
+                        </button>
+                    </div>
+                </div>
 
             </form>
-        </div><br><br>
+        </div>
+
+        <!-- FORMULARIO DE INGRESOS -->
+        <div v-if="showIncomeForm" class="card p-4">
+            <h4 class="text-center mb-4 text-success">
+                <i class="fas fa-arrow-up"></i> Registro de Ingresos
+            </h4>
+
+            <form @submit.prevent="submitIncome">
+                <div class="row">
+                    <div class="form-group col-md-6">
+                        <label for="productTypeIncome">Tipo de Producto</label>
+                        <select id="productTypeIncome" class="form-control" v-model="income.selectedType"
+                            @change="fetchProducts('income')">
+                            <option value="">Seleccione un tipo</option>
+                            <option value="PAPEL">PAPEL</option>
+                            <option value="INSECTICIDAS">INSECTICIDAS</option>
+                            <option value="JABONES Y DESINFECTANTES">JABONES Y DESINFECTANTES</option>
+                            <option value="ESCOBAS Y TRAPEADORES">ESCOBAS Y TRAPEADORES</option>
+                            <option value="CEPILLOS ESPECIALES">CEPILLOS ESPECIALES</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group col-md-6">
+                        <label for="productSelectIncome">Seleccionar Producto</label>
+                        <select id="productSelectIncome" class="form-control" v-model="income.selectedProduct" required>
+                            <option disabled value="">Seleccione un producto</option>
+                            <option v-for="product in income.products" :key="product.id" :value="product.id">
+                                {{ product.name }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="form-group col-md-6">
+                        <label for="balanceIncome">Saldo Actual</label>
+                        <input type="text" id="balanceIncome" class="form-control" v-model="income.currentBalance"
+                            readonly />
+                    </div>
+
+                    <div class="form-group col-md-6">
+                        <label for="dateIncome">Fecha</label>
+                        <input type="date" id="dateIncome" class="form-control" v-model="income.movementDate"
+                            required />
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="form-group col-md-6">
+                        <label for="quantityIncome">Cantidad</label>
+                        <input type="number" id="quantityIncome" class="form-control" v-model="income.quantity" required
+                            min="1" />
+                    </div>
+
+                    <div class="form-group col-md-6">
+                        <label for="areaIncome">Área</label>
+                        <input type="text" id="areaIncome" class="form-control" v-model="income.area" required />
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="form-group col-md-6">
+                        <label for="responsibleIncome">Responsable</label>
+                        <input type="text" id="responsibleIncome" class="form-control" v-model="income.responsible"
+                            required />
+                    </div>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label for="observationsIncome">Observaciones</label>
+                    <textarea id="observationsIncome" class="form-control" v-model="income.observations"
+                        rows="3"></textarea>
+                </div>
+
+                <div class="d-flex justify-content-center mt-4">
+                    <button type="submit" class="btn btn-success w-50">
+                        <i class="fas fa-save"></i> Registrar Ingreso
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- MODAL LOGIN -->
+        <div v-if="showLoginModal" class="modal-overlay">
+            <div class="modal-content">
+                <h5 class="text-center mb-3">Iniciar Sesión</h5>
+
+                <div class="form-group mb-3">
+                    <label>Usuario</label>
+                    <input type="text" class="form-control" v-model="username" />
+                </div>
+
+                <div class="form-group mb-3">
+                    <label>Contraseña</label>
+                    <input type="password" class="form-control" v-model="password" />
+                </div>
+
+                <p class="text-danger text-center">{{ errorMessage }}</p>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button class="btn btn-primary w-50 me-2" @click="authenticate">
+                        Ingresar
+                    </button>
+                    <button class="btn btn-secondary w-50" @click="showLoginModal = false">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
-
 <script>
-import axios from 'axios';
+import axios from "axios";
 
 export default {
     data() {
         return {
-            selectedType: '',
-            selectedProduct: '',
-            products: [],
-            currentBalance: 0,
-            movementDate: '',
-            movementType: 'Ingreso',
-            quantity: 0,
-            area: '',
-            responsible: '',
-            observations: '',
+            showIncomeForm: false,
+            showLoginModal: false,
+            username: "",
+            password: "",
+            errorMessage: "",
+            egress: {
+                selectedType: "",
+                selectedProduct: "",
+                products: [],
+                currentBalance: 0,
+                movementDate: "",
+                quantity: 0,
+                area: "",
+                responsible: "",
+                observations: "",
+            },
+            income: {
+                selectedType: "",
+                selectedProduct: "",
+                products: [],
+                currentBalance: 0,
+                movementDate: "",
+                quantity: 0,
+                area: "",
+                responsible: "",
+                observations: "",
+            },
         };
     },
-    created() {
-        this.fetchProducts();
-    },
     watch: {
-        selectedProduct(newProductId) {
-            if (newProductId) {
-                this.fetchProductBalance(newProductId);
-            }
+        "egress.selectedProduct"(newProductId) {
+            if (newProductId) this.fetchProductBalance(newProductId, "egress");
+        },
+        "income.selectedProduct"(newProductId) {
+            if (newProductId) this.fetchProductBalance(newProductId, "income");
         },
     },
     methods: {
-        async fetchProducts() {
+        async fetchProducts(type) {
             try {
-                if (!this.selectedType) {
-                    this.products = [];
+                const target = this[type];
+                if (!target.selectedType) {
+                    target.products = [];
                     return;
                 }
-                const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/cleaning-products`, {
-                    params: { type: this.selectedType }
-                });
-                this.products = response.data;
-                this.selectedProduct = '';
+                const response = await axios.get(
+                    `${process.env.VUE_APP_API_URL}/api/cleaning-products`,
+                    { params: { type: target.selectedType } }
+                );
+                target.products = response.data;
             } catch (error) {
-                console.error('Error al cargar los productos:', error);
+                console.error("Error al cargar productos:", error);
             }
         },
-        async fetchProductBalance(productId) {
+
+        async fetchProductBalance(productId, type) {
             try {
-                const response = await axios.get(`${process.env.VUE_APP_API_URL}/api/product-balance/${productId}`);
-                this.currentBalance = response.data.quantity;
+                const response = await axios.get(
+                    `${process.env.VUE_APP_API_URL}/api/product-balance/${productId}`
+                );
+                this[type].currentBalance = response.data.quantity;
             } catch (error) {
-                console.error('Error al obtener el saldo del producto:', error);
+                console.error("Error al obtener saldo:", error);
             }
         },
-        async submitForm() {
-            const movementData = {
-                product_id: this.selectedProduct,
-                date: this.movementDate,
-                area: this.area.toUpperCase(),
-                income: this.movementType === 'Ingreso' ? this.quantity : 0,
-                outcome: this.movementType === 'Egreso' ? this.quantity : 0,
-                responsible: this.responsible.toUpperCase(),
-                observations: this.observations.toUpperCase(),
-            };
 
+        async submitEgress() {
+            await this.submitMovement("egress", "Egreso registrado exitosamente");
+        },
+        async submitIncome() {
+            await this.submitMovement("income", "Ingreso registrado exitosamente");
+        },
+
+        async submitMovement(type, successMsg) {
             try {
-                await axios.post(`${process.env.VUE_APP_API_URL}/api/register-movement`, movementData);
-
-                // Si llegamos aquí, la petición fue exitosa (status 200–299)
-                alert('Movimiento registrado exitosamente');
-                this.resetForm();
+                const form = this[type];
+                const data = {
+                    product_id: form.selectedProduct,
+                    date: form.movementDate,
+                    area: form.area.toUpperCase(),
+                    income: type === "income" ? form.quantity : 0,
+                    outcome: type === "egress" ? form.quantity : 0,
+                    responsible: form.responsible.toUpperCase(),
+                    observations: form.observations.toUpperCase(),
+                };
+                await axios.post(`${process.env.VUE_APP_API_URL}/api/register-movement`, data);
+                alert(successMsg);
+                this.resetForm(type);
             } catch (error) {
-                // Verificamos si hay mensaje de error del servidor
-                if (error.response?.data?.error) {
-                    alert('Error: ' + error.response.data.error);
+                alert("Error al registrar el movimiento");
+                console.error(error);
+            }
+        },
+
+        async authenticate() {
+            try {
+                const response = await axios.post(
+                    `${process.env.VUE_APP_API_URL}/api/login-supervisor`,
+                    {
+                        username: this.username,
+                        password: this.password,
+                        area: "Limpieza",
+                    }
+                );
+                if (response.data.success) {
+                    this.errorMessage = "";
+                    this.showLoginModal = false;
+                    this.showIncomeForm = true;
+                    alert(response.data.message);
                 } else {
-                    alert('Error desconocido al registrar el movimiento');
+                    this.errorMessage = response.data.message;
                 }
-                console.error('Error al registrar el movimiento:', error);
+            } catch {
+                this.errorMessage = "Usuario o contraseña incorrectos.";
             }
         },
-        resetForm() {
-            this.selectedType = '';
-            this.selectedProduct = '';
-            this.currentBalance = 0;
-            this.movementDate = '';
-            this.movementType = 'Ingreso';
-            this.quantity = 0;
-            this.area = '';
-            this.responsible = '';
-            this.observations = '';
-        }
+
+        resetForm(type) {
+            Object.keys(this[type]).forEach((key) => (this[type][key] = ""));
+            this[type].currentBalance = 0;
+        },
     },
 };
 </script>
@@ -188,6 +337,25 @@ export default {
 .card {
     max-width: 900px;
     margin: 0 auto;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    width: 400px;
 }
 
 label {

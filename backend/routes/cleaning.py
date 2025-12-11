@@ -135,13 +135,13 @@ def create_product():
     name = data.get('name')
     quantity = data.get('quantity', 0)
     type = data.get('type')
-    minimun = data.get('minimun', 0)
+    minimum = data.get('minimum', 0)
 
 
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("INSERT INTO cleaning_products (name, quantity, type, minimun) VALUES (%s, %s, %s, %s)", (name, quantity, type, minimun))
+        cur.execute("INSERT INTO cleaning_products (name, quantity, type, minimum) VALUES (%s, %s, %s, %s)", (name, quantity, type, minimum))
         conn.commit()
         cur.close()
         conn.close()
@@ -155,13 +155,13 @@ def update_cleaning_product(product_id):
     name = data.get('name')
     quantity = data.get('quantity')
     type = data.get('type')
-    minimun = data.get('minimun')
+    minimum = data.get('minimum')
 
 
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("UPDATE cleaning_products SET name = %s, quantity = %s, type = %s, minimun = %s WHERE id = %s", (name, quantity, type, minimun, product_id))
+        cur.execute("UPDATE cleaning_products SET name = %s, quantity = %s, type = %s, minimum = %s WHERE id = %s", (name, quantity, type, minimum, product_id))
         conn.commit()
         cur.close()
         conn.close()
@@ -194,7 +194,7 @@ def download_cleaning_movements_excel():
 
         cur.execute('''
             SELECT cm.id, cp.name AS product_name, cm.date, cm.area,
-                   cm.income, cm.outcome, cm.balance, cm.observations
+                   cm.income, cm.outcome, cm.balance, cm.observations, cm.responsible
             FROM cleaning_movements cm
             JOIN cleaning_products cp ON cm.product_id = cp.id
             ORDER BY cm.date DESC
@@ -209,7 +209,7 @@ def download_cleaning_movements_excel():
         # Encabezados
         headers = [
             "ID", "Producto", "Fecha", "Área", 
-            "Ingreso", "Egreso", "Saldo", "Observaciones"
+            "Ingreso", "Egreso", "Saldo", "Observaciones", "Responsable"
         ]
         ws.append(headers)
 

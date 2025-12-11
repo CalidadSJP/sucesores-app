@@ -710,3 +710,151 @@ def download_piece_inspections_excel():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+
+from flask import send_file, current_app
+from reportlab.lib.pagesizes import A5
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image
+from reportlab.lib import colors
+import os
+import io
+
+@penailties_bp.route('/generate-penalty-pdf/<int:penalty_id>', methods=['GET'])
+def generate_penalty_pdf(penalty_id):
+
+    # ====== 1) OBTENER DATOS ======
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT 
+            pen.id,
+            pen.date,
+            p.name AS full_name,
+            p.role,
+            pen.fault_description,
+            pen.description AS penalty_desc,
+            pen.numeration
+        FROM penalties pen
+        JOIN personnel p ON pen.personnel_id = p.id
+        WHERE pen.id = %s
+    """, (penalty_id,))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        return {"error": "Multa no encontrada"}, 404
+
+    # ====== 2) CONFIG PDF ======
+    buffer = io.BytesIO()
+    pdf = SimpleDocTemplate(
+        buffer,
+        pagesize=A5,
+        rightMargin=20,
+        leftMargin=20,
+        topMargin=20,
+        bottomMargin=20
+    )
+
+    styles = getSampleStyleSheet()
+    title_style = styles["Heading1"]
+    title_style.alignment = 1  # centered
+    normal = styles["Normal"]
+
+    elements = []
+
+    # ====== 3) LOGO + FECHA ======
+    # Ruta absoluta correcta
+    logo_path = os.path.join(current_app.root_path, "static", "logo.png")
+
+    try:
+        logo = Image(logo_path, width=150, height=60)
+    except Exception as e:
+        print("ERROR CARGANDO LOGO:", e)
+        logo = Paragraph("LOGO", normal)
+
+    header_table = Table([
+        [logo, Paragraph(f"<b>Fecha:</b> {row[1].strftime('%d/%m/%Y')}", normal)]
+    ], colWidths=[80, 200])
+
+    header_table.setStyle(TableStyle([
+        ("VALIGN", (0,0), (-1,-1), "TOP")
+    ]))
+
+    elements.append(header_table)
+    elements.append(Spacer(1, 12))
+
+    # ====== 4) TITULO ======
+    elements.append(Paragraph("<b>FORMULARIO DE AMONESTACIÓN</b>", title_style))
+    elements.append(Spacer(1, 10))
+
+    # ====== 5) TARJETA 1 - DATOS ======
+    card1 = Table([
+        [Paragraph("<b>Nombre completo:</b> " + row[2], normal)],
+        [Paragraph("<b>Cargo:</b> " + (row[3] or ""), normal)],
+        [Paragraph("<b>Jefe inmediato:</b> _________________________", normal)],
+        [Paragraph("<b>Sucursal:</b> _______________________________", normal)],
+    ], colWidths=[350])
+
+    card1.setStyle(TableStyle([
+        ("BOX", (0,0), (-1,-1), 1, colors.black),
+        ("INNERPADDING", (0,0), (-1,-1), 6),
+        ("BACKGROUND", (0,0), (-1,-1), colors.whitesmoke)
+    ]))
+
+    elements.append(card1)
+    elements.append(Spacer(1, 12))
+
+    # ====== 6) TARJETA 2 - AMONESTACION ======
+    card2 = Table([
+        [Paragraph("<b>Motivo / Descripción:</b>", normal)],
+        [Paragraph(row[4], normal)],
+        [Paragraph("<b>Llamado de atención:</b>", normal)],
+        [Paragraph("<b>Multa:</b> " + row[5], normal)],
+    ], colWidths=[350])
+
+    card2.setStyle(TableStyle([
+        ("BOX", (0,0), (-1,-1), 1, colors.black),
+        ("INNERPADDING", (0,0), (-1,-1), 6),
+        ("BACKGROUND", (0,0), (-1,-1), colors.whitesmoke)
+    ]))
+
+    elements.append(card2)
+    elements.append(Spacer(1, 20))
+
+    # ====== 7) TARJETA 3 - FIRMAS ======
+    firmas = Table([
+        ["__________________", "__________________", "__________________"],
+        ["COLABORADOR", "JEFE INMEDIATO", "TALENTO HUMANO"],
+    ], colWidths=[110, 110, 110])
+
+    firmas.setStyle(TableStyle([
+        ("ALIGN", (0,0), (-1,1), "CENTER"),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 4)
+    ]))
+
+    elements.append(firmas)
+    elements.append(Spacer(1, 15))
+
+    # ====== 8) NUMERACIÓN ======
+    numeration = f"N° {str(row[6]).zfill(6)}"
+    elements.append(Paragraph(numeration, ParagraphStyle(
+        name="right",
+        parent=normal,
+        alignment=2,
+        textColor=colors.grey,
+        fontSize=9
+    )))
+
+    # ====== 9) GENERAR PDF ======
+    pdf.build(elements)
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"amonestacion_{penalty_id}.pdf",
+        mimetype="application/pdf"
+    )

@@ -12,7 +12,7 @@
           </div>
           <button @click="$router.push('/additive-home')" class="custom-back-button">
             <span class="icon-text">
-              <i class="fas fa-rotate-left"></i>
+              <i class="fas fa-arrow-left"></i>
               <span>Regresar</span>
             </span>
           </button>

@@ -4,6 +4,8 @@ from flask_cors import CORS
 from config import Config
 from routes import register_routes
 
+#Reiniciar servicio: httpd.exe -k restart -n "sucesores-app"
+
 # Crear la app Flask
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config.from_object(Config)

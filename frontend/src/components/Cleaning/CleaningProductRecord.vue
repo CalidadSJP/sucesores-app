@@ -1,13 +1,23 @@
 <template>
-    <div class="container mt-5">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Movimientos de Limpieza</h4>
+    <div class="container mt-4">
+        <div class="card shadow-sm modern-card">
+
+            <!-- Header -->
+            <div class="card-header d-flex justify-content-between align-items-center custom-header">
+                <h4 class="mb-0 text-white">Movimientos de Limpieza</h4>
+
+                <router-link to="/cleaning-home" class="btn btn-light btn-sm return-btn">
+                    <i class="fas fa-arrow-left me-1"></i> Volver
+                </router-link>
             </div>
+
             <div class="card-body">
+
+                <!-- Tabla -->
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
-                        <thead class="table-light">
+                    <div class="table-wrapper">
+<table class="table modern-table">
+                        <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Producto</th>
@@ -20,6 +30,7 @@
                                 <th>Responsable</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             <tr v-for="row in paginatedData" :key="row.id">
                                 <td>{{ row.id }}</td>
@@ -32,36 +43,42 @@
                                 <td>{{ row.observations }}</td>
                                 <td>{{ row.responsible }}</td>
                             </tr>
+
                             <tr v-if="paginatedData.length === 0">
-                                <td colspan="8" class="text-center">No hay movimientos disponibles.</td>
+                                <td colspan="9" class="text-center py-3">No hay movimientos disponibles.</td>
                             </tr>
                         </tbody>
+
                     </table>
+</div>
                 </div>
 
                 <!-- Paginación -->
-                <nav class="mt-3">
+                <nav class="mt-4">
                     <ul class="pagination justify-content-center">
+
                         <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                            <a class="page-link rounded-pill nav-arrow" href="#"
-                                @click.prevent="changePage(currentPage - 1)">
+                            <a class="page-link pagination-btn" href="#" @click.prevent="changePage(currentPage - 1)">
                                 &laquo;
                             </a>
                         </li>
 
-                        <li v-for="page in visiblePages" :key="page" class="page-item"
+                        <li v-for="page in visiblePages" :key="page"
+                            class="page-item"
                             :class="{ active: currentPage === page }">
-                            <a class="page-link rounded-circle page-number" href="#" @click.prevent="changePage(page)">
+
+                            <a class="page-link pagination-number" href="#"
+                                @click.prevent="changePage(page)">
                                 {{ page }}
                             </a>
                         </li>
 
                         <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                            <a class="page-link rounded-pill nav-arrow" href="#"
-                                @click.prevent="changePage(currentPage + 1)">
+                            <a class="page-link pagination-btn" href="#" @click.prevent="changePage(currentPage + 1)">
                                 &raquo;
                             </a>
                         </li>
+
                     </ul>
                 </nav>
 
@@ -69,6 +86,7 @@
         </div>
     </div>
 </template>
+
 
 <script>
 import axios from 'axios';
@@ -140,13 +158,96 @@ export default {
 </script>
 
 <style scoped>
-.card {
-    max-height: 80vh;
-    overflow: auto;
+/* CARD MÁS LIMPIA */
+.modern-card {
+    border-radius: 12px;
+    overflow: hidden;
 }
 
-.table th,
-.table td {
-    vertical-align: middle;
+/* HEADER VERDE ELEGANTE */
+.custom-header {
+    background: #019c54;
+    padding: 1rem 1.2rem;
+}
+
+/* BOTÓN VOLVER */
+.return-btn {
+    border-radius: 50px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.return-btn:hover {
+    background: #e7f7ed;
+}
+
+/* TABLA PROFESIONAL */
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.9rem;
+}
+
+.table thead th {
+    background: #f8f9fa;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f3f7ff !important;
+}
+
+.table td,
+.table th {
+    border-right: 1px solid #e6e6e6;
+}
+
+.table td:last-child,
+.table th:last-child {
+    border-right: none;
+}
+
+/* PAGINACIÓN MODERNA */
+.pagination-number,
+.pagination-btn {
+    border-radius: 50px !important;
+    margin: 0 4px;
+    padding: 8px 14px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    transition: all 0.2s ease;
+    border: none !important;
+    background: #ffffff;
+    color: #198754;
+    font-weight: 500;
+}
+
+.pagination-number:hover,
+.pagination-btn:hover {
+    background: #198754;
+    color: white;
+    box-shadow: 0 3px 10px rgba(25, 135, 84, 0.35);
+}
+
+/* ACTIVA */
+.page-item.active .page-link {
+    background: #198754 !important;
+    color: white !important;
+    font-weight: bold;
+    box-shadow: 0 0 8px rgba(25, 135, 84, 0.5);
+}
+
+/* DESHABILITADA */
+.page-item.disabled .page-link {
+    opacity: 0.4;
+    pointer-events: none;
+}
+.table-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
 }
 </style>

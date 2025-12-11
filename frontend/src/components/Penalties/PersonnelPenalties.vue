@@ -95,7 +95,7 @@
               <div class="mb-3">
                 <label class="form-label">Gravedad:</label>
                 <select v-model="severity" class="form-select">
-                  <option disabled value="">Seleccionar gravedad…</option>
+                  <option disabled value="">Seleccionar…</option>
                   <option value="LEVE">LEVE</option>
                   <option value="GRAVE">GRAVE</option>
                   <option value="MUY GRAVE">MUY GRAVE</option>
@@ -113,19 +113,19 @@
               <div class="mb-3">
                 <label class="form-label">Descripción de la falta:</label>
                 <textarea v-model="description" class="form-control text-uppercase" rows="3"
-                  placeholder="Descripción de la falta"></textarea>
+                  placeholder=""></textarea>
               </div>
 
               <!-- Multa: aparece si es GRAVE, MUY GRAVE o si el check de LEVE está marcado -->
               <div v-if="severity === 'GRAVE' || severity === 'MUY GRAVE' || levePenaltyCheck" class="mb-3">
-                <label class="form-label">Valor de la multa:</label>
+                <label class="form-label">Valor de la multa / $:</label>
                 <textarea v-model="penaltyDescription" class="form-control text-uppercase" rows="2"
-                  placeholder="Descripción de la multa"></textarea>
+                  placeholder=""></textarea>
               </div>
 
               <div v-if="severity === 'GRAVE' || severity === 'MUY GRAVE' || levePenaltyCheck" class="mb-3">
                 <label class="form-label">N° Amonestación:</label>
-                <input type="number" min="1" v-model="numeration" class="form-control" placeholder="N° Amonestación">
+                <input type="number" min="1" v-model="numeration" class="form-control" placeholder="">
               </div>
 
               <button @click="addFault" class="btn btn-warning w-100 mt-2">Registrar</button>

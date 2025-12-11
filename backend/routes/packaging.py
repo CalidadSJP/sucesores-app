@@ -239,7 +239,7 @@ def update_materials(id):
 
 #Página "Formulario de ingreso Material de Empaque"
 
-@packaging_bp.route('/submit-material-form', methods=['POST']) # Subir formulario material de empaque
+@packaging_bp.route('/submit-material-form', methods=['POST'])  # Subir formulario material de empaque
 def submit_material_form():
     try:
         # Obtiene los datos JSON
@@ -258,9 +258,9 @@ def submit_material_form():
              allergen_statement, product_accepted, rejection_reasons, 
              received_by, manufacture_date, package_quantity, unit_quantity, total_weight,
              invoice_file_confirmation, truck_condition_image_confirmation, truck_plate_image_confirmation,
-             technical_file_confirmation)
+             technical_file_confirmation, release)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'EN ESPERA')
         ''', (
             data['entry_date'], data['supplier'], data['driver_name'], data['driver_id'],
             data['invoice_number'],
@@ -270,9 +270,9 @@ def submit_material_form():
             data['product'], data['lot_number'], data['shelf_life_check'], 
             data['allergen_statement'], data['product_accepted'], 
             data['rejection_reasons'], data['received_by'], data['manufacture_date'], 
-            data['package_quantity'], data['unit_quantity'], data['total_weight'], data['invoice_file_confirmation'],
-            data['truck_condition_image_confirmation'], data['truck_plate_image_confirmation'], data['technical_file_confirmation']
-            
+            data['package_quantity'], data['unit_quantity'], data['total_weight'], 
+            data['invoice_file_confirmation'], data['truck_condition_image_confirmation'], 
+            data['truck_plate_image_confirmation'], data['technical_file_confirmation']
         ))
 
         # Confirmar los cambios
@@ -287,6 +287,7 @@ def submit_material_form():
     except Exception as e:
         print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 
 @packaging_bp.route('/submit-materials-files', methods=['POST']) # Subir archivos | Material de empaque
 def submit_material_files():

@@ -685,4 +685,3 @@ def get_technical_sheets():
 def serve_technical_sheet(filename):
     base_path = os.path.join(current_app.config['UPLOAD_FOLDER_FT'], 'Fichas Tecnicas', 'Aditivos')
     return send_from_directory(base_path, filename)
-
