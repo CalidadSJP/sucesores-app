@@ -3,7 +3,7 @@ import HomeComponent from '../components/Home/HomeComponent.vue';
 import FormComponent from '../components/Personnel/FormComponent.vue';
 import PersonnelComponent from '../components/Personnel/PersonnelComponent.vue';
 import FrecuecyComponent from '../components/Personnel/FrecuencyComponent.vue';
-import WeightComponent from '../components/weight/WeightComponent.vue';
+import WeightComponent from '../components/WeightBalers/WeightComponent.vue';
 import LoginComponent from '../components/Login/LoginComponent.vue';
 import HomeControlComponent from '../components/Home/HomeControlComponent.vue';
 import AdditiveStorageForm from '../components/Additive/AdditiveStorageForm.vue';
@@ -17,8 +17,8 @@ import MaterialFiles from '@/components/Packaging/MaterialFiles.vue';
 import PackagingStorageForm from '@/components/Packaging/PackagingStorageForm.vue';
 import MaterialRecord from '@/components/Packaging/MaterialRecord.vue';
 import InspectionView from '@/components/Personnel/InspectionView.vue';
-import WeightResume from '@/components/weight/WeightResume.vue';
-import WeightRegister from '@/components/weight/WeightRegister.vue';
+import WeightResume from '@/components/WeightBalers/WeightResume.vue';
+import WeightRegister from '@/components/WeightBalers/WeightRegister.vue';
 import ArticlesList from '@/components/Articles/ArticlesList.vue';
 import HumidityControl from '@/components/Humidity/HumidityControl.vue';
 import ArtFiles from '@/components/Art/ArtFiles.vue';
@@ -33,6 +33,7 @@ import LockerInspection from '@/components/Locker/LockerInspection.vue';
 import PiecesInspection from '@/components/Production/PiecesInspection.vue';
 import PiecesRecord from '@/components/Production/PiecesRecord.vue';
 import IdentifierCheck from '@/components/Identifiers/IdentifierCheck.vue';
+import WeightRecoder from '@/components/WeightB1/WeightRecorder.vue';
 
 const routes = [
   // Ruta para la página principal
@@ -210,7 +211,9 @@ const routes = [
 
   { path: '/pieces-record', name: 'PiecesRecord', component: PiecesRecord },
 
-  { path: '/identifier-check', name: 'IdentifierCheck', component: IdentifierCheck }
+  { path: '/identifier-check', name: 'IdentifierCheck', component: IdentifierCheck },
+
+  { path: '/weight-recorder', name: 'WeightRecoder', component: WeightRecoder },
 
 ];
 

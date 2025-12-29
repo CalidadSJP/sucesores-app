@@ -5,6 +5,8 @@ from io import BytesIO
 from flask import request, jsonify, send_file
 from psycopg2.extras import RealDictCursor
 from datetime import time
+from routes.faults_penalties import add_fault
+
 
 
 personnel_bp = Blueprint("personnel", __name__)
@@ -14,16 +16,18 @@ personnel_bp = Blueprint("personnel", __name__)
 @personnel_bp.route('/submit-form', methods=['POST'])
 def submit_form():
     try:
+        from flask import current_app
         data = request.json
-        print(f"Datos recibidos: {data}")
+        print(f"Datos recibidos /submit-form: {data}")
 
         conn = get_db_connection()
         cur = conn.cursor()
 
         observaciones = data.get('observaciones', None)
 
-
-        # Insertar la revisión
+        # =============================
+        # 1) INSERTAR INSPECCIÓN
+        # =============================
         cur.execute(''' 
             INSERT INTO inspection 
             (fecha, turno, area, nombre_operario, manos_limpias, uniforme_limpio, no_objetos_personales, 
@@ -38,51 +42,66 @@ def submit_form():
             data['medicamento_autorizado'], data['supervisor'], observaciones, data['hora']
         ))
 
-        # Obtener el ID del operario
+        # =============================
+        # 2) OBTENER EL ID DEL OPERARIO
+        # =============================
         cur.execute("SELECT id FROM personnel WHERE name = %s", (data['nombre_operario'],))
         result = cur.fetchone()
         if not result:
             raise Exception(f"No se encontró el personal con nombre: {data['nombre_operario']}")
+
         personnel_id = result[0]
-
-        # Campos a verificar
-        campos_a_verificar = {
-            'manos_limpias': 'Manos limpias',
-            'uniforme_limpio': 'Uniforme limpio',
-            'no_objetos_personales': 'Objetos personales en el area',
-            'heridas_protegidas': 'Heridas protegidas',
-            'cofia_bien_puesta': 'Cofia bien puesta',
-            'mascarilla_bien_colocada': 'Mascarilla bien colocada',
-            'protector_auditivo': 'Protector auditivo',
-            'unas_cortas': 'Uñas cortas, limpias y sin esmalte',
-            'guantes_limpios': 'Guantes limpios',
-            'pestanas': 'Pestañas sin rimel o extensiones',
-            'barba_bigote': 'Barba o bigote',
-            'medicamento_autorizado': 'Medicamento autorizado'
-        }
-        # Registrar faltas por cada NO CUMPLE
-        for campo, descripcion in campos_a_verificar.items():
-            if data.get(campo) == 'NO CUMPLE':
-                falta = f"{descripcion}: NO CUMPLE"
-                responsable = (data.get('supervisor') or '').strip().upper()
-                
-                cur.execute(
-                    """
-                    INSERT INTO faults (personnel_id, description, fault_type_id, severity, responsible)
-                    VALUES (%s, %s, %s, %s, %s)
-                    """,
-                    (personnel_id, falta, 1, 'LEVE', responsable)
-                )
-
 
         conn.commit()
         cur.close()
         conn.close()
 
+
+        # =============================
+        # 3) REGISTRAR FALTAS USANDO /faults
+        # =============================
+        campos_a_verificar = {
+            'manos_limpias': 'Manos limpias',
+            'uniforme_limpio': 'Uniforme limpio',
+            'no_objetos_personales': 'Objetos personales en el área',
+            'heridas_protegidas': 'Heridas protegidas',
+            'cofia_bien_puesta': 'Cofia bien puesta',
+            'mascarilla_bien_colocada': 'Mascarilla bien colocada',
+            'protector_auditivo': 'Protector auditivo',
+            'unas_cortas': 'Uñas cortas',
+            'guantes_limpios': 'Guantes limpios',
+            'pestanas': 'Pestañas sin rimel',
+            'barba_bigote': 'Barba o bigote',
+            'medicamento_autorizado': 'Medicamento autorizado'
+        }
+
+        for campo, label in campos_a_verificar.items():
+            if data.get(campo) == 'NO CUMPLE':
+
+                descripcion = f"{label}: NO CUMPLE"
+                supervisor = (data.get('supervisor') or '').strip().upper()
+
+                payload_falta = {
+                    "personnel_id": personnel_id,
+                    "description": descripcion,
+                    "responsible": supervisor,
+                    "date": data["fecha"],
+                    "fault_type_id": 1,
+                    "severity": "LEVE"
+                }
+
+                print(f"[DEBUG] Registrando falta desde submit-form: {payload_falta}")
+
+                # Llamada interna al endpoint /faults
+                with current_app.test_request_context(
+                    '/faults', method='POST', json=payload_falta
+                ):
+                    add_fault()
+
         return jsonify({"message": "Formulario registrado correctamente."}), 200
 
     except Exception as e:
-        print(f"Error general: {str(e)}")
+        print(f"[ERROR] en /submit-form: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @personnel_bp.route('/download-inspection', methods=['GET']) #Método para descargar el registro de inpección del personal

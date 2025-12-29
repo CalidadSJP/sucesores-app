@@ -713,10 +713,10 @@ def download_piece_inspections_excel():
 
 
 from flask import send_file, current_app
-from reportlab.lib.pagesizes import A5
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image
 from reportlab.lib import colors
+from reportlab.lib.units import cm
 import os
 import io
 
@@ -729,13 +729,13 @@ def generate_penalty_pdf(penalty_id):
 
     cursor.execute("""
         SELECT 
-            pen.id,
-            pen.date,
-            p.name AS full_name,
-            p.role,
-            pen.fault_description,
-            pen.description AS penalty_desc,
-            pen.numeration
+            pen.id,                -- 0
+            pen.date,              -- 1
+            p.name AS full_name,   -- 2
+            p.role,                -- 3
+            pen.fault_description, -- 4
+            pen.description,       -- 5 (esta es la multa)
+            pen.numeration         -- 6
         FROM penalties pen
         JOIN personnel p ON pen.personnel_id = p.id
         WHERE pen.id = %s
@@ -747,106 +747,150 @@ def generate_penalty_pdf(penalty_id):
     if not row:
         return {"error": "Multa no encontrada"}, 404
 
-    # ====== 2) CONFIG PDF ======
+    # ====== 2) PDF A5 VERTICAL (estándar: 14.8 x 21 cm) ======
+    from reportlab.lib.pagesizes import A5
+    A5_WIDTH, A5_HEIGHT = A5  # points
+    # Margins (points) - reduced a bit to fit mejor para apilar 2 en A4
+    left_margin = right_margin = top_margin = bottom_margin = 14
+
     buffer = io.BytesIO()
     pdf = SimpleDocTemplate(
         buffer,
-        pagesize=A5,
-        rightMargin=20,
-        leftMargin=20,
-        topMargin=20,
-        bottomMargin=20
+        pagesize=(A5_WIDTH, A5_HEIGHT),
+        leftMargin=left_margin,
+        rightMargin=right_margin,
+        topMargin=top_margin,
+        bottomMargin=bottom_margin
     )
 
     styles = getSampleStyleSheet()
-    title_style = styles["Heading1"]
-    title_style.alignment = 1  # centered
     normal = styles["Normal"]
+    normal.fontSize = 9
+    normal.leading = 11
+
+    title_style = ParagraphStyle(
+        "TitleCenter",
+        parent=styles["Heading1"],
+        alignment=1,
+        fontSize=12,
+        spaceAfter=6,
+        leading=14
+    )
 
     elements = []
 
-    # ====== 3) LOGO + FECHA ======
-    # Ruta absoluta correcta
+    # ====== 3) LOGO (esquina izquierda) + FECHA (esquina derecha) ======
     logo_path = os.path.join(current_app.root_path, "static", "logo.png")
-
     try:
-        logo = Image(logo_path, width=150, height=60)
-    except Exception as e:
-        print("ERROR CARGANDO LOGO:", e)
+        # tamaño pequeño para que quede en la esquina
+        logo = Image(logo_path, width=60, height=24)
+    except Exception:
         logo = Paragraph("LOGO", normal)
 
-    header_table = Table([
-        [logo, Paragraph(f"<b>Fecha:</b> {row[1].strftime('%d/%m/%Y')}", normal)]
-    ], colWidths=[80, 200])
+    # calculamos ancho disponible para la tabla header
+    available_width = A5_WIDTH - left_margin - right_margin
+    logo_w = 70
+    date_w = 80
+    middle_w = available_width - logo_w - date_w
 
-    header_table.setStyle(TableStyle([
-        ("VALIGN", (0,0), (-1,-1), "TOP")
+    header = Table(
+        [
+            [logo, "", Paragraph(f"<b>Fecha:</b> {row[1].strftime('%d/%m/%Y')}", normal)]
+        ],
+        colWidths=[logo_w, middle_w, date_w]
+    )
+
+    header.setStyle(TableStyle([
+        ("VALIGN", (0,0), (-1,-1), "TOP"),
+        ("ALIGN", (0,0), (0,0), "LEFT"),     # logo a la izquierda
+        ("ALIGN", (2,0), (2,0), "RIGHT"),    # fecha a la derecha
+        ("BOTTOMPADDING", (0,0), (-1,-1), 6),
+        ("LEFTPADDING", (0,0), (-1,-1), 0),
+        ("RIGHTPADDING", (0,0), (-1,-1), 0),
     ]))
 
-    elements.append(header_table)
-    elements.append(Spacer(1, 12))
+    elements.append(header)
+    elements.append(Spacer(1, 6))
 
-    # ====== 4) TITULO ======
-    elements.append(Paragraph("<b>FORMULARIO DE AMONESTACIÓN</b>", title_style))
-    elements.append(Spacer(1, 10))
+    # ====== 4) TÍTULO ======
+    elements.append(Paragraph("FORMULARIO DE AMONESTACIÓN", title_style))
+    elements.append(Spacer(1, 8))
 
-    # ====== 5) TARJETA 1 - DATOS ======
+    # ====== 5) BLOQUE DE DATOS ======
+    content_w = available_width  # usamos el ancho disponible completo
     card1 = Table([
-        [Paragraph("<b>Nombre completo:</b> " + row[2], normal)],
-        [Paragraph("<b>Cargo:</b> " + (row[3] or ""), normal)],
-        [Paragraph("<b>Jefe inmediato:</b> _________________________", normal)],
-        [Paragraph("<b>Sucursal:</b> _______________________________", normal)],
-    ], colWidths=[350])
+        [Paragraph(f"<b>Nombre completo:</b> {row[2]}", normal)],
+        [Paragraph(f"<b>Cargo:</b> {row[3] or ''}", normal)],
+        [Paragraph("<b>Jefe inmediato:</b> ________________________________", normal)],
+        [Paragraph("<b>Sucursal:</b> ______________________________________", normal)],
+    ], colWidths=[content_w])
 
     card1.setStyle(TableStyle([
-        ("BOX", (0,0), (-1,-1), 1, colors.black),
+        ("BOX", (0,0), (-1,-1), 0.8, colors.black),
         ("INNERPADDING", (0,0), (-1,-1), 6),
-        ("BACKGROUND", (0,0), (-1,-1), colors.whitesmoke)
+        ("TOPPADDING", (0,0), (-1,-1), 4),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 8),
     ]))
 
     elements.append(card1)
-    elements.append(Spacer(1, 12))
+    elements.append(Spacer(1, 8))
 
-    # ====== 6) TARJETA 2 - AMONESTACION ======
+    # ====== 6) BLOQUE MOTIVO ======
     card2 = Table([
         [Paragraph("<b>Motivo / Descripción:</b>", normal)],
-        [Paragraph(row[4], normal)],
+        [Paragraph(row[4] or "", normal)],
         [Paragraph("<b>Llamado de atención:</b>", normal)],
-        [Paragraph("<b>Multa:</b> " + row[5], normal)],
-    ], colWidths=[350])
+        [Paragraph(f"<b>Multa:</b> {row[5] or ''}", normal)],
+    ], colWidths=[content_w])
 
     card2.setStyle(TableStyle([
-        ("BOX", (0,0), (-1,-1), 1, colors.black),
+        ("BOX", (0,0), (-1,-1), 0.8, colors.black),
         ("INNERPADDING", (0,0), (-1,-1), 6),
-        ("BACKGROUND", (0,0), (-1,-1), colors.whitesmoke)
+        ("TOPPADDING", (0,0), (-1,-1), 4),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 12),  # padding inferior para separación con firmas
     ]))
 
     elements.append(card2)
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 12))  # espacio más grande para que no pegue con firmas
 
-    # ====== 7) TARJETA 3 - FIRMAS ======
+    # ====== 7) FIRMAS: 3 LÍNEAS SEPARADAS + ESPACIO PARA FIRMAR ======
+    # Hacemos la primera fila vacía con suficiente altura (padding) y aplicamos LINEABOVE en cada celda por separado.
+    col_w = (content_w) / 3.0
     firmas = Table([
-        ["__________________", "__________________", "__________________"],
-        ["COLABORADOR", "JEFE INMEDIATO", "TALENTO HUMANO"],
-    ], colWidths=[110, 110, 110])
+        ["", "", ""],                         # fila para las líneas
+        ["COLABORADOR", "JEFE INMEDIATO", "TALENTO HUMANO"]
+    ], colWidths=[col_w, col_w, col_w])
 
     firmas.setStyle(TableStyle([
-        ("ALIGN", (0,0), (-1,1), "CENTER"),
-        ("BOTTOMPADDING", (0,0), (-1,-1), 4)
+        # líneas arriba (cada columna independiente)
+        ("LINEABOVE", (0,0), (0,0), 0.9, colors.black),
+        ("LINEABOVE", (1,0), (1,0), 0.9, colors.black),
+        ("LINEABOVE", (2,0), (2,0), 0.9, colors.black),
+
+        # centrado etiquetas
+        ("ALIGN", (0,1), (2,1), "CENTER"),
+        ("TOPPADDING", (0,1), (2,1), 6),
+
+        # espacio para firmar: padding en la celda de la línea (fila 0)
+        ("BOTTOMPADDING", (0,0), (2,0), 18),
+        ("TOPPADDING", (0,0), (2,0), 8),
     ]))
 
     elements.append(firmas)
-    elements.append(Spacer(1, 15))
+    elements.append(Spacer(1, 8))
 
-    # ====== 8) NUMERACIÓN ======
+    # ====== 8) NUMERACIÓN ABAJO A LA DERECHA ======
     numeration = f"N° {str(row[6]).zfill(6)}"
-    elements.append(Paragraph(numeration, ParagraphStyle(
-        name="right",
-        parent=normal,
-        alignment=2,
-        textColor=colors.grey,
-        fontSize=9
-    )))
+    elements.append(Paragraph(
+        numeration,
+        ParagraphStyle(
+            name="right",
+            parent=normal,
+            alignment=2,
+            fontSize=8,
+            textColor=colors.grey
+        )
+    ))
 
     # ====== 9) GENERAR PDF ======
     pdf.build(elements)

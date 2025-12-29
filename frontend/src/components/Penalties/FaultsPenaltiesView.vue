@@ -1,44 +1,53 @@
 <template>
-  <div class="container mt-4">
-    <div
-      class="header-box d-flex flex-wrap justify-content-between align-items-center p-3 mb-4 rounded bg-success text-white">
-      <div class="d-flex align-items-center">
-        <i class="fas fa-user-times fa-2x me-3"></i>
-        <div>
-          <h2 class="mb-0">Control de Faltas y Multas</h2>
-          <small class="fw-light">Registro y seguimiento de personal</small>
+  <div class="page-wrapper">
+
+    <div class="big-card shadow-lg rounded">
+
+      <!-- Header dentro de la tarjeta -->
+      <div class="header-box p-3 text-white d-flex justify-content-between align-items-center">
+
+        <div class="d-flex align-items-center">
+          <i class="fas fa-user-times fa-2x me-3"></i>
+          <div>
+            <h2 class="mb-0">Control de Faltas y Multas</h2>
+            <small class="fw-light">Registro y seguimiento de personal</small>
+          </div>
         </div>
-      </div>
-      <button @click="$router.back()" class="btn btn-light text-success fw-bold" style="opacity: 1; transition: none;">
-        <i class="fas fa-arrow-left me-2"></i> Regresar
-      </button>
 
-    </div>
+        <!-- CONTENEDOR DE BOTONES DEL HEADER -->
+        <div class="header-buttons d-flex align-items-center">
 
-
-    <!-- Card -->
-    <div class="card shadow">
-      <div class="card-body">
-
-        <!-- Pestañas -->
-        <ul class="nav nav-tabs mb-4" id="faultPenaltyTabs" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="faults-tab" data-bs-toggle="tab" data-bs-target="#faults" type="button"
-              role="tab">
+          <!-- Grupo: Faltas + Multas -->
+          <div class="tab-group d-flex gap-2">
+            <button @click="selectTab('faults')" :class="['tab-btn', activeTab === 'faults' ? 'active' : '']">
               <i class="fas fa-user-times me-1"></i> Faltas
             </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="penalties-tab" data-bs-toggle="tab" data-bs-target="#penalties" type="button"
-              role="tab">
+
+            <button @click="selectTab('penalties')" :class="['tab-btn', activeTab === 'penalties' ? 'active' : '']">
               <i class="fas fa-gavel me-1"></i> Multas
             </button>
-          </li>
-        </ul>
+          </div>
+
+          <!-- Botón Regresar alineado a la derecha -->
+          <button @click="$router.back()" class="btn btn-light text-success fw-bold ms-auto">
+            <i class="fas fa-arrow-left me-2"></i> Regresar
+          </button>
+
+        </div>
+
+
+      </div>
+
+
+
+      <div class="card-body">
+
 
         <div class="tab-content" id="faultPenaltyTabsContent">
-          <!-- TAB: Faltas -->
-          <div class="tab-pane fade show active" id="faults" role="tabpanel">
+          <!-- ============================
+      TAB FALTAS
+============================= -->
+          <div v-if="activeTab === 'faults'">
             <div class="table-responsive">
               <table class="table table-bordered table-striped">
                 <thead class="table-dark">
@@ -50,6 +59,7 @@
                     <th>Tipo</th>
                     <th>Gravedad</th>
                   </tr>
+
                   <!-- fila de filtros FALTAS -->
                   <tr class="bg-light">
                     <th><input v-model="filtersFaults.date" class="form-control form-control-sm"></th>
@@ -79,6 +89,8 @@
                 </tbody>
               </table>
             </div>
+
+            <!-- PAGINACIÓN FALTAS -->
             <div class="pagination-container">
               <button @click="prevPage('faults')" :disabled="faultPage === 1">Anterior</button>
               <button @click="jumpPages('faults', -10)" :disabled="faultPage <= 10">«</button>
@@ -91,8 +103,11 @@
             </div>
           </div>
 
-          <!-- TAB: Multas -->
-          <div class="tab-pane fade" id="penalties" role="tabpanel">
+
+          <!-- ============================
+      TAB MULTAS
+============================= -->
+          <div v-if="activeTab === 'penalties'">
             <div class="table-responsive">
               <table class="table table-bordered table-striped">
                 <thead class="table-dark">
@@ -104,11 +119,9 @@
                     <th>Responsable</th>
                     <th>Tipo</th>
                     <th>N° Amonestación</th>
-                    <!--<th>PDF</th>-->
                   </tr>
 
-
-                  <!-- fila de filtros FALTAS -->
+                  <!-- fila de filtros MULTAS -->
                   <tr class="bg-light">
                     <th><input v-model="filtersPenalties.date" class="form-control form-control-sm"></th>
                     <th><input v-model="filtersPenalties.employee" class="form-control form-control-sm"></th>
@@ -124,23 +137,19 @@
                   <tr v-for="penalty in paginatedPenalties" :key="penalty.id">
                     <td>{{ penalty.date }}</td>
                     <td>{{ penalty.full_name }}</td>
-                    <td>{{ penalty.fault_description }}</td>
+                    <td class="text-truncate fault-desc" :title="penalty.fault_description">
+                      {{ penalty.fault_description }}
+                    </td>
                     <td>{{ penalty.description }}</td>
                     <td>{{ penalty.responsible }}</td>
                     <td>{{ penalty.type }}</td>
                     <td>{{ penalty.numeration }}</td>
-
-                    <!-- Botón para generar PDF 
-                    <td class="text-center">
-                      <button class="btn btn-sm btn-danger" @click="downloadPenaltyPDF(penalty.id)">
-                        <i class="fas fa-file-pdf"></i>
-                      </button>
-                    </td>-->
                   </tr>
-
                 </tbody>
               </table>
             </div>
+
+            <!-- PAGINACIÓN MULTAS -->
             <div class="pagination-container">
               <button @click="prevPage('penalties')" :disabled="penaltyPage === 1">Anterior</button>
               <button @click="jumpPages('penalties', -10)" :disabled="penaltyPage <= 10">«</button>
@@ -152,6 +161,7 @@
               <button @click="nextPage('penalties')" :disabled="penaltyPage === totalPenaltyPages">Siguiente</button>
             </div>
           </div>
+
         </div>
 
       </div>
@@ -168,7 +178,9 @@ import axios from 'axios';
 export default {
   name: 'FaultsPenaltiesView',
   data() {
+
     return {
+      activeTab: 'faults',
       faults: [],
       penalties: [],
       filtersFaults: {
@@ -183,6 +195,7 @@ export default {
       penaltyPage: 1,
       perPage: 10
     };
+
   },
   computed: {
 
@@ -241,6 +254,10 @@ export default {
     this.fetchPenalties();
   },
   methods: {
+
+    selectTab(tab) {
+      this.activeTab = tab;
+    },
 
     downloadPenaltyPDF(id) {
       const url = `${process.env.VUE_APP_API_URL}/api/generate-penalty-pdf/${id}`;
@@ -311,11 +328,22 @@ export default {
 </script>
 
 <style scoped>
+/* ===========================
+   TABLAS
+=========================== */
 .table th,
 .table td {
   vertical-align: middle;
+  white-space: nowrap;
 }
 
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* ===========================
+   PAGINACIÓN
+=========================== */
 .pagination-container {
   display: flex;
   flex-wrap: wrap;
@@ -347,93 +375,165 @@ export default {
   cursor: not-allowed;
 }
 
-/* Círculo para números */
-.pagination-container button:not(:first-child):not(:last-child):not([data-type="arrow"]) {
+.pagination-container button:not(:first-child):not(:last-child) {
   border-radius: 50%;
 }
 
-/* Bordes redondeados para anterior/siguiente */
-.pagination-container button:first-child,
-.pagination-container button:last-child,
-.pagination-container button[data-type="arrow"] {
-  border-radius: 20px;
+/* ===========================
+   TARJETA PRINCIPAL
+=========================== */
+.page-wrapper {
+  width: 100%;
+  padding: 20px;
+  padding-bottom: 40px;
+  box-sizing: border-box;
 }
 
+.big-card {
+  width: 100%;
+  max-width: 100%;
+  background: white;
+  margin: 0 auto;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.card-body {
+  width: 100%;
+  padding: 25px !important;
+  padding-top: 30px !important;
+  box-sizing: border-box;
+}
+
+/* ===========================
+   HEADER DE LA TARJETA
+=========================== */
 .header-box {
+  width: 100%;
   background: linear-gradient(135deg, #28a745, #218838);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   border-left: 5px solid #1e7e34;
+  border-radius: 18px 18px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.nav-tabs .nav-link {
-  border-radius: 10px 10px 0 0;
-  transition: background-color 0.3s;
-}
-
-.nav-tabs .nav-link.active {
-  background-color: #218838;
+/* ===========================
+   BOTONES DE PESTAÑAS
+=========================== */
+.tab-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 2px solid #ffffff55;
+  background: #ffffff22;
   color: white;
+  font-weight: bold;
+  transition: 0.25s;
 }
 
-.nav-tabs .nav-link {
-  color: black;
-  /* Letras negras para pestañas inactivas */
+.tab-btn:hover {
+  background: #ffffff33;
+  border-color: #fff;
 }
 
-.nav-tabs .nav-link.active {
-  background-color: #218838;
-  color: white;
+.tab-btn.active {
+  background: white !important;
+  color: #218838 !important;
+  border-color: white !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-@media (max-width: 768px) {
+/* ===========================
+   CONTENEDOR BOTONES HEADER
+=========================== */
+.header-buttons {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.tab-group {
+  display: flex;
+  gap: 6px;
+}
+
+.header-buttons .btn {
+  margin-left: auto;
+}
+
+/* ===========================
+   DESCRIPCIÓN TRUNCADA
+=========================== */
+.fault-desc {
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+@media (max-width: 992px) {
   .header-box h2 {
-    font-size: 1.3rem;
+    font-size: 1.4rem;
   }
+
   .header-box small {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
   }
-  .header-box button {
+}
+
+@media (max-width: 768px) {
+  .header-box {
+    text-align: center;
+  }
+
+  .header-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .header-buttons .btn {
     width: 100%;
-    margin-top: 10px;
+    margin-left: 0 !important;
   }
-}
 
-/* Header responsive */
-@media (max-width: 768px) {
-  .header-box h2 {
-    font-size: 1.3rem;
-  }
-  .header-box small {
-    font-size: 0.8rem;
-  }
-  .header-box button {
+  .tab-group {
     width: 100%;
-    margin-top: 10px;
+    justify-content: center;
   }
-}
 
-/* Card responsive */
-@media (max-width: 768px) {
-  .card-body {
-    padding: 0.5rem !important;
-  }
-}
-
-/* Filtros de tabla responsive */
-table input.form-control-sm,
-table select.form-select-sm {
-  min-width: 100px;
-}
-
-@media (max-width: 768px) {
   table input.form-control-sm,
   table select.form-select-sm {
-    min-width: 80px;
+    min-width: 70px;
     font-size: 0.75rem;
-    padding: 2px 4px;
   }
 }
 
+@media (max-width: 576px) {
+  .header-box h2 {
+    font-size: 1.1rem;
+  }
 
+  .card-body {
+    padding: 0.4rem !important;
+  }
+
+  table {
+    font-size: 0.75rem;
+  }
+
+  .pagination-container button {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+}
+
+/* Empuja los botones un poco hacia abajo */
+.header-buttons {
+  margin-left: 50px;
+}
 
 </style>

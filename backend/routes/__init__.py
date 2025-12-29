@@ -5,6 +5,7 @@ from .weight import weight_bp
 from .humidity import humidity_bp
 from .cleaning import cleaning_bp
 from .faults_penalties import penailties_bp
+from .weightB1 import weightB1_bp
 
 
 # Registrar todas las rutas
@@ -18,3 +19,4 @@ def register_routes(app):
     app.register_blueprint(humidity_bp)
     app.register_blueprint(cleaning_bp)
     app.register_blueprint(penailties_bp)
+    app.register_blueprint(weightB1_bp)

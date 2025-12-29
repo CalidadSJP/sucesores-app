@@ -7,12 +7,7 @@
 
     <section class="menu-section">
       <div class="menu-grid">
-        <router-link
-          v-for="option in menuOptions"
-          :key="option.label"
-          :to="option.link"
-          class="menu-card clickable"
-        >
+        <router-link v-for="option in menuOptions" :key="option.label" :to="option.link" class="menu-card clickable">
           <div class="d-flex align-items-center icon-container">
             <i :class="option.icon" class="icon"></i>
             <h2>{{ option.label }}</h2>
@@ -23,6 +18,7 @@
       </div>
     </section>
   </div>
+
 </template>
 
 <script>
@@ -45,14 +41,29 @@ export default {
 
 <style scoped>
 @keyframes fadeSlideUp {
-  0% { opacity: 1; transform: translateY(30px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 1;
+    transform: translateY(30px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes highlightCard {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.03); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.03);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 .home-wrapper {
@@ -116,7 +127,8 @@ export default {
   padding: 1rem 1.2rem;
   border-radius: 0.8rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  opacity: 1; /* Asegura que no desaparezca */
+  opacity: 1;
+  /* Asegura que no desaparezca */
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
@@ -127,7 +139,8 @@ export default {
 }
 
 .menu-card:hover {
-  transform: translateY(-2px); /* movimiento MUY leve */
+  transform: translateY(-2px);
+  /* movimiento MUY leve */
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
   background: #f6fff9;
 }

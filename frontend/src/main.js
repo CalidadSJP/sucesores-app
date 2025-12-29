@@ -5,6 +5,10 @@ import App from './App.vue'
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/js/bootstrap.js';
 
+// Tailwind
+import './assets/main.css'
+
+
 // FontAwesome
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
